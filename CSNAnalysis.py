@@ -2,10 +2,10 @@ import requests
 import simplejson as json
 import os
 import sys
-from datetime import datetime
-import tempfile
 import csv
+from datetime import datetime
 from Overrides import CSNOverRideRead
+from Overrides import CSNOverRideReadSafe
 from Overrides import CSNPatrolWrite
 
 # Settings
@@ -126,8 +126,11 @@ def Misson_Gen(argv):
                 orides = list(reader)
             for x in orides[1:]:  # Yeah, can probably be done in 1 statement
                 x[1] = int(x[1])
+    elif '/safe' in argv:
+        # Google Sheer Via Read
+        orides = CSNOverRideReadSafe()
     else:
-        # Google Sheet
+        # Google Sheet via API
         orides = CSNOverRideRead()
 
     messages = []

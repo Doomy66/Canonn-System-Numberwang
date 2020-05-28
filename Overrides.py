@@ -16,20 +16,6 @@ from contextlib import closing
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 
-def CSNOverRideReadTrad(): # Read without Google API
-    answer = []
-    answer.append(['System','Priority','Mission'])
-    mysheet_id = '1_yQqR2Plntx7Dma_PGvoS670YwsYF19jx8g1TBCOh5k'
-    readaction = 'export?format=csv&gid=1185587304'
-    url = f'https://docs.google.com/spreadsheets/d/{mysheet_id}/{readaction}'
-    with closing(requests.get(url, stream=True)) as r:
-        reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter=',')
-        next(reader)
-        for row in reader:
-            system, priority, Description = row
-            if system != '':
-                answer.append([system, int(priority), Description])
-    return(answer)
 
 def GoogleSheetService(): # Authorise and Return a sheet object to work on
     creds = None
@@ -49,6 +35,21 @@ def GoogleSheetService(): # Authorise and Return a sheet object to work on
             pickle.dump(creds, token)
 
     return(build('sheets', 'v4', credentials=creds))
+
+def CSNOverRideReadSafe(): # Read without Google API
+    answer = []
+    answer.append(['System','Priority','Mission'])
+    mysheet_id = '1_yQqR2Plntx7Dma_PGvoS670YwsYF19jx8g1TBCOh5k'
+    readaction = 'export?format=csv&gid=1185587304'
+    url = f'https://docs.google.com/spreadsheets/d/{mysheet_id}/{readaction}'
+    with closing(requests.get(url, stream=True)) as r:
+        reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter=',')
+        next(reader)
+        for row in reader:
+            system, priority, Description = row
+            if system != '':
+                answer.append([system, int(priority), Description])
+    return(answer)
 
 def CSNOverRideRead():
     answer = []
@@ -73,28 +74,36 @@ def CSNOverRideRead():
 
 def CSNPatrolWrite(answer):
     mysheet_id = '1_yQqR2Plntx7Dma_PGvoS670YwsYF19jx8g1TBCOh5k'
-    myrange = 'CSNPatrol!A2:G'
+    mysheet = 'CSNPatrol'
     sheet = GoogleSheetService().spreadsheets()
 
-    #clear in case the new patrol is shorted
+    # Datestamp my mayhem
+    myrange = f'{mysheet}!H1'
+    myvalue = [[datetime.now().ctime()]]
+    result = sheet.values().update(spreadsheetId=mysheet_id,
+                                range=myrange,
+                                valueInputOption='USER_ENTERED',
+                                body={'values':myvalue}                                
+                                ).execute()
+
+
+    #Clear in case the new patrol is shorted
+    myrange = f'{mysheet}!A2:G'
     result = sheet.values().clear(spreadsheetId=mysheet_id, 
         range=myrange,
         body={}).execute()
 
-    #write the new patrol
+    #Write the new patrol
     result = sheet.values().update(spreadsheetId=mysheet_id,
                                 valueInputOption='RAW',
                                 range=myrange,
                                 body=dict(majorDimension='ROWS',
                                     values=answer)).execute()
 
-    #write datatime of post
-    #result = sheet.values().update(spreadsheetId=mysheet_id,
-    #                            valueInputOption='RAW',
-    #                           range='CSNPatrol!H1:H1',
-    #                          body={'values':[datetime.now()]}).execute()
-
     return(result["updatedRows"])
 
+def Test():
+    return('No Test Configured')
 
-
+if __name__ == '__main__':
+    print(Test())
