@@ -119,7 +119,7 @@ def Misson_Gen(argv):
 
     if LOCAL_OVERRIDE:
         # Local Overrides
-        oridefile = 'MyOverrides.csv'
+        oridefile = f'{factionname}Overrides.csv'
         if os.path.isfile(oridefile):
             with open(oridefile, newline='') as io:
                 reader = csv.reader(io, delimiter='\t')
@@ -161,6 +161,7 @@ def Misson_Gen(argv):
 
         oride = list(filter(lambda x: x[0] == sys["system_name"], orides))
         
+
         # Single Message per sysme for Patrol
         if len(oride) > 0:  # OVERRIDE!
             messages.append(
@@ -203,12 +204,28 @@ def Misson_Gen(argv):
 
         # Conflict Complete Info
         if len(list(filter(lambda x: x['state'] in {'war', 'election', 'civilwar'},sys['recovering_states']))) > 0:
-            thisconflict = sys["conflicts"][0]  
+            thisconflict = sys["conflicts"][0]
+            if thisconflict["days_won"] == dayslost(sys["system_name"],thisconflict["opponent_name"]):
+                # Draw
+                asset=''
+            elif  thisconflict["days_won"]>dayslost(sys["system_name"],thisconflict["opponent_name"]):
+                # Won
+                asset = assetatrisk(sys["system_name"],thisconflict["opponent_name"])
+                if asset != '':
+                    asset = 'Gained '+ asset
+            else:
+                # Lost
+                asset = thisconflict["stake"]
+                if asset != '':
+                    asset = 'Lost '+ asset
+
+            
             messages.append(amessage(
-                sys, 2, '{3} against {0} ({1} v {2})'.format(
+                sys, 21, '{3} against {0} Complete ({1} v {2}) {4}'.format(
                     thisconflict["opponent_name"], 
                     thisconflict["days_won"], dayslost(sys["system_name"],thisconflict["opponent_name"]), 
-                    mixedcase(thisconflict["type"])),
+                    mixedcase(thisconflict["type"]),
+                    asset),
                 dIcons["info"]))
 
 
@@ -263,6 +280,8 @@ def amessage(sys, p, message, icon=''):
 
 def dayslost(system_name, faction):
     return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["days_won"])
+def assetatrisk(system_name, faction):
+    return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["stake"])
 
 def mixedcase(name):
     return(name[0].upper()+name[1:])
