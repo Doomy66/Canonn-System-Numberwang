@@ -1,5 +1,0 @@
-wh_id = ''
-wh_token = ''
-factionname = 'Canonn'
-override_workbook = ''
-override_sheet = ''
