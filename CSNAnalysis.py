@@ -3,13 +3,16 @@ import simplejson as json
 import os
 import sys
 import csv
+import discord
+import CSNSettings
+from discord import Webhook, RequestsWebhookAdapter, File
 from datetime import datetime
 from Overrides import CSNOverRideRead
 from Overrides import CSNOverRideReadSafe
 from Overrides import CSNPatrolWrite
 
 # Settings
-factionname = 'Canonn'
+factionname = CSNSettings.factionname
 M_INFGAP = 15  # Minimum difference in Inf before issueing a mission
 M_MININF = 40  # Minimum Inf before issueing a mission
 LOCAL_OVERRIDE = False  # Use a local Override file or look up the Canonn Overrides page
@@ -103,6 +106,7 @@ def BGSDownloader():
 
 
 def Misson_Gen(argv):
+    #print(argv)
     if "/?" in argv:
         print("Canonn System Numberwang:")
         print(" /new = Force new data")
@@ -132,6 +136,13 @@ def Misson_Gen(argv):
     else:
         # Google Sheet via API
         orides = CSNOverRideRead()
+
+    try:
+        with open(f'{factionname}Message.json', 'r') as io:
+            oldmessage = json.load(io)
+    except:
+        oldmessage = []
+
 
     messages = []
     active_states = []
@@ -173,7 +184,7 @@ def Misson_Gen(argv):
                 sys, 2, '{3} against {0} ({1} v {2})'.format(
                     thisconflict["opponent_name"], 
                     thisconflict["days_won"], dayslost(sys["system_name"],thisconflict["opponent_name"]), 
-                    mixedcase(thisconflict["type"])),
+                    thisconflict["type"].title()),
                 dIcons[thisconflict["type"]],
                 ))
         # Conflict Pending
@@ -182,7 +193,7 @@ def Misson_Gen(argv):
             messages.append(amessage(
                 sys, 2, '{1} Pending with {0}'.format(
                     thisconflict["opponent_name"], 
-                    mixedcase(thisconflict["type"])),
+                    thisconflict["type"].title()),
                 dIcons[thisconflict["type"]],
                 ))
         # Push  conrol
@@ -192,7 +203,7 @@ def Misson_Gen(argv):
         # Gap to 2nd place is low
         elif inf[0]['influence']-inf[1]['influence'] < M_INFGAP:  
             messages.append(
-                amessage(sys, 4, f'Boost {factionname} - {inf[1]["name"]} is threatening', dIcons['infgap']))
+                amessage(sys, 4, f'Boost {factionname} - {inf[1]["name"]} is threatening ({inf[0]["influence"]-inf[1]["influence"]:4.3}%)', dIcons['infgap']))
         # Inf is too low
         elif inf[0]['influence'] < M_MININF:  
             messages.append(amessage(
@@ -219,12 +230,11 @@ def Misson_Gen(argv):
                 if asset != '':
                     asset = 'Lost '+ asset
 
-            
             messages.append(amessage(
                 sys, 21, '{3} against {0} Complete ({1} v {2}) {4}'.format(
                     thisconflict["opponent_name"], 
                     thisconflict["days_won"], dayslost(sys["system_name"],thisconflict["opponent_name"]), 
-                    mixedcase(thisconflict["type"]),
+                    thisconflict["type"].title(),
                     asset),
                 dIcons["info"]))
 
@@ -247,18 +257,42 @@ def Misson_Gen(argv):
                 print(f'!Override Ignored : {ex[0]} {ex[2]}')
     messages.sort()
 
+    # Looks for changes in Discord suitable Messages since last run for WebHook
+    messagechanges = []
+    for x in messages:
+        if x not in oldmessage:
+            messagechanges.append(x)
+    # Looks to see what systems no longer have a message of any type
+    for x in oldmessage:
+        s = list(filter(lambda y: y[1] == x[1], messages))
+        if len(s) == 0:
+            messagechanges.append(x)
+            messagechanges[len(messagechanges)-1][7] += ' : Misson Complete'
+            messagechanges[len(messagechanges)-1][8] = dIcons['info']
+    
     # Write Orders various formats
-    with open('CSNPatrol.Tsv', 'w') as io:  # Tab Seperated for Copy/Paste to Google Sheets, Not used.
-        io.writelines(f'System\tX\tY\tZ\tTI\tFaction\tMessage\n')
-        io.writelines(
-            f'{x[1]}\t{x[2]}\t{x[3]}\t{x[4]}\t{x[5]}\t{x[6]}\t{x[7]}\n' for x in messages)
-    with open('CSNPatrol.Csv', 'w') as io:  # CSV for Humans
+    with open(f'{factionname}Patrol.Csv', 'w') as io:  # CSV for Humans
         io.writelines(f'System,X,Y,Z,Priority,Message\n')
         io.writelines(
             f'{x[1]},{x[2]},{x[3]},{x[4]},{x[5]},{x[7]}\n' for x in messages)
-    with open('CSNPatrolDiscord.txt', 'w') as io:  # Text Version for Discord
+    with open(f'{factionname}DiscordPatrol.txt', 'w') as io:  # Text Version for Discord
         io.writelines(f'Canonn System Numberwang\n')
         io.writelines(f'{x[8]}{x[1]} : {x[7]}\n' for x in filter(lambda x: x[0]<11 or x[0]>20, messages))
+    with open(f'{factionname}DiscordWebhook.txt', 'w') as io:  # Webhook Text Version for Discord
+        io.writelines(f'{x[8]}{x[1]} : {x[7]}\n' for x in filter(lambda x: x[0]<11 or x[0]>20, messagechanges))
+    with open(f'{factionname}Message.json', 'w') as io:
+        json.dump(messages,io, indent=4)
+
+
+    # Discord Webhook
+    if len(list(filter(lambda x: x[0]<11 or x[0]>20, messagechanges)))>0 and CSNSettings.wh_id != '':
+        wh_text = ''
+        wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,\
+            adapter = RequestsWebhookAdapter())
+        for x in filter(lambda x: x[0]<11 or x[0]>20, messagechanges):
+            wh_text+=f'{x[8]}{x[1]} : {x[7]}\n' 
+        if wh_text != '':
+            wh.send(wh_text)
 
     # Patrol to send to Google
     patrol=[]
@@ -279,12 +313,15 @@ def amessage(sys, p, message, icon=''):
     return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, factionname, message, icon])
 
 def dayslost(system_name, faction):
-    return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["days_won"])
+    try:
+        return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["days_won"])
+    except:
+        return(0)
 def assetatrisk(system_name, faction):
-    return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["stake"])
-
-def mixedcase(name):
-    return(name[0].upper()+name[1:])
-
+    try:
+        return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["stake"])
+    except:
+        return('')
+        
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:])
+    Misson_Gen(sys.argv[1:]+["/Test2","/Test3"])
