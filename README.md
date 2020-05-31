@@ -1,4 +1,4 @@
-# Canon-System-Numberwang
+# Canonn-System-Numberwang
 CSN will create a list of intructions for CMDRS to follow based on the current BGS State that benefit the Canonn Minor Faction.
 It will report on Conflicts, Systems where we are not ye in control, Systems where we are dangerously low on Influence, Systems where the 2nd ranked faction is getting too close for comfort, and systems where data is out of date.
 
