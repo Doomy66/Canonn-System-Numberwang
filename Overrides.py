@@ -1,6 +1,7 @@
 #Google API
 import pickle
 import os.path
+import CSNSettings
 from datetime import datetime
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -39,8 +40,10 @@ def GoogleSheetService(): # Authorise and Return a sheet object to work on
 def CSNOverRideReadSafe(): # Read without Google API
     answer = []
     answer.append(['System','Priority','Mission'])
-    mysheet_id = '1_yQqR2Plntx7Dma_PGvoS670YwsYF19jx8g1TBCOh5k'
-    readaction = 'export?format=csv&gid=1185587304'
+    mysheet_id = CSNSettings.override_workbook
+    if mysheet_id == '':
+        return(answer)
+    readaction = f'export?format=csv&gid={CSNSettings.overide_sheet}'
     url = f'https://docs.google.com/spreadsheets/d/{mysheet_id}/{readaction}'
     with closing(requests.get(url, stream=True)) as r:
         reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter=',')
@@ -54,7 +57,9 @@ def CSNOverRideReadSafe(): # Read without Google API
 def CSNOverRideRead():
     answer = []
     answer.append(['System','Priority','Mission'])
-    mysheet_id = '1_yQqR2Plntx7Dma_PGvoS670YwsYF19jx8g1TBCOh5k'
+    mysheet_id = CSNSettings.override_workbook
+    if mysheet_id == '':
+        return(answer)
     myrange = 'Overrides!A2:C'
     sheet = GoogleSheetService().spreadsheets()
 
@@ -67,15 +72,18 @@ def CSNOverRideRead():
     else:
         for row in values:
             #print(row)
-            system, priority, Description = row
+            system, priority, Description = row if len(row)==3 else row+['']
             if system != '':
                 answer.append([system, int(priority), Description])
     return(answer)
 
 def CSNPatrolWrite(answer):
-    mysheet_id = '1_yQqR2Plntx7Dma_PGvoS670YwsYF19jx8g1TBCOh5k'
+    mysheet_id = CSNSettings.override_workbook
     mysheet = 'CSNPatrol'
     sheet = GoogleSheetService().spreadsheets()
+
+    if mysheet_id == '':
+        return('No API')
 
     # Datestamp my mayhem
     myrange = f'{mysheet}!H1'
