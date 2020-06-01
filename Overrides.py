@@ -39,7 +39,7 @@ def GoogleSheetService(): # Authorise and Return a sheet object to work on
 
 def CSNOverRideReadSafe(): # Read without Google API
     answer = []
-    answer.append(['System','Priority','Mission'])
+    answer.append(['System','Priority','Mission','Emoji'])
     mysheet_id = CSNSettings.override_workbook
     if mysheet_id == '':
         return(answer)
@@ -49,9 +49,9 @@ def CSNOverRideReadSafe(): # Read without Google API
         reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter=',')
         next(reader)
         for row in reader:
-            system, priority, Description = row
+            system, priority, Description, Emoji = row
             if system != '':
-                answer.append([system, int(priority), Description])
+                answer.append([system, int(priority), Description, Emoji])
     return(answer)
 
 def CSNOverRideRead():
@@ -60,7 +60,7 @@ def CSNOverRideRead():
     mysheet_id = CSNSettings.override_workbook
     if mysheet_id == '':
         return(answer)
-    myrange = 'Overrides!A2:C'
+    myrange = 'Overrides!A2:D'
     sheet = GoogleSheetService().spreadsheets()
 
     result = sheet.values().get(spreadsheetId=mysheet_id,
@@ -72,9 +72,9 @@ def CSNOverRideRead():
     else:
         for row in values:
             #print(row)
-            system, priority, Description = row if len(row)==3 else row+['']
+            system, priority, Description, Emoji = row if len(row)==4 else row+['']  if len(row)==3 else row+['']+['']
             if system != '':
-                answer.append([system, int(priority), Description])
+                answer.append([system, int(priority), Description, Emoji])
     return(answer)
 
 def CSNPatrolWrite(answer):

@@ -114,6 +114,9 @@ def Misson_Gen(argv):
         print(" /wait = Pause console at end to review output")
         quit
 
+    stat_run = datetime.now()
+    last_run = None
+
     myfile = 'Faction.json'
     if ('/new') in argv or not(os.path.isfile(myfile)):
         BGSDownloader()
@@ -121,6 +124,7 @@ def Misson_Gen(argv):
     with open(myfile, 'r') as io:
         faction_systems = json.load(io)
 
+    
     if LOCAL_OVERRIDE:
         # Local Overrides
         oridefile = f'{factionname}Overrides.csv'
@@ -148,16 +152,17 @@ def Misson_Gen(argv):
     active_states = []
     pending_states = []
     recovering_states = []
-    dIcons = {"war": ':EliteEagle: ' , 
+
+    dIcons = {"war": '<:EliteEagle:231083794700959744> ' , 
         "election": ':ballot_box: ', 
-        "civilwar": ':EliteEagle: ',
-        "override": ':Salute: ',
-        "push": ':Salute2: ',
+        "civilwar": '<:EliteEagle:231083794700959744> ',
+        "override": '<:canonn:231835416548999168> ',
+        "push": '<:Salute2:500679418692501506> ',
         "data": ':eyes: ',
         "infgap": ':dagger: ',
-        "mininf": ':worried: ',
-        "info": ':information_source: '}
-
+        "mininf": ':chart_with_downwards_trend: ',
+        "info": ':information_source: ',
+        "end": ':clap: ' }
 
     print(f'CSN Missions:')
     # Create a single Message for each faction system
@@ -165,18 +170,16 @@ def Misson_Gen(argv):
         # Sort all factions by influence
         inf = sorted(sys['inflist'],
                      key=lambda x: x['influence'], reverse=True)
-        dformat = '%Y-%m-%dT%H:%M:%S'  # so much grief from this function
-        age = datetime.now() - datetime.strptime(sys["updated_at"][:len(dformat)+2], dformat)  # print(age.days)
-        # TODO Complete Conflict Info (active, pending, finished)
-        # TODO Info messages
-
+        updated = EliteBGSDateTime(sys["updated_at"])
+        age = datetime.now() - updated
         oride = list(filter(lambda x: x[0] == sys["system_name"], orides))
         
 
         # Single Message per sysme for Patrol
         if len(oride) > 0:  # OVERRIDE!
             messages.append(
-                amessage(sys, oride[0][1], oride[0][2]+'*', dIcons['override']))
+                amessage(sys, oride[0][1], oride[0][2]+'*',
+                dIcons['override'] if oride[0][3] == '' else dIcons[oride[0][3]]))
         # Conflict Active
         elif len(list(filter(lambda x: x['state'] in {'war', 'election', 'civilwar'},sys['active_states']))) > 0:
             thisconflict = sys["conflicts"][0]  
@@ -213,7 +216,7 @@ def Misson_Gen(argv):
             messages.append(
                 amessage(sys, 11, f'Scan System to update data {int(age.days)} days old', dIcons['data']))
 
-        # Conflict Complete Info
+        # Conflict Complete Info - Additional Message, not for Patrol, but for Discord
         if len(list(filter(lambda x: x['state'] in {'war', 'election', 'civilwar'},sys['recovering_states']))) > 0:
             thisconflict = sys["conflicts"][0]
             if thisconflict["days_won"] == dayslost(sys["system_name"],thisconflict["opponent_name"]):
@@ -252,7 +255,8 @@ def Misson_Gen(argv):
         if sum(x["system_name"] == ex[0] for x in faction_systems) == 0:
             exsys = external_system(ex[0])
             try:
-                messages.append(amessage(exsys, ex[1], ex[2]+'*', dIcons['override']))
+                messages.append(amessage(exsys, ex[1], ex[2]+'*', 
+                dIcons['override'] if ex[3] == '' else dIcons[ex[3]]))                
             except:
                 print(f'!Override Ignored : {ex[0]} {ex[2]}')
     messages.sort()
@@ -268,8 +272,10 @@ def Misson_Gen(argv):
         if len(s) == 0:
             messagechanges.append(x)
             messagechanges[len(messagechanges)-1][7] += ' : Misson Complete'
-            messagechanges[len(messagechanges)-1][8] = dIcons['info']
+            messagechanges[len(messagechanges)-1][8] = dIcons['end']
     
+    # return(None)
+
     # Write Orders various formats
     with open(f'{factionname}Patrol.Csv', 'w') as io:  # CSV for Humans
         io.writelines(f'System,X,Y,Z,Priority,Message\n')
@@ -292,7 +298,7 @@ def Misson_Gen(argv):
         for x in filter(lambda x: x[0]<11 or x[0]>20, messagechanges):
             wh_text+=f'{x[8]}{x[1]} : {x[7]}\n' 
         if wh_text != '':
-            wh.send(wh_text)
+            wh.send(f'<:canonn:231835416548999168> \n{wh_text}')
 
     # Patrol to send to Google
     patrol=[]
@@ -322,6 +328,10 @@ def assetatrisk(system_name, faction):
         return(list(filter(lambda x: x["system_name"] == system_name, getfactiondata(faction)))[0]["conflicts"][0]["stake"])
     except:
         return('')
+
+def EliteBGSDateTime(s):
+    dformat = '%Y-%m-%dT%H:%M:%S'  # so much grief from this function
+    return(datetime.strptime(s[:len(dformat)+2], dformat))  
         
 if __name__ == '__main__':
     Misson_Gen(sys.argv[1:]+["/Test2","/Test3"])
