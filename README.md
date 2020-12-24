@@ -17,3 +17,11 @@ Does not gather fresh EliteBGS API Data unless either:
  It cannout find a Faction.json
 
 Currently ran manually, but may be made to run automatically in the near future.
+
+# Reports formatting and meaning
+:dagger: [System]: Boost Canonn ... - indicates immediate threat, in most cases it needs the full arsenal of exploration data, Canonn bountie redeems, Missions and Trade.
+:Salute2:  - indicates current BGS project, in most cases gaining a system or station for Canonn.
+:chart_with_downwards_trend: [System] : Boost Canonn to crush the hopes of ...: - indicates always three systems, where Canonn could use some exploration data, bountie redeems, Missions and Trade. It's not critical, but appreciated.
+:EliteEagle: and :ballot_box: - indicating a current conflict - War or Election - Canonn is fighting. Wars are mainly about Conflictzones, and Elections mainly about Missions. You'll also find a post what else can help Canonn winning.
+:information_source:  and :canonn: - some kind of info Boffins deemed inportant enough to overwrite Numberwang.
+:anchor: Locations of Canonns BGS fleetcarriers and those, who are currently supporting BGS work.
