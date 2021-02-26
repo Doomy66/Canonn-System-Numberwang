@@ -13,7 +13,7 @@ CSNAnalysis - Very Canonn Specific - Will create a list of suggested orders, but
 
 # Utilities
 Routeploter - Utility to provide quick routes around a selection of systems for data collection purposes
-ExpansionTarget - Utility to calculate which systems will expand to where - Currently uses a lot of EliteBGS API Calls
+ExpansionTarget - Utility to calculate which systems will expand to where - Both quick and dirty EDDB and slow but accurate EliteBGS
 JournalInf - Lists all Inf related actions you have done since the last tick
 
 # Odd Bits of R&D
@@ -25,4 +25,6 @@ Spansh - Will process gigantic downloaded Spansh file for systems near your Empi
 Keys.py - Not in GIT - It has keys to Canonn Sheets and Webhooks
 
 # Release Notes
+26/02/21 ExpansionTarget now also has EDDBFramework Options. Quicker, but not live data
+26/02/21 ExpansionTarget : New Tool EDDBInvasionAlert will alert you to systems that are predicted to invade your territory
 26/02/21 EDDBFramework Added

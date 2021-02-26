@@ -13,7 +13,7 @@ def cubedist(s1, s2):
     '''
     Cube Distance between 2 systems - The maximum delta
     '''
-    return(max((abs(s1['x']-s2['x'])) , abs((s1['y']-s2['y'])) , abs((s1['z']-s2['z']))))
+    return(max(abs(s1['x']-s2['x']) , abs(s1['y']-s2['y']) , abs(s1['z']-s2['z'])))
 
 class EDDBFrame():
 
@@ -39,7 +39,7 @@ class EDDBFrame():
             with open(eddfaction_cache, 'w') as io:
                 json.dump(self.factions,io)
         else:
-            print('Using Local Cached EDDB Dump...')
+            #print('Using Local Cached EDDB Dump...')
             with open(eddpopulate_cache, 'r') as io:
                 self.systems = json.load(io)
             with open(eddfaction_cache, 'r') as io:
@@ -62,6 +62,7 @@ class EDDBFrame():
             for mf in sys['minor_faction_presences']:
                 f = self.faction(mf['minor_faction_id'])
                 mf['name'] = f['name']
+                mf['detail'] = f
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
         return sys
 
@@ -82,7 +83,7 @@ class EDDBFrame():
         '''
         Returns all Systems controled by the faction
         '''
-        print(f'.Faction Controlled {factionname}')
+        #print(f'.Faction Controlled {factionname}')
         ans = list()
         for s in self.systems:
             if s['controlling_minor_faction'] == factionname:
@@ -93,7 +94,7 @@ class EDDBFrame():
         '''
         Returns all Systems controled by the faction
         '''
-        print(f'.Faction Presence {factionname}')
+        #print(f'.Faction Presence {factionname}')
         fid = self.faction(factionname)['id']
         ans = list()
         for sys in self.systems:
@@ -108,16 +109,39 @@ class EDDBFrame():
         '''
          All Populated Systems within the cube around sysname
         '''
-        print(f'.Cube around {sysname}')
+        #print(f'.Cube around {sysname}')
         sys = self.system(sysname)
         ans = list()
-        for sys in filter(lambda x: cubedist(x,sys)<=range,self.systems):
-            ans.append(self.system(sys['name'])) # Denormalised
+        for s in filter(lambda x: cubedist(x,sys)<=range,self.systems):
+            ans.append(self.system(s['name'])) # Denormalised
         return ans
 
+    def activestates(self,sysname,conflicts=False):
+        '''
+        Returns active states for all faction in a system, with an option to only report Conflicts
+        '''
+        ans = list()
+        sys = self.system(sysname)
+        for f in sys['minor_faction_presences']:
+            for state in f['active_states']:
+                state['faction'] = f['name']
+                if state['name'] in ['Election','War','Civil War'] or not conflicts:
+                    ans.append(state)
+        return ans
+
+    def natives(self,system):
+        '''
+        Returns a list of faction names with the system (name or id) as their home system
+        '''
+        ans = list()
+        sys = self.system(system)
+        for f in self.factions:
+            if f['home_system_id'] == sys['id']:
+                ans.append(f['name'])
+        return ans
 
 if __name__ == '__main__':
-    ## Test Harness
+    ## Unit Test Harness
     g = EDDBFrame()
     varati = g.system('Varati')
     failed = g.system('I Dont Exist')
@@ -126,5 +150,6 @@ if __name__ == '__main__':
     canonnowned = g.systemscontroled('Canonn')
     canonnspace = g.systemspresent('Canonn')
     aboutvarati = g.cubearea('Varati',30)
+    homesys = g.system(18454)
 
     print('')
