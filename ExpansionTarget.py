@@ -5,26 +5,25 @@ from EDDBFramework import EDDBFrame, cubedist, sysdist
 eddb = list()
 
 
-def update_progress(progress):
+def update_progress(progress,status=''):
     # update_progress() : Displays or updates a console progress bar
     ## Accepts a float between 0 and 1. Any int will be converted to a float.
     ## A value under 0 represents a 'halt'.
     ## A value at 1 or bigger represents 100%
     barLength = 30 # Modify this to change the length of the progress bar
-    status = ""
     if isinstance(progress, int):
         progress = float(progress)
     if not isinstance(progress, float):
         progress = 0
-        status = "error: progress var must be float\r\n"
+        status = "error: progress var must be float".ljust(40)+"\r\n"
     if progress < 0:
         progress = 0
-        status = "Halt...\r\n"
+        status = "Halt...+".ljust(40)+"\r\n"
     if progress >= 1:
         progress = 1
-        status = "Done...\r\n"
+        status = "Done...".ljust(40)+"\r\n"
     block = int(round(barLength*progress))
-    text = "\rPercent: [{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), round(progress*100,1), status)
+    text = "\rPercent: [{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), round(progress*100,1), status.ljust(40))
     sys.stdout.write(text)
     sys.stdout.flush()
 
@@ -139,25 +138,25 @@ def expansionTargets(faction, knownsys=None):
         print('** No Target : '+ ', '.join(map(lambda x: f"{x['system_name']} ({sys['happytext']})", proposedNL)))
     print(f'*** Complete. Number of API Requests:{api.NREQ} ***')
 
-def EDDBExpansionFromSystem(faction, system, excluded = None,show = False):
+def EDDBExpansionFromSystem(system, excluded = None,show = False):
     '''
     Reports best expansion target for a faction from a system
     excluded can be the precalculated faction presence - If None it will be loaded (Time saver)
     '''
-    #print(f".Expansion Targets for {faction} - {system}")
-    range = 30  # Should be 30 for normal running, use a lower number during R&D
+    range = 30  # Maximum Range for Expansion
     global eddb
     if not eddb:
         eddb = EDDBFrame()
 
     # Default
-    if excluded:
-        factionpresence = excluded
-    else:
-        factionpresence = eddb.systemspresent(faction)
     sys = eddb.system(system)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
+    if excluded:
+        factionpresence = excluded
+    else:
+        factionpresence = eddb.systemspresent(sys['controlling_minor_faction'])
+
 
     sys['conflicts'] = eddb.activestates(system,True)
 
@@ -197,7 +196,6 @@ def EDDBExpansionFromSystem(faction, system, excluded = None,show = False):
                 except:
                     print(f"!! Dodgy Faction {target['name']} in {sys['name']}")
 
-
         # Sort all candidate systems in priority order
         sysInRange.sort(key=lambda x: x['sys_priority'])
 
@@ -220,15 +218,11 @@ def EDDBExpansionCandidates(faction, show=False):
     candidates = eddb.systemscontroled(faction)
     candidates = list(filter(lambda x: x['minor_faction_presences'][0]['influence'] > 70, candidates))
     candidates.sort(key=lambda x: -100*(x['minor_faction_presences'][0]['happiness_id'])+x['minor_faction_presences'][0]['influence'], reverse=True)
-    counter = 0
-    update_progress(0)
-    for c in candidates:
-        update_progress(counter/len(candidates))
-        counter += 1
-        alltargets = EDDBExpansionFromSystem(faction,c['name'],excludedtargets)
+    for counter, c in enumerate(candidates):
+        update_progress(counter/len(candidates),c['name'])
+        alltargets = EDDBExpansionFromSystem(c['name'],excludedtargets)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
-            #print(f"  {c['expansion']['name']} ({c['expansion']['expansionType']})")
             ## TODO ## Conflict check for source system
         else:
             c['expansion'] = list()
@@ -242,7 +236,7 @@ def EDDBExpansionCandidates(faction, show=False):
 
     return list(filter(lambda x: x['expansion'] , candidates))
         
-def EDDBInvasionAlert(faction,show=False):
+def EDDBInvasionAlert(faction,mininf=70, show=True):
     global eddb
     if not eddb:
         eddb = EDDBFrame()
@@ -250,19 +244,16 @@ def EDDBInvasionAlert(faction,show=False):
 
     homesystems = list((x['name'] for x in eddb.systemspresent(faction)))
     donesystems = list()
-    print(f'Checking for Invasions of {faction}:')
-    counter=0
-    for home in homesystems:
-        update_progress(counter/len(homesystems))
-        counter += 1
-        #print(f".Checking all populated systems near {home}")
+    print(f'Checking for Invasions of {faction} Systems:')
+    for counter, home in enumerate(homesystems):
+        update_progress(counter/len(homesystems),home)
         invaders = filter(lambda x: x['name'] not in homesystems 
                         and x['name'] not in donesystems 
                         and x['population'] > 0
-                        and x['minor_faction_presences'][0]['influence'] > 70
+                        and x['minor_faction_presences'][0]['influence'] > mininf
                         , eddb.cubearea(home, 30))
         for invader in invaders:
-            targets = EDDBExpansionFromSystem(invader['minor_faction_presences'][0]['name'],invader['name'])
+            targets = EDDBExpansionFromSystem(invader['name'])
             if targets and targets[0]['name'] in homesystems:
                 alertsystems.append(invader.copy())
                 alertsystems[-1]['invading']=targets[0]['name']
@@ -274,7 +265,7 @@ def EDDBInvasionAlert(faction,show=False):
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['minor_faction_presences'][0]['influence'], reverse=True)
             for alert in alertsystems:
-                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} (inf {alert['minor_faction_presences'][0]['influence']}%)")
+                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} (inf {round(alert['minor_faction_presences'][0]['influence'],1)}%)")
 
     return alertsystems
 
@@ -282,8 +273,8 @@ def EDDBInvasionAlert(faction,show=False):
 if __name__ == '__main__':
     #expansionTargets("Canonn","")
     #expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
-    #EDDBExpansionFromSystem("Canonn","Aknango",None,True)
+    #EDDBExpansionFromSystem("Aknango",None,True)
     EDDBExpansionCandidates("Canonn",True)
     print('')
-    EDDBInvasionAlert("Canonn",True)
+    EDDBInvasionAlert("Canonn",70)
     
