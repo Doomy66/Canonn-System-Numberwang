@@ -219,16 +219,20 @@ def EDDBInvasionAlert(faction,show=False):
     alertsystems = list()
 
     homesystems = list((x['name'] for x in eddb.systemspresent(faction)))
+    donesystems = list()
     for home in homesystems:
         print(f".Checking all populated systems near {home}")
-        invaders = filter(lambda x: x['name'] not in homesystems and x['population'] >0 ,eddb.cubearea(home,30))
+        invaders = filter(lambda x: x['name'] not in homesystems 
+                        and x['name'] not in donesystems 
+                        and x['population'] > 0
+                        and x['minor_faction_presences'][0]['influence'] > 70
+                        , eddb.cubearea(home, 30))
         for invader in invaders:
-            if invader['minor_faction_presences'][0]['influence'] > 70:
-                targets = EDDBExpansionFromSystem(invader['minor_faction_presences'][0]['name'],invader['name'])
-                if targets and targets[0]['name'] == home:
-                    alertsystems.append(invader.copy())
-                    alertsystems[-1]['invading']=home
-
+            targets = EDDBExpansionFromSystem(invader['minor_faction_presences'][0]['name'],invader['name'])
+            if targets and targets[0]['name'] in homesystems:
+                alertsystems.append(invader.copy())
+                alertsystems[-1]['invading']=targets[0]['name']
+            donesystems.append(invader['name'])
 
     if show:
         if alertsystems:
@@ -245,5 +249,6 @@ if __name__ == '__main__':
     #expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     #EDDBExpansionFromSystem("Canonn","Aknango",None,True)
     EDDBExpansionCandidates("Canonn",True)
+    print('')
     EDDBInvasionAlert("Canonn",True)
     
