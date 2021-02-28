@@ -1,4 +1,4 @@
-from Bubble import Bubble
+from Bubble import Bubble, update_progress
 import simplejson as json
 import os
 import sys
@@ -17,8 +17,7 @@ import api
 
 M_INFGAP = 15  # Minimum difference in Inf before issueing a mission
 M_MININF = 40  # Minimum Inf before issueing a mission
-LOCAL_OVERRIDE = False  # Use a local Override file or look up the Canonn Overrides page
-
+LOCAL_OVERRIDE = not CSNSettings.override_sheet
 
 def Misson_Gen(argv=''):
 
@@ -56,7 +55,7 @@ def Misson_Gen(argv=''):
             for x in orides[1:]:  # Yeah, can probably be done in 1 statement
                 x[1] = int(x[1])
     elif '/safe' in argv:
-        # Google Sheer Via Read
+        # Google Sheet Via Read
         orides = CSNOverRideReadSafe()
     else:
         # Google Sheet via API
@@ -89,6 +88,7 @@ def Misson_Gen(argv=''):
     # Create a single Message for each faction system
     faction_systems = dict(filter(lambda x: x[1],faction_systems.items()))
     for i, key in enumerate(faction_systems):
+        update_progress(i/len(faction_systems),key)
         sys = faction_systems[key]
         if sys:
             # Sort all factions by influence
@@ -200,7 +200,7 @@ def Misson_Gen(argv=''):
                 pending_states.append([sys["system_name"], x["state"]])
             for x in empire['recovering_states']:
                 recovering_states.append([sys["system_name"], x["state"]])
-
+    update_progress(1)
     # All Canonn Systems Processed
     # Messages for External Systems
     for ex in orides[1:]:
@@ -274,7 +274,7 @@ def Misson_Gen(argv=''):
         json.dump(messages, io, indent=4)
 
     # Discord Webhook
-    if len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 and CSNSettings.wh_id != '':
+    if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
         wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
                              adapter=RequestsWebhookAdapter())

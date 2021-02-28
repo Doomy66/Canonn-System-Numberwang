@@ -47,7 +47,7 @@ def CSNOverRideReadSafe(): # Read without Google API
     answer = []
     answer.append(['System','Priority','Mission','Emoji','Type'])
     mysheet_id = CSNSettings.override_workbook
-    if mysheet_id == '':
+    if not mysheet_id:
         return(answer)
     readaction = f'export?format=csv&gid={CSNSettings.overide_sheet}'
     url = f'https://docs.google.com/spreadsheets/d/{mysheet_id}/{readaction}'
@@ -64,7 +64,7 @@ def CSNOverRideRead():
     answer = []
     answer.append(['System','Priority','Mission'])
     mysheet_id = CSNSettings.override_workbook
-    if mysheet_id == '':
+    if not mysheet_id:
         return(answer)
     myrange = 'Overrides!A2:E'
     sheet = GoogleSheetService().spreadsheets()
@@ -85,24 +85,25 @@ def CSNOverRideRead():
 
 def CSNSchedule(now = datetime.now().hour):
     answer = []
+    if CSNSettings.override_workbook:
+        mysheet_id = CSNSettings.override_workbook
+        if not mysheet_id:
+            return(answer)
+        myrange = 'Overrides!F2:G25'
+        sheet = GoogleSheetService().spreadsheets()
 
-    mysheet_id = CSNSettings.override_workbook
-    if mysheet_id == '':
-        return(answer)
-    myrange = 'Overrides!F2:G25'
-    sheet = GoogleSheetService().spreadsheets()
+        result = sheet.values().get(spreadsheetId=mysheet_id,
+                                    range=myrange).execute()
+        values = result.get('values', [])
 
-    result = sheet.values().get(spreadsheetId=mysheet_id,
-                                range=myrange).execute()
-    values = result.get('values', [])
-
-    if not values:
-        print('No data found.')
-    else:
-        for row in values:
-            thour, task = row if len(row)==2 else row+['']  if len(row)==1 else row+['']+['']
-            if task and int(thour[0:2])==now:
-                return task
+        if not values:
+            print('No data found.')
+        else:
+            for row in values:
+                thour, task = row if len(row)==2 else row+['']  if len(row)==1 else row+['']+['']
+                if task and int(thour[0:2])==now:
+                    return task
+    return None
 
 def CSNFleetCarrierRead():
     '''
@@ -110,7 +111,7 @@ def CSNFleetCarrierRead():
     '''
     answer = list()
     mysheet_id = CSNSettings.override_workbook
-    if mysheet_id == '':
+    if not mysheet_id:
         return(answer)
     myrange = 'FC!A2:D'
     sheet = GoogleSheetService().spreadsheets()
@@ -131,11 +132,11 @@ def CSNFleetCarrierRead():
 
 def CSNPatrolWrite(answer):
     mysheet_id = CSNSettings.override_workbook
+    if not mysheet_id:
+        return('No API')
     mysheet = 'CSNPatrol'
     sheet = GoogleSheetService().spreadsheets()
 
-    if mysheet_id == '':
-        return('No API')
 
     # Datestamp my mayhem
     myrange = f'{mysheet}!H1'
@@ -224,29 +225,6 @@ def CSNAttractions(cspace):
             gSheet.append({'System': sys['system_name'], 'Body': sys['system_name'], 'Name': 'Nav Beacon', 'Type':'',
                            'Inst Type': '', 'Comments': '', 'Faction': ''})
 
-        """ Not currently needed, and no way to resolve the Body Name
-        for station in sys['stations']:
-            station['body_name'] = f'{sys["system_name"]} ({station["body_id"]})'
-            station['type'] = capwords(station['type'])
-
-            factionname = CSNFactionname(station['controlling_minor_faction_id'],factions) if station['controlling_minor_faction_id'] else None
-            if station['type'] != 'Fleet Carrier':
-                # Look for Station in Sheet
-                found = False
-                for ssline in gSheet:
-                    if ssline['System'] == sys['system_name'] and ssline['Name'] == station['name'] and ssline['Type']=='Station': # Update
-                        if ssline['Body'] != station['body_name'] or ssline['Faction'] != factionname or ssline['Inst Type'] != station['type']:
-                            ssline['Body'] = station['body_name']
-                            ssline['Inst Type'] = station['type']
-                            ssline['Faction'] = factionname
-                        found = True
-                        break
-                if not found: # Add
-                    gSheet.append({'System': sys['system_name'], 'Body': station['body_name'], 'Name': station['name'], 'Type': 'Station',
-                            'Inst Type': station['type'], 'Comments': '', 'Faction': factionname})
-        """
-
-    
 
     print('.Save Data')
     gSheet = sorted(gSheet, key=lambda x: x['System']+x['Body']+' !'+ x['Name'])

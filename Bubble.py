@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import gzip
 from os import name, system
@@ -33,6 +34,28 @@ def whereami():
             return json.load(io)['Route'][-1]['StarSystem']
     except:
         return
+
+def update_progress(progress,status=''):
+    # update_progress() : Displays or updates a console progress bar
+    ## Accepts a float between 0 and 1. Any int will be converted to a float.
+    ## A value under 0 represents a 'halt'.
+    ## A value at 1 or bigger represents 100%
+    barLength = 30 # Modify this to change the length of the progress bar
+    if isinstance(progress, int):
+        progress = float(progress)
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float".ljust(40)+"\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...+".ljust(40)+"\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "Done...".ljust(40)+"\r\n"
+    block = int(round(barLength*progress))
+    text = "\rPercent: [{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), round(progress*100,1), status.ljust(40))
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 class Bubble():
     factionnames = CSNSettings.factionnames
@@ -158,16 +181,14 @@ class Bubble():
             faction_systems += api.getfaction(faction)['faction_presence']
 
         # Loop through all the systems that the faction is present in
-        for sys in faction_systems:
-
+        for counter, sys in enumerate(faction_systems):
+            update_progress(counter/len(faction_systems),sys['system_name'])
             # Previous Run
             # NB updated_at do not always match between Faction and System
             if sys['system_name'] in localSpace and localSpace[sys['system_name']] and sys['updated_at'] == localSpace[sys['system_name']]['updated_at']:
                 # Same or broken api call
                 pass
             else:
-                print(f", {sys['system_name']}", end='')
-                print(f"...", end='')
                 localSpace[sys['system_name']] = api.getsystem(sys['system_name'],True)
                 if not localSpace[sys['system_name']]:
                     continue
@@ -195,7 +216,7 @@ class Bubble():
         with open(myfile, 'w') as io:
             json.dump(localSpace, io)
 
-        print(f'\nBase Date Generated')
+        update_progress(1,'Base Date Generated')
         return localSpace
 
     def canonndist(self,sys):
@@ -284,7 +305,5 @@ class Bubble():
 
 if __name__ == '__main__':
     bubble = Bubble()
-    x = bubble.findsystem('HIP 54529')
-    print(x)
     print(F'Done in {api.NREQ}')
     #bubble.SpamSpanch(bubble.SPANSH1MON)
