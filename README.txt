@@ -26,5 +26,5 @@ Keys.py - Not in GIT - It has keys to Canonn Sheets and Webhooks
 
 # Release Notes
 26/02/21 ExpansionTarget now also has EDDBFramework Options. Quicker, but not live data
-26/02/21 ExpansionTarget : New Tool EDDBInvasionAlert will alert you to systems that are predicted to invade your territory
+26/02/21 ExpansionTarget : New Tool InvasionAlert will alert you to systems that are predicted to invade your territory
 26/02/21 EDDBFramework Added
