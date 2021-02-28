@@ -94,7 +94,7 @@ class EDDBFrame():
 
     def systemspresent(self,factionname):
         '''
-        Returns all Systems controled by the faction
+        Returns list of systems (Syustem Name only) controled by the faction
         '''
         faction = next((x for x in self.factions if x['name'] == factionname),None)
         if 'faction_presence' not in faction.keys():
