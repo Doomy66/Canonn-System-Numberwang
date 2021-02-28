@@ -115,10 +115,10 @@ def EBGS_expansionTargets(faction, knownsys=None):
         print('** No Target : '+ ', '.join(map(lambda x: f"{x['system_name']} ({sys['happytext']})", proposedNL)))
     print(f'*** Complete. Number of API Requests:{api.NREQ} ***')
 
-def ExpansionFromSystem(system, show = False):
+def ExpansionFromSystem(system, show = False, ingorefaction = False):
     '''
     Reports best expansion target for a faction from a system
-    excluded can be the precalculated faction presence - If None it will be loaded (Time saver)
+    ignorefaction option will ignore who owns the faction - for long term planning where ownership may change.
     '''
     range = 30  # Maximum Range for Expansion
     global eddb
@@ -129,8 +129,7 @@ def ExpansionFromSystem(system, show = False):
     sys = eddb.system(system)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
-    factionpresence = eddb.systemspresent(sys['controlling_minor_faction'])
-
+    factionpresence = eddb.systemspresent(sys['controlling_minor_faction']) if not ingorefaction else list()
 
     sys['conflicts'] = eddb.activestates(system,True)
 
