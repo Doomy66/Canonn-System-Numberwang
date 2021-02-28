@@ -63,7 +63,9 @@ class EDDBFrame():
                 f = self.faction(mf['minor_faction_id'])
                 mf['name'] = f['name']
                 mf['detail'] = f
+            # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
+            sys['influence'] = sys['minor_faction_presences'][0]['influence'] if sys['minor_faction_presences'] else 0
         return sys
 
     def faction(self,idorname):
@@ -94,16 +96,16 @@ class EDDBFrame():
         '''
         Returns all Systems controled by the faction
         '''
-        #print(f'.Faction Presence {factionname}')
-        fid = self.faction(factionname)['id']
-        ans = list()
-        for sys in self.systems:
-            #print(sys['name'])
-            for f in sys['minor_faction_presences']:
-                if f['minor_faction_id'] == fid:
-                    ans.append(self.system(sys['name'])) # Denormalised
-
-        return ans
+        faction = next((x for x in self.factions if x['name'] == factionname),None)
+        if 'faction_presence' not in faction.keys():
+            ## not yet cached
+            ans = list()
+            for sys in self.systems:
+                for f in sys['minor_faction_presences']:
+                    if f['minor_faction_id'] == faction['id']:
+                        ans.append(self.system(sys['name'])) # Denormalised
+            faction['faction_presence'] = ans # cache the result
+        return faction['faction_presence']
 
     def cubearea(self,sysname,range):
         '''
