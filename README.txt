@@ -26,6 +26,7 @@ Keys_Canonn.py - Not in GIT - It has keys to Canonn Sheets and Webhooks, use Key
 Have a "data" subfolder to read/write json/csv/txt
 
 # Release Notes
+01/03/21 ExpansionTarget now has InvasionRoute to calculate managed expansion between 2 systems
 26/02/21 ExpansionTarget now also has EDDBFramework Options. Quicker, but not live data
 26/02/21 ExpansionTarget : New Tool InvasionAlert will alert you to systems that are predicted to invade your territory
 26/02/21 EDDBFramework Added

@@ -245,13 +245,15 @@ def InvasionAlert(faction,mininf=70, show=True):
 
     return alertsystems
 
-def InvasionRoute(fromsys,tosys,maxcycles = 5):
+def InvasionRoute(fromsys,tosys,maxcycles = 10):
     '''
     Will calculate the quickest controlled expansion route between 2 systems.
     maxcycles is the number of additional cycles you are prepared to wait at each system
     '''
-   
     def spider(route,tosys,maxcycles=10):
+        '''
+        recursive depth first
+        '''
         global allroutes
         global bestdist 
         global tdepth
@@ -259,23 +261,18 @@ def InvasionRoute(fromsys,tosys,maxcycles = 5):
         currentdist = sysdist(currentsys,tosys)
         routedist = currentsys['routedist'] if 'routedist' in currentsys.keys() else 0
         db = list(x['name'] for x in route)
-        if bestdist and routedist > bestdist: #exit - route is too long - Not really using this anymore, is checked pre-call
-            pass
-        elif currentsys['name'] == tosys['name']: #reached the end
-            print(f' ! Route Found : Total Phases {routedist}')
+        if currentsys['name'] == tosys['name']: #reached the end
+            print(f'! Route Found : Total Phases {routedist}')
             if (not bestdist) or routedist < bestdist:
                 allroutes.append(route.copy())
-                for r in route:
-                    r['best'] = r['routedist']
                 bestdist = min(routedist,bestdist) if bestdist else routedist
-                ## TODO - Maybe now apply the current distance for each system in route as a BEST, to allow shortcutting ?
         else: # take the next set of expansions
             exp = ExpansionFromSystem(currentsys['name'],False,route)
             for sys in exp[:maxcycles]:
                 routedist += 1 if sys['expansionType'][0]=='S' else 2
-                
-                # prevent backtracking
                 sys['routedist'] = routedist
+
+                # prevent backtracking
                 if 'best' not in sys.keys():        
                     sys['best'] = sys['routedist']+1
                 else:
@@ -320,7 +317,6 @@ def InvasionRoute(fromsys,tosys,maxcycles = 5):
     else:
         print('Failed for some unknown reason')
     
-
     return
 
 
@@ -332,7 +328,6 @@ if __name__ == '__main__':
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Gliese 506.2",True)
     #ExpansionCandidates("Canonn",True)
-    #print('')
     #InvasionAlert("Canonn",60)
-    InvasionRoute('Varati','Merope',10)
+    InvasionRoute('Varati','Merope')
     
