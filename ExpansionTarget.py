@@ -115,7 +115,7 @@ def EBGS_expansionTargets(faction, knownsys=None):
         print('** No Target : '+ ', '.join(map(lambda x: f"{x['system_name']} ({sys['happytext']})", proposedNL)))
     print(f'*** Complete. Number of API Requests:{api.NREQ} ***')
 
-def ExpansionFromSystem(system, show = False, factionpresence = None):
+def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked = None):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -131,6 +131,9 @@ def ExpansionFromSystem(system, show = False, factionpresence = None):
     sys['priority'] = 1000
     if not factionpresence:
         factionpresence = eddb.systemspresent(sys['controlling_minor_faction'])
+    
+    if prebooked:
+        factionpresence.append(eddb.system(prebooked))
 
     sys['conflicts'] = eddb.activestates(system,True)
 
@@ -183,7 +186,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None):
                     print(f" {cand['name']} : {cand['expansionType']}")
     return sysInRange
 
-def ExpansionCandidates(faction, show=False):
+def ExpansionCandidates(faction, show=False, prebooked=None):
     global eddb
     print(f"Expansion Candidates for {faction}:")
     if not eddb:
@@ -193,7 +196,7 @@ def ExpansionCandidates(faction, show=False):
     candidates.sort(key=lambda x: -100*(x['minor_faction_presences'][0]['happiness_id'])+x['influence'], reverse=True)
     for counter, c in enumerate(candidates):
         update_progress(counter/len(candidates),c['name'])
-        alltargets = ExpansionFromSystem(c['name'])
+        alltargets = ExpansionFromSystem(c['name'],False,None,prebooked)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
             ## TODO ## Conflict check for source system
@@ -327,7 +330,7 @@ if __name__ == '__main__':
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Gliese 506.2",True)
-    #ExpansionCandidates("Canonn",True)
-    #InvasionAlert("Canonn",60)
-    InvasionRoute('Varati','Merope')
+    ExpansionCandidates("Canonn",True,"Kashis")
+    InvasionAlert("Canonn",60)
+    #InvasionRoute('Varati','Merope')
     
