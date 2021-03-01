@@ -20,30 +20,38 @@ class EDDBFrame():
     def __init__(self):
         EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
-        eddpopulate_cache = 'Data\EDDBSystemCache.json'
-        eddfaction_cache = 'Data\EDDBFactionCache.json'
+        self._eddpopulate_cache = 'Data\EDDBSystemCache.json'
+        self._eddfaction_cache = 'Data\EDDBFactionCache.json'
 
         ## Get EDDB Data either from local cache or download a dump
-        if (not os.path.exists(eddpopulate_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(eddpopulate_cache))).seconds > 3*60*60:
+        if (not os.path.exists(self._eddpopulate_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddpopulate_cache))).seconds > 3*60*60:
             ## Download Nightly Dumps from EDDB if older than 3 hours
             print('Downloading from EDDB Dump...')
             req = urllib.request.Request(EDDBPOPULATED)
             with urllib.request.urlopen(req) as response:
                 self.systems = json.loads(response.read().decode('utf8'))
-            with open(eddpopulate_cache, 'w') as io:
-                json.dump(self.systems,io)
 
             req = urllib.request.Request(EDDBFACTIONS)
             with urllib.request.urlopen(req) as response:
                 self.factions = json.loads(response.read().decode('utf8'))
-            with open(eddfaction_cache, 'w') as io:
-                json.dump(self.factions,io)
+
+            self.savecache()
+
         else:
             #print('Using Local Cached EDDB Dump...')
-            with open(eddpopulate_cache, 'r') as io:
+            with open(self._eddpopulate_cache, 'r') as io:
                 self.systems = json.load(io)
-            with open(eddfaction_cache, 'r') as io:
+            with open(self._eddfaction_cache, 'r') as io:
                 self.factions = json.load(io)
+        return
+
+    def savecache(self):
+        print('Saving EDDB Dump Cache...')
+        with open(self._eddpopulate_cache, 'w') as io:
+            json.dump(self.systems,io)
+        with open(self._eddfaction_cache, 'w') as io:
+            json.dump(self.factions,io)
+        return
 
     def system(self,idorname):
         ''' 
@@ -114,9 +122,18 @@ class EDDBFrame():
         #print(f'.Cube around {sysname}')
         sys = self.system(sysname)
         ans = list()
-        for s in filter(lambda x: cubedist(x,sys)<=range,self.systems):
-            ans.append(self.system(s['name'])) # Denormalised
+        if range==30: #expansion request
+            if 'xcube' in sys.keys(): #cached
+                ans = sys['xcube']
+        
+        if not ans:
+            for s in filter(lambda x: cubedist(x,sys)<=range,self.systems):
+                ans.append(self.system(s['name'])) # Denormalised
+
+        if range==30 and 'xcube' not in sys.keys(): # save cache
+            sys['xcube'] = ans
         return ans
+
 
     def activestates(self,sysname,conflicts=False):
         '''
@@ -151,6 +168,7 @@ if __name__ == '__main__':
     failed = g.faction('I Dont Exist')
     canonnowned = g.systemscontroled('Canonn')
     canonnspace = g.systemspresent('Canonn')
+    aboutvarati = g.cubearea('Varati',30)
     aboutvarati = g.cubearea('Varati',30)
     homesys = g.system(18454)
 
