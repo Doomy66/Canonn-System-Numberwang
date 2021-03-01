@@ -115,10 +115,10 @@ def EBGS_expansionTargets(faction, knownsys=None):
         print('** No Target : '+ ', '.join(map(lambda x: f"{x['system_name']} ({sys['happytext']})", proposedNL)))
     print(f'*** Complete. Number of API Requests:{api.NREQ} ***')
 
-def ExpansionFromSystem(system, show = False, ingorefaction = False):
+def ExpansionFromSystem(system, show = False, factionpresence = None):
     '''
     Reports best expansion target for a faction from a system
-    ignorefaction option will ignore who owns the faction - for long term planning where ownership may change.
+    factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
     '''
     range = 30  # Maximum Range for Expansion
     global eddb
@@ -129,7 +129,8 @@ def ExpansionFromSystem(system, show = False, ingorefaction = False):
     sys = eddb.system(system)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
-    factionpresence = eddb.systemspresent(sys['controlling_minor_faction']) if not ingorefaction else list()
+    if not factionpresence:
+        factionpresence = eddb.systemspresent(sys['controlling_minor_faction'])
 
     sys['conflicts'] = eddb.activestates(system,True)
 
@@ -209,6 +210,9 @@ def ExpansionCandidates(faction, show=False):
     return list(filter(lambda x: x['expansion'] , candidates))
         
 def InvasionAlert(faction,mininf=70, show=True):
+    '''
+    Will report all systems that would expand into a faction system 
+    '''
     global eddb
     if not eddb:
         eddb = EDDBFrame()
@@ -241,6 +245,89 @@ def InvasionAlert(faction,mininf=70, show=True):
 
     return alertsystems
 
+def InvasionRoute(fromsys,tosys,maxcycles = 5):
+    '''
+    Will calculate the quickest controlled expansion route between 2 systems.
+    maxcycles is the number of additional cycles you are prepared to wait at each system
+    '''
+    def newnode(l,r,phases=0,desc=''):
+        '''
+        l = from, t = to, phases = number of phases to process for that expansion
+        total = running total of phases during a route
+        name = denormalisation so can be used as a replacement for factionpresense
+        '''
+        return {'l':l, 'r':r, 'phases':phases,'total':0,'name':l, 'desc':desc}
+    
+    def nextstep(nodes,tosys,route,bestdist):
+        global allroutes
+        currentsys = route[-1]['r']
+        currentdist = route[-1]['total']
+        if bestdist and currentdist > bestdist: #exit - route is too long
+            pass
+        elif currentsys == tosys: #reached the end
+            print(f'Route Found : Systems = {len(route)}, Total Phases {currentdist}')
+            if (not bestdist) or currentdist <= bestdist:
+                allroutes.append(route.copy())
+                bestdist = min(currentdist,bestdist) if bestdist else currentdist
+        else: # take the next step
+            for node in filter(lambda x: x['l']==currentsys,nodes):
+                route.append(node)
+                route[-1]['total'] = currentdist + node['phases']
+                nextstep(nodes,tosys,route,bestdist)
+        route.pop()
+        return
+
+    global eddb, allroutes
+    print(f"Invasion Route from {fromsys} to {tosys}:")
+    if not eddb:
+        eddb = EDDBFrame()
+    nodes = list()
+    nodes.append(newnode('',fromsys)) # put Start System as a node
+    #nodes = [newnode('',fromsys)]
+    #nodes += [newnode('',fromsys)] 
+    
+    startsys = eddb.system(fromsys) # for distance calcs     
+    destsys = eddb.system(tosys) # for distance calcs
+    totaldist = sysdist(startsys,destsys) # for progress bar
+
+    print('.Generate Nodes')
+    for n in nodes: # nodes increases within the loop, no need for an external loop
+        if not next((x for x in nodes if x['l'] == n['r']),False): # skip if right has already been processed
+            sysl = eddb.system(n['r'])
+            currentdist = sysdist(sysl,destsys)
+            update_progress((totaldist-currentdist)/(1+totaldist),sysl['name'])
+
+            exp = ExpansionFromSystem(sysl['name'],False,nodes)
+            nphases = 0
+            options = list((x['name'] for x in exp))
+            for sysr in exp[:maxcycles]:
+                nphases += 1 if sysr['expansionType'][0]=='S' else 2
+                if sysdist(sysr,destsys) < currentdist: # must be closer to destination
+                    nodes.append(newnode(sysl['name'],sysr['name'],nphases,sysr['expansionType']))
+    update_progress(1)
+    allroutes = list()
+    if not next((x for x in nodes if x['r'] == tosys),False):
+        print('Nodes Failed! Try a higher maxcycles')
+    else:
+        print(f"Nodes Done {len(nodes)}")
+
+        print('Recursing Nodes for best route')
+        nextstep(nodes,tosys,[newnode('',fromsys)],None)
+
+    if allroutes:
+        allroutes.sort(key=lambda x: x[-1]['total'])
+        print(f"Route from {fromsys} to {tosys}:")
+        for n in allroutes[0][1:]:
+            print(f"{n['l']} to {n['r']} {n['desc']} ({n['phases']} = {n['total']}) ")
+    else:
+        print('Failed for some unknown reason')
+    
+    ## TODO = Due to l->r phase being different depending on route, 2 phase wont work, 
+    # or at least phases and faction presence is ROUTE dependant (including systems in unused phases)
+    # may have to be slow single phase
+
+    return
+
 
 if __name__ == '__main__':
     ## These functions use EliteBGS API, so the data is live, but uses a LOT of API Calls and is the slower method
@@ -249,7 +336,8 @@ if __name__ == '__main__':
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Aknango",None,True)
-    ExpansionCandidates("Canonn",True)
-    print('')
-    InvasionAlert("Canonn",70)
+    #ExpansionCandidates("Canonn",True)
+    #print('')
+    #InvasionAlert("Canonn",60)
+    InvasionRoute('Varati','Bactrimpox',10)
     
