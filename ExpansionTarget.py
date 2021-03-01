@@ -178,7 +178,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None):
         if not sysInRange or sysInRange[0]['sys_priority'] == 1000:
             print(f" ! No Candidates ")
         else:
-            for cand in sysInRange[:4]:
+            for cand in sysInRange:#[:4]:
                 if cand['sys_priority'] != 1000:
                     print(f" {cand['name']} : {cand['expansionType']}")
     return sysInRange
@@ -250,81 +250,76 @@ def InvasionRoute(fromsys,tosys,maxcycles = 5):
     Will calculate the quickest controlled expansion route between 2 systems.
     maxcycles is the number of additional cycles you are prepared to wait at each system
     '''
-    def newnode(l,r,phases=0,desc=''):
-        '''
-        l = from, t = to, phases = number of phases to process for that expansion
-        total = running total of phases during a route
-        name = denormalisation so can be used as a replacement for factionpresense
-        '''
-        return {'l':l, 'r':r, 'phases':phases,'total':0,'name':l, 'desc':desc}
-    
-    def nextstep(nodes,tosys,route,bestdist):
+   
+    def spider(route,tosys,maxcycles=10):
         global allroutes
-        currentsys = route[-1]['r']
-        currentdist = route[-1]['total']
-        if bestdist and currentdist > bestdist: #exit - route is too long
+        global bestdist 
+        global tdepth
+        currentsys = route[-1]
+        currentdist = sysdist(currentsys,tosys)
+        routedist = currentsys['routedist'] if 'routedist' in currentsys.keys() else 0
+        db = list(x['name'] for x in route)
+        if bestdist and routedist > bestdist: #exit - route is too long - Not really using this anymore, is checked pre-call
             pass
-        elif currentsys == tosys: #reached the end
-            print(f'Route Found : Systems = {len(route)}, Total Phases {currentdist}')
-            if (not bestdist) or currentdist <= bestdist:
+        elif currentsys['name'] == tosys['name']: #reached the end
+            print(f' ! Route Found : Total Phases {routedist}')
+            if (not bestdist) or routedist < bestdist:
                 allroutes.append(route.copy())
-                bestdist = min(currentdist,bestdist) if bestdist else currentdist
-        else: # take the next step
-            for node in filter(lambda x: x['l']==currentsys,nodes):
-                route.append(node)
-                route[-1]['total'] = currentdist + node['phases']
-                nextstep(nodes,tosys,route,bestdist)
-        route.pop()
+                for r in route:
+                    r['best'] = r['routedist']
+                bestdist = min(routedist,bestdist) if bestdist else routedist
+                ## TODO - Maybe now apply the current distance for each system in route as a BEST, to allow shortcutting ?
+        else: # take the next set of expansions
+            exp = ExpansionFromSystem(currentsys['name'],False,route)
+            for sys in exp[:maxcycles]:
+                routedist += 1 if sys['expansionType'][0]=='S' else 2
+                
+                # prevent backtracking
+                sys['routedist'] = routedist
+                if 'best' not in sys.keys():        
+                    sys['best'] = sys['routedist']+1
+                else:
+                    sys['best'] = min(sys['best'],sys['routedist']+1) 
+                
+                route.append(sys.copy()) # expand
+                xdist = sysdist(sys,destsys)
+                if xdist < currentdist and ((not bestdist) or routedist<bestdist) and (sys['best'] > routedist): # follow the expansion if it is usefull
+                    tdepth += 1
+                    print(' '*tdepth+f"{currentsys['name']} > {sys['name']} ({routedist}) ({round(xdist,1)})")
+                    spider(route,tosys,maxcycles)
+
+            # all done, pop the route off
+            for sys in exp[:maxcycles]:
+                routedist -= 1 if sys['expansionType'][0]=='S' else 2
+                route.pop()
+        tdepth -= 1
         return
 
-    global eddb, allroutes
+    global eddb, allroutes, bestdist, tdepth
     print(f"Invasion Route from {fromsys} to {tosys}:")
     if not eddb:
         eddb = EDDBFrame()
-    nodes = list()
-    nodes.append(newnode('',fromsys)) # put Start System as a node
-    #nodes = [newnode('',fromsys)]
-    #nodes += [newnode('',fromsys)] 
     
     startsys = eddb.system(fromsys) # for distance calcs     
     destsys = eddb.system(tosys) # for distance calcs
     totaldist = sysdist(startsys,destsys) # for progress bar
 
-    print('.Generate Nodes')
-    for n in nodes: # nodes increases within the loop, no need for an external loop
-        if not next((x for x in nodes if x['l'] == n['r']),False): # skip if right has already been processed
-            sysl = eddb.system(n['r'])
-            currentdist = sysdist(sysl,destsys)
-            update_progress((totaldist-currentdist)/(1+totaldist),sysl['name'])
-
-            exp = ExpansionFromSystem(sysl['name'],False,nodes)
-            nphases = 0
-            options = list((x['name'] for x in exp))
-            for sysr in exp[:maxcycles]:
-                nphases += 1 if sysr['expansionType'][0]=='S' else 2
-                if sysdist(sysr,destsys) < currentdist: # must be closer to destination
-                    nodes.append(newnode(sysl['name'],sysr['name'],nphases,sysr['expansionType']))
-    update_progress(1)
+    route = [startsys]
+    route[0]['expansionType'] = 'Home'
+    route[0]['routedist'] = 0
     allroutes = list()
-    if not next((x for x in nodes if x['r'] == tosys),False):
-        print('Nodes Failed! Try a higher maxcycles')
-    else:
-        print(f"Nodes Done {len(nodes)}")
-
-        print('Recursing Nodes for best route')
-        nextstep(nodes,tosys,[newnode('',fromsys)],None)
+    bestdist = None
+    tdepth = 0
+    spider(route,destsys,30)
 
     if allroutes:
-        allroutes.sort(key=lambda x: x[-1]['total'])
-        print(f"Route from {fromsys} to {tosys}:")
-        for n in allroutes[0][1:]:
-            print(f"{n['l']} to {n['r']} {n['desc']} ({n['phases']} = {n['total']}) ")
+        allroutes.sort(key=lambda x: x[-1]['routedist'])
+        print(f"\n**Route from {fromsys} to {tosys}:")
+        for n in allroutes[0]:
+            print(f"{n['name']} : {n['expansionType']} ({n['routedist']})")
     else:
         print('Failed for some unknown reason')
     
-    ## TODO = Due to l->r phase being different depending on route, 2 phase wont work, 
-    # or at least phases and faction presence is ROUTE dependant (including systems in unused phases)
-    # may have to be slow single phase
 
     return
 
@@ -335,9 +330,9 @@ if __name__ == '__main__':
     #EBGS_expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
-    #ExpansionFromSystem("Aknango",None,True)
+    #ExpansionFromSystem("Gliese 506.2",True)
     #ExpansionCandidates("Canonn",True)
     #print('')
     #InvasionAlert("Canonn",60)
-    InvasionRoute('Varati','Bactrimpox',10)
+    InvasionRoute('Varati','Merope',10)
     
