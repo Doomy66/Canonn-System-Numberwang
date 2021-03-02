@@ -253,18 +253,17 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
     Will calculate the quickest controlled expansion route between 2 systems.
     maxcycles is the number of additional cycles you are prepared to wait at each system
     '''
-    def spider(route,tosys,maxcycles=10):
+    global eddb
+    def spider():
         '''
         recursive depth first
         '''
-        global allroutes
-        global bestdist 
-        global tdepth
+        nonlocal route, allroutes, bestdist, tdepth
         currentsys = route[-1]
-        currentdist = sysdist(currentsys,tosys)
+        currentdist = sysdist(currentsys,destsys)
         routedist = currentsys['routedist'] if 'routedist' in currentsys.keys() else 0
         db = list(x['name'] for x in route)
-        if currentsys['name'] == tosys['name']: #reached the end
+        if currentsys['name'] == destsys['name']: #reached the end
             print(f'! Route Found : Total Phases {routedist}')
             if (not bestdist) or routedist < bestdist:
                 allroutes.append(route.copy())
@@ -286,7 +285,7 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
                 if xdist < currentdist and ((not bestdist) or routedist<bestdist) and (sys['best'] > routedist): # follow the expansion if it is usefull
                     tdepth += 1
                     print(' '*tdepth+f"{currentsys['name']} > {sys['name']} ({routedist}) ({round(xdist,1)})")
-                    spider(route,tosys,maxcycles)
+                    spider()
 
             # all done, pop the route off
             for sys in exp[:maxcycles]:
@@ -295,7 +294,6 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
         tdepth -= 1
         return
 
-    global eddb, allroutes, bestdist, tdepth
     print(f"Invasion Route from {fromsys} to {tosys}:")
     if not eddb:
         eddb = EDDBFrame()
@@ -310,7 +308,8 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
     allroutes = list()
     bestdist = None
     tdepth = 0
-    spider(route,destsys,30)
+    maxcycles = 30
+    spider()
 
     if allroutes:
         allroutes.sort(key=lambda x: x[-1]['routedist'])
@@ -330,7 +329,7 @@ if __name__ == '__main__':
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Gliese 506.2",True)
-    ExpansionCandidates("Canonn",True,"Kashis")
-    InvasionAlert("Canonn",60)
-    #InvasionRoute('Varati','Merope')
+    #ExpansionCandidates("Canonn",True,"Kashis")
+    #InvasionAlert("Canonn",60)
+    InvasionRoute('Varati','Sol')
     
