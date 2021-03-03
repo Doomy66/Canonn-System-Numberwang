@@ -329,7 +329,7 @@ if __name__ == '__main__':
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Gliese 506.2",True)
-    #ExpansionCandidates("Canonn",True,"Kashis")
-    #InvasionAlert("Canonn",60)
-    InvasionRoute('Varati','Sol')
+    ExpansionCandidates("Canonn",True,"Kashis")
+    InvasionAlert("Canonn",60)
+    #InvasionRoute('Varati','Sol')
     

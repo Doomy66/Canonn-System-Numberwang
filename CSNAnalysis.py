@@ -4,6 +4,7 @@ import os
 import sys
 import csv
 import CSNSettings
+from ExpansionTarget import InvasionAlert
 from discord import Webhook, RequestsWebhookAdapter
 from datetime import datetime
 from Overrides import CSNAttractions, CSNOverRideRead, CSNSchedule
@@ -212,6 +213,12 @@ def Misson_Gen(argv=''):
             else:
                 print(f'!Override Ignored : {ex[0]} {ex[2]}')
 
+    # Invasion Alert
+    invaders = InvasionAlert(factionnames[0])
+    for sys in invaders:
+        sys["system_name"] = sys["name"]
+        messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} : Undermine their Influence ({round(sys['influence'],1)}%)",dIcons['infgap']))
+
     # Lowest Gaps for PUSH message
     l = list(filter(lambda x: faction_systems[x]['override'] == 'Addition' or not hasmessage(
         messages, faction_systems[x]['system_name']), faction_systems))
@@ -306,7 +313,7 @@ def hasmessage(messages, sysname):
     return False
 
 def amessage(sys, p, message, icon='', empire=''):
-    return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' else empire, message, icon])
+    return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon])
 
 def availableactions(system,factionnames):
     '''
