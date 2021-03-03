@@ -67,6 +67,12 @@ def Misson_Gen(argv=''):
             oldmessage = json.load(io)
     except:
         oldmessage = []
+        
+    try:
+        with open(f'data\\{factionnames[0]}Invaders.json', 'r') as io:
+            invaders = json.load(io)
+    except:
+        invaders = []
 
     messages = []
     active_states = []
@@ -214,9 +220,13 @@ def Misson_Gen(argv=''):
                 print(f'!Override Ignored : {ex[0]} {ex[2]}')
 
     # Invasion Alert
-    invaders = InvasionAlert(factionnames[0])
+    if '/new' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
+        invaders = InvasionAlert(factionnames[0])
     for sys in invaders:
         sys["system_name"] = sys["name"]
+        # trim spurious data that was giving circular reference errors when trying to save
+        sys['minor_faction_presences'] = list() 
+        sys['xcube'] = list()
         messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} : Undermine their Influence ({round(sys['influence'],1)}%)",dIcons['infgap']))
 
     # Lowest Gaps for PUSH message
@@ -279,6 +289,8 @@ def Misson_Gen(argv=''):
             lambda x: x[0] < 11 or x[0] > 20, messagechanges))
     with open(f'data\\{factionnames[0]}Message.json', 'w') as io:  # Dump to file for comparison next run
         json.dump(messages, io, indent=4)
+    with open(f'data\\{factionnames[0]}Invaders.json', 'w') as io:  # Dump to file for comparison next run
+        json.dump(invaders, io, indent=4)
 
     # Discord Webhook
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
