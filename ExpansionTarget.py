@@ -149,6 +149,10 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
             target['sys_priority'] = 1000
             target['expansionType'] = 'None'
             target['cubedist'] = cubedist(target,sys)
+            target['pf'] = list()
+            for pf in target['minor_faction_presences']:
+                if pf['detail']['is_player_faction'] == True:
+                    target['pf'].append(pf['name'])
             # System Priorties : 0 < Simple Expansion Dist < 100 < Extended Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 1000 < Nothing Found
             # Simple Expansion
             if cubedist(target,sys) <= 20 and len(target['minor_faction_presences']) < 7:
@@ -183,7 +187,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
         else:
             for cand in sysInRange:#[:4]:
                 if cand['sys_priority'] != 1000:
-                    print(f" {cand['name']} : {cand['expansionType']}")
+                    print(f" {cand['name']} : {cand['expansionType']} {'('+', '.join(cand['pf'])+')' if cand['pf'] else ''}")
     return sysInRange
 
 def ExpansionCandidates(faction, show=False, prebooked=None):
@@ -199,7 +203,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None):
         alltargets = ExpansionFromSystem(c['name'],False,None,prebooked)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
-            ## TODO ## Conflict check for source system
+            ## TODO ## Conflict check for source system - Not really worth it while Happiness is so broken
         else:
             c['expansion'] = list()
     update_progress(1)
@@ -208,7 +212,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None):
         print(f"Expansion Candidates for {faction}:")
         for c in candidates:
             if c['expansion']:
-                print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} > {c['expansion']['name']} ({c['expansion']['expansionType']})")
+                print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} > {c['expansion']['name']} ({c['expansion']['expansionType']}) {'['+', '.join(c['expansion']['pf'])+']' if c['expansion']['pf'] else ''}")
 
     return list(filter(lambda x: x['expansion'] , candidates))
         
@@ -244,7 +248,7 @@ def InvasionAlert(faction,mininf=70, show=True):
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['influence'], reverse=True)
             for alert in alertsystems:
-                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} (inf {round(alert['influence'],1)}%)")
+                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} (inf {round(alert['influence'],1)}%) ")
 
     return alertsystems
 
@@ -329,7 +333,7 @@ if __name__ == '__main__':
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Parinta",True)
-    #ExpansionCandidates("Canonn",True)
-    InvasionAlert("Canonn")
+    ExpansionCandidates("Canonn",True)
+    #InvasionAlert("Canonn")
     #InvasionRoute('Varati','Sol')
     
