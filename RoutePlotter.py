@@ -1,5 +1,5 @@
 import json
-from Bubble import whereami
+from Bubble import whereami, update_progress
 import api
 
 
@@ -85,7 +85,7 @@ def printRoute(route, title):
 if __name__ == '__main__':
     # What list of systems do want to use ?
     faction = 'Canonn'
-    faction = "Marquis du Ma'a"
+    #faction = "Marquis du Ma'a"
     mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol'][1]
 
     # Look in Journals so you start the route in your current location 
@@ -101,19 +101,11 @@ Mahatrents
 Ngundjedes
 Sekenks""".split('\n')
     elif mode == 'Full Tour':  # All Faction Systems
-        systems = api.getfaction(faction)['faction_presence']
-        for sys in systems:
-            system_names.append(sys['system_name'])
+        system_names += list(map(lambda x: x['system_name'],api.getfaction(faction)['faction_presence']))
     elif mode == 'Expansion Check':  # All factio Systems over 70% Inf
-        systems = api.getfaction(faction)['faction_presence']
-        for sys in systems:
-            if sys['influence'] >= 0.70:
-                system_names.append(sys['system_name'])
+        system_names += list(map(lambda x: x['system_name'],filter(lambda x: x['influence'] >= 0.70,api.getfaction(faction)['faction_presence'])))
     elif mode == 'Patrol':  # All Systems mentioned on the CSNPatrol
-        patrol = api.CSNPatrol()
-        for patrolLine in patrol:
-            if patrolLine['icon'] not in [':information_source: ', ':clap: ', ':anchor: ']:
-                system_names.append(patrolLine['system'])
+        system_names += list(map(lambda x: x['system_name'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
 
     # Now we have a simple list of the system names, get full system data
     route = list()
