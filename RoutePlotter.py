@@ -55,11 +55,11 @@ def tsales(croute, cdist, rroute, best):
     return(best)
 
 
-def HeatDeath():
+def HeatDeath(faction):
     '''
     An early attempt to give the traveling salesman run a fighting chance by supplying the simple route as a starting point
     '''
-    startlist = api.getfaction('Canonn')['faction_presence']
+    startlist = api.getfaction(faction)['faction_presence']
 
     answer = simple(startlist[0], startlist[1::].copy(), None)
     answer = tsales(list(), 0, answer['route'][:], None)
@@ -84,7 +84,9 @@ def printRoute(route, title):
 
 if __name__ == '__main__':
     # What list of systems do want to use ?
-    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol'][3]
+    faction = 'Canonn'
+    faction = "Marquis du Ma'a"
+    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol'][1]
 
     # Look in Journals so you start the route in your current location 
     system_names = [whereami()]
@@ -98,12 +100,12 @@ Evenses
 Mahatrents
 Ngundjedes
 Sekenks""".split('\n')
-    elif mode == 'Full Tour':  # All Canonn Systems
-        systems = api.getfaction('Canonn')['faction_presence']
+    elif mode == 'Full Tour':  # All Faction Systems
+        systems = api.getfaction(faction)['faction_presence']
         for sys in systems:
             system_names.append(sys['system_name'])
-    elif mode == 'Expansion Check':  # All Canonn Systems over 70% Inf
-        systems = api.getfaction('Canonn')['faction_presence']
+    elif mode == 'Expansion Check':  # All factio Systems over 70% Inf
+        systems = api.getfaction(faction)['faction_presence']
         for sys in systems:
             if sys['influence'] >= 0.70:
                 system_names.append(sys['system_name'])

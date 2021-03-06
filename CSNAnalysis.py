@@ -269,7 +269,7 @@ def Misson_Gen(argv=''):
             messagechanges.append(x)
             messagechanges[len(messagechanges) - 1][7] = '~~' + \
                 messagechanges[len(messagechanges) - 1][7] + \
-                '~~ : Misson Complete'
+                '~~ : Mission Complete'
             messagechanges[len(messagechanges) - 1][8] = dIcons['end']
 
     for m in messages:

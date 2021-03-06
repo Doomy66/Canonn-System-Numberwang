@@ -328,8 +328,8 @@ if __name__ == '__main__':
     #EBGS_expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
-    #ExpansionFromSystem("Gliese 506.2",True)
-    ExpansionCandidates("Canonn",True,"Kashis")
-    InvasionAlert("Canonn",60)
+    #ExpansionFromSystem("Parinta",True)
+    #ExpansionCandidates("Canonn",True)
+    InvasionAlert("Canonn")
     #InvasionRoute('Varati','Sol')
     
