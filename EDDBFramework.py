@@ -1,6 +1,7 @@
 import os
 import datetime
 import json
+from typing import AnyStr
 import urllib.request
 
 def sysdist(s1, s2):
@@ -20,8 +21,10 @@ class EDDBFrame():
     def __init__(self):
         EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
+        EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
         self._eddpopulate_cache = 'Data\EDDBSystemCache.json'
         self._eddfaction_cache = 'Data\EDDBFactionCache.json'
+        self._eddstation_cache = 'Data\EDDBStationCache.json'
 
         ## Get EDDB Data either from local cache or download a dump
         if (not os.path.exists(self._eddpopulate_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddpopulate_cache))).seconds > 3*60*60:
@@ -35,6 +38,10 @@ class EDDBFrame():
             with urllib.request.urlopen(req) as response:
                 self.factions = json.loads(response.read().decode('utf8'))
 
+            req = urllib.request.Request(EDDBSTAIONS)
+            with urllib.request.urlopen(req) as response:
+                self.stations = json.loads(response.read().decode('utf8'))
+
             self.savecache()
 
         else:
@@ -43,6 +50,8 @@ class EDDBFrame():
                 self.systems = json.load(io)
             with open(self._eddfaction_cache, 'r') as io:
                 self.factions = json.load(io)
+            with open(self._eddstation_cache, 'r') as io:
+                self.stations = json.load(io)
         return
 
     def savecache(self):
@@ -51,6 +60,8 @@ class EDDBFrame():
             json.dump(self.systems,io)
         with open(self._eddfaction_cache, 'w') as io:
             json.dump(self.factions,io)
+        with open(self._eddstation_cache, 'w') as io:
+            json.dump(self.stations,io)
         return
 
     def system(self,idorname):
@@ -69,8 +80,10 @@ class EDDBFrame():
             #Denormalise for lazyness
             for mf in sys['minor_faction_presences']:
                 f = self.faction(mf['minor_faction_id'])
-                mf['name'] = f['name']
-                mf['detail'] = f
+                if f:
+                    mf['name'] = f['name']
+                    mf['detail'] = f
+
             # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
             sys['influence'] = sys['minor_faction_presences'][0]['influence'] if sys['minor_faction_presences'] else 0
@@ -159,6 +172,18 @@ class EDDBFrame():
                 ans.append(f['name'])
         return ans
 
+    def getstations(self,sysname):
+        sys = self.system(sysname)
+        ans = list()
+        if sys:
+            if 'stations' not in sys.keys():
+                for station in filter(lambda x: x['system_id'] == sys['id'],self.stations):
+                    ans.append(station)
+                sys['stations'] = ans
+            else:
+                ans = sys['stations']
+        return ans
+        
 if __name__ == '__main__':
     ## Unit Test Harness
     g = EDDBFrame()
@@ -171,5 +196,6 @@ if __name__ == '__main__':
     aboutvarati = g.cubearea('Varati',30)
     aboutvarati = g.cubearea('Varati',30)
     homesys = g.system(18454)
+    stations = g.getstations('Varati')
 
     print('')

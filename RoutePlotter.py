@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # What list of systems do want to use ?
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
-    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol'][1]
+    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol'][3]
 
     # Look in Journals so you start the route in your current location 
     system_names = [whereami()]
@@ -105,7 +105,7 @@ Sekenks""".split('\n')
     elif mode == 'Expansion Check':  # All factio Systems over 70% Inf
         system_names += list(map(lambda x: x['system_name'],filter(lambda x: x['influence'] >= 0.70,api.getfaction(faction)['faction_presence'])))
     elif mode == 'Patrol':  # All Systems mentioned on the CSNPatrol
-        system_names += list(map(lambda x: x['system_name'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
+        system_names += list(map(lambda x: x['system'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
 
     # Now we have a simple list of the system names, get full system data
     route = list()
