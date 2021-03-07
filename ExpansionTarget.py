@@ -150,12 +150,13 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
             target['expansionType'] = 'None'
             target['cubedist'] = cubedist(target,sys)
             target['pf'] = list()
+            eddb.getstations(target['name']) # Load Station and Beststation into System
+
             for pf in target['minor_faction_presences']:
                 if pf['detail']['is_player_faction'] == True:
                     target['pf'].append(pf['name'])
             # System Priorties : 0 < Simple Expansion Dist < 100 < Extended Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 1000 < Nothing Found
-            # Simple Expansion
-            if cubedist(target,sys) <= 20 and len(target['minor_faction_presences']) < 7:
+            if cubedist(target,sys) <= 20 and len(target['minor_faction_presences']) < 7: # Simple Expansion
                 target['sys_priority'] = sysdist(target,sys)
                 target['expansionType'] = f"Simple Expansion"
                 bestpriority = min(bestpriority, target['sys_priority'])
@@ -176,7 +177,6 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
                             break
                 except:
                     print(f"!! Dodgy Faction {target['name']} in {sys['name']}")
-
         # Sort all candidate systems in priority order
         sysInRange.sort(key=lambda x: x['sys_priority'])
 
@@ -187,7 +187,8 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
         else:
             for cand in sysInRange:#[:4]:
                 if cand['sys_priority'] != 1000:
-                    print(f" {cand['name']} : {cand['expansionType']} {'('+', '.join(cand['pf'])+')' if cand['pf'] else ''}")
+
+                    print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}]")
     return sysInRange
 
 def ExpansionCandidates(faction, show=False, prebooked=None):
@@ -212,7 +213,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None):
         print(f"Expansion Candidates for {faction}:")
         for c in candidates:
             if c['expansion']:
-                print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} > {c['expansion']['name']} ({c['expansion']['expansionType']}) {'['+', '.join(c['expansion']['pf'])+']' if c['expansion']['pf'] else ''}")
+                print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} > {c['expansion']['name']} ({c['expansion']['expansionType']}){' ('+', '.join(c['expansion']['pf'])+')' if c['expansion']['pf'] else ''} [{c['expansion']['beststation']}]")
 
     return list(filter(lambda x: x['expansion'] , candidates))
         
@@ -332,7 +333,7 @@ if __name__ == '__main__':
     #EBGS_expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
-    #ExpansionFromSystem("Parinta",True)
+    ExpansionFromSystem("Parinta",True)
     ExpansionCandidates("Canonn",True)
     #InvasionAlert("Canonn")
     #InvasionRoute('Varati','Sol')

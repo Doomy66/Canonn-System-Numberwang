@@ -180,6 +180,8 @@ class EDDBFrame():
                 for station in filter(lambda x: x['system_id'] == sys['id'],self.stations):
                     ans.append(station)
                 sys['stations'] = ans
+                sys['beststation'] = 'Orbital' if next((x for x in ans if x['max_landing_pad_size']=='L' and not x['is_planetary']), False) else 'Outpost' if next((x for x in ans if x['max_landing_pad_size']=='M' and not x['is_planetary']), False) else 'Planetary'
+                # max_landing_pad_size, is_planetary
             else:
                 ans = sys['stations']
         return ans
