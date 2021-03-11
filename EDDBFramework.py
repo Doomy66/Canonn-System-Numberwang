@@ -78,11 +78,14 @@ class EDDBFrame():
             print(f'! System Not Found : {idorname}')
         else:
             #Denormalise for lazyness
+            sys['pf'] = list()
             for mf in sys['minor_faction_presences']:
                 f = self.faction(mf['minor_faction_id'])
                 if f:
                     mf['name'] = f['name']
                     mf['detail'] = f
+                    if f['is_player_faction']:
+                        sys['pf'].append(f['name'])
 
             # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
@@ -180,7 +183,7 @@ class EDDBFrame():
                 for station in filter(lambda x: x['system_id'] == sys['id'],self.stations):
                     ans.append(station)
                 sys['stations'] = ans
-                sys['beststation'] = 'Orbital' if next((x for x in ans if x['max_landing_pad_size']=='L' and not x['is_planetary']), False) else 'Outpost' if next((x for x in ans if x['max_landing_pad_size']=='M' and not x['is_planetary']), False) else 'Planetary'
+                sys['beststation'] = 'Orbital' if next((x for x in ans if x['max_landing_pad_size']=='L' and not x['is_planetary'] and x['type_id'] != 24), False) else 'Outpost' if next((x for x in ans if x['max_landing_pad_size']=='M' and not x['is_planetary']), False) else 'Planetary'
                 # max_landing_pad_size, is_planetary
             else:
                 ans = sys['stations']
@@ -198,6 +201,6 @@ if __name__ == '__main__':
     aboutvarati = g.cubearea('Varati',30)
     aboutvarati = g.cubearea('Varati',30)
     homesys = g.system(18454)
-    stations = g.getstations('Varati')
+    stations = g.getstations('Col 285 Sector TZ-O c6-27')
 
     print('')

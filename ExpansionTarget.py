@@ -1,5 +1,6 @@
 from Bubble import update_progress
 import api
+from datetime import datetime
 from EDDBFramework import EDDBFrame, cubedist, sysdist
 
 eddb = None # Global Variabel to store an instance of the EDDBFramework
@@ -149,12 +150,8 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
             target['sys_priority'] = 1000
             target['expansionType'] = 'None'
             target['cubedist'] = cubedist(target,sys)
-            target['pf'] = list()
             eddb.getstations(target['name']) # Load Station and Beststation into System
 
-            for pf in target['minor_faction_presences']:
-                if pf['detail']['is_player_faction'] == True:
-                    target['pf'].append(pf['name'])
             # System Priorties : 0 < Simple Expansion Dist < 100 < Extended Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 1000 < Nothing Found
             if cubedist(target,sys) <= 20 and len(target['minor_faction_presences']) < 7: # Simple Expansion
                 target['sys_priority'] = sysdist(target,sys)
@@ -185,7 +182,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
         if not sysInRange or sysInRange[0]['sys_priority'] == 1000:
             print(f" ! No Candidates ")
         else:
-            for cand in sysInRange:#[:4]:
+            for cand in sysInRange[:8]:
                 if cand['sys_priority'] != 1000:
 
                     print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}]")
@@ -217,9 +214,9 @@ def ExpansionCandidates(faction, show=False, prebooked=None):
 
     return list(filter(lambda x: x['expansion'] , candidates))
         
-def InvasionAlert(faction,mininf=70, show=True):
+def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
     '''
-    Will report all systems that would expand into a faction system 
+    Will report all systems that would expand into a faction system within lookahead cycles
     '''
     global eddb
     if not eddb:
@@ -228,7 +225,7 @@ def InvasionAlert(faction,mininf=70, show=True):
 
     homesystems = list((x['name'] for x in eddb.systemspresent(faction)))
     donesystems = list()
-    print(f'Checking for Invasions of {faction} Systems:')
+    print(f'Checking for Future Invasions of {faction} Systems:')
     for counter, home in enumerate(homesystems):
         update_progress(counter/len(homesystems),home)
         invaders = filter(lambda x: x['name'] not in homesystems 
@@ -237,8 +234,8 @@ def InvasionAlert(faction,mininf=70, show=True):
                         and x['influence'] > mininf
                         , eddb.cubearea(home, 30))
         for invader in invaders:
-            targets = ExpansionFromSystem(invader['name'])
-            if targets and targets[0]['name'] in homesystems:
+            targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'])[:lookahead])) # Check if next lookahead expansions will target the home faction
+            if targets:
                 alertsystems.append(invader.copy())
                 alertsystems[-1]['invading']=targets[0]['name']
             donesystems.append(invader['name'])
@@ -333,8 +330,15 @@ if __name__ == '__main__':
     #EBGS_expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
-    ExpansionFromSystem("Parinta",True)
-    ExpansionCandidates("Canonn",True)
-    #InvasionAlert("Canonn")
+    #ExpansionFromSystem("Bactrimpox",True)
+    #ExpansionFromSystem("Luvalla",True)
+    
+    #ExpansionCandidates("Canonn",True,None)
+    #ExpansionCandidates("Marquis du Ma'a",True,None)
+
+    print(datetime.now())
+    InvasionAlert("Canonn")
+    print(datetime.now())
+
     #InvasionRoute('Varati','Sol')
     

@@ -15,6 +15,7 @@ CSNAnalysis - Will create a list of suggested actions to perform as CSN*.txt and
 Routeploter - Utility to provide quick routes around a selection of systems for data collection purposes
 ExpansionTarget - Utilities to calculate which systems will expand to where - Both quick and dirty EDDB and slow but accurate EliteBGS
 JournalInf - Reads your local Journals and lists all Inf related actions you have done since the last tick
+DDDepartment - Utilities to monitor and identify usefull actions to defend your empire from rivals
 
 # Odd Bits of R&D
 JournalRings - A bit of niche project to post Ring Scans to a Canonn Sheet
