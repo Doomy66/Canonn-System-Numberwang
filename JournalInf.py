@@ -61,7 +61,7 @@ class ActionLog(list):
             self.append({"sys": sys, "faction": faction,
                          "event": event, "count": num, "inf": inf, 'ton': ton, 'profit': profit})
 
-
+print('.Getting Lasttick')
 LASTTICK = api.getlasttick()
 
 print(f'.Scanning {JFOLDER} since UTC {LASTTICK}')
