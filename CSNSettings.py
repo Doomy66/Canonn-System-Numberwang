@@ -12,4 +12,5 @@ wh_token = keys.wh_token
 override_workbook = keys.override_workbook
 override_sheet = keys.override_sheet
 
-factionnames = ['Canonn','Canonn Deep Space Research']
+#factionnames = ['Canonn','Canonn Deep Space Research']
+factionnames = ['Canonn']
