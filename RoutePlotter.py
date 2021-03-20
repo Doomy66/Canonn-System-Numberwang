@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # What list of systems do want to use ?
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
-    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol'][3]
+    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol','Combined'][4]
 
     # Look in Journals so you start the route in your current location 
     system_names = [whereami()]
@@ -94,17 +94,20 @@ if __name__ == '__main__':
     if not system_names:
         system_names = []
 
-    if mode == 'Manual':  # Manual List
-        system_names += """Col 285 Sector TZ-O c6-23
-Evenses
-Mahatrents
-Ngundjedes
-Sekenks""".split('\n')
-    elif mode == 'Full Tour':  # All Faction Systems
+    if mode == 'Manual' or mode == 'Combined':  # Manual List (Currently Systems known to need suppressing)
+        system_names += """  Vorden
+            Backlumba
+            Ba Devaci
+            Luvalla
+            HIP 38225
+            HIP 117029""".split('\n')
+        system_names = list(map(lambda x: x.lstrip(),system_names))
+        #print(system_names)
+    if mode == 'Full Tour':  # All Faction Systems
         system_names += list(map(lambda x: x['system_name'],api.getfaction(faction)['faction_presence']))
-    elif mode == 'Expansion Check':  # All factio Systems over 70% Inf
+    if mode == 'Expansion Check':  # All factio Systems over 70% Inf
         system_names += list(map(lambda x: x['system_name'],filter(lambda x: x['influence'] >= 0.70,api.getfaction(faction)['faction_presence'])))
-    elif mode == 'Patrol':  # All Systems mentioned on the CSNPatrol
+    if mode == 'Patrol' or mode == 'Combined':  # All Systems mentioned on the CSNPatrol
         system_names += list(map(lambda x: x['system'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
 
     # Now we have a simple list of the system names, get full system data
@@ -113,7 +116,7 @@ Sekenks""".split('\n')
         sys = api.getsystem(system_name)
         # discard any that have already been scanned this tick
         # allways add the 1st one, its your current location/starting point
-        if sys and ((not sys['fresh']) or (not route) or mode == 'Manual'):
+        if sys and ((not sys['fresh']) or (not route)):
             route.append(sys)
 
     printRoute(simple(route[0], route[1::].copy(), None), mode)

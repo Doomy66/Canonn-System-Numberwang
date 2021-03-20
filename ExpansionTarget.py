@@ -1,3 +1,4 @@
+from ssl import ALERT_DESCRIPTION_BAD_CERTIFICATE_HASH_VALUE
 from Bubble import update_progress
 import api
 from datetime import datetime
@@ -116,6 +117,40 @@ def EBGS_expansionTargets(faction, knownsys=None):
         print('** No Target : '+ ', '.join(map(lambda x: f"{x['system_name']} ({sys['happytext']})", proposedNL)))
     print(f'*** Complete. Number of API Requests:{api.NREQ} ***')
 
+def ExpansionToSystem(system,show=True,simpleonly = False):
+    ''' Returns systems that would expand INTO a given system the soonest '''
+    range = 15 if simpleonly else 30  # Maximum Range for Expansion
+    global eddb
+    if not eddb:
+        eddb = EDDBFrame()
+    best = 99
+    answers=list()
+
+    # Default
+    targetsys = eddb.system(system)
+    sysInRange = eddb.cubearea(system, range)
+    print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets')
+    for sys in sysInRange:
+        targets = ExpansionFromSystem(sys['name'])
+        cycles = 0
+        for target in targets:
+            cycles += 1 if target['expansionType'][0] == 'S' else 2
+            if target['name'] == system:
+                print(sys['name'],sys['influence'],'>',target['name'],'x',cycles, '*' if cycles<=best else '')
+                if cycles<best:
+                    answers = list()
+                    best = min(best,cycles)
+                if cycles == best:
+                    eddb.getstations(sys['name'])
+                    answers.append(sys)
+                break
+
+    print('')
+    print(f'# Quickest Expansions to {system} in {best} cycles')
+    for answer in answers:
+        print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['beststation']}")
+    return answers
+
 def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked = None):
     '''
     Reports best expansion target for a faction from a system
@@ -188,13 +223,13 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
                     print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}]")
     return sysInRange
 
-def ExpansionCandidates(faction, show=False, prebooked=None):
+def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
     global eddb
     print(f"Expansion Candidates for {faction}:")
     if not eddb:
         eddb = EDDBFrame()
     candidates = eddb.systemscontroled(faction)
-    candidates = list(filter(lambda x: x['influence'] > 70, candidates))
+    candidates = list(filter(lambda x: x['influence'] > inflevel, candidates))
     candidates.sort(key=lambda x: -100*(x['minor_faction_presences'][0]['happiness_id'])+x['influence'], reverse=True)
     for counter, c in enumerate(candidates):
         update_progress(counter/len(candidates),c['name'])
@@ -332,9 +367,18 @@ if __name__ == '__main__':
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Col 285 Sector KS-T d3-78",True)
     #ExpansionFromSystem("Luvalla",True)
+    #ExpansionFromSystem("Backlumba",True)
+    #ExpansionFromSystem("Krinda",True)
+    #ExpansionFromSystem("Gluskabiku",True)
+    
+
+    #ExpansionToSystem("Wathlanukh",True,True)
+    #ExpansionToSystem("Wathlanukh")
+
     
     #ExpansionCandidates("Canonn",True,None)
     #ExpansionCandidates("Marquis du Ma'a",True,None)
+    #ExpansionCandidates("Sanctified Chapter of Backlumba",True)
 
     #InvasionAlert("Canonn",70,True,4)
     InvasionAlert("Canonn")
