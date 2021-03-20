@@ -237,7 +237,8 @@ def Misson_Gen(argv=''):
         # trim spurious data that was giving circular reference errors when trying to save
         sys['minor_faction_presences'] = list() 
         sys['xcube'] = list()
-        messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} : Undermine their Influence ({round(sys['influence'],1)}%)",dIcons['infgap']))
+        if sys['controlling_minor_faction'] in sys['pf']: # Policy is we allow NPC to arrive so they fill the system and block PC factions
+            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} : We should do something about this ({round(sys['influence'],1)}%)",dIcons['infgap']))
 
     # Lowest Gaps for PUSH message
     l = list(filter(lambda x: faction_systems[x]['override'] == 'Addition' or not hasmessage(
