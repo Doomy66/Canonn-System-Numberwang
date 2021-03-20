@@ -78,6 +78,7 @@ def Misson_Gen(argv=''):
     active_states = []
     pending_states = []
     recovering_states = []
+    ootsystems = []
 
     dIcons = {"war": '<:EliteEagle:231083794700959744> ',
               "election": ':ballot_box: ',
@@ -219,8 +220,10 @@ def Misson_Gen(argv=''):
     # Messages for External Systems
     for ex in orides[1:]:
         if sum(faction_systems[x]["system_name"] == ex[0] for x in faction_systems) == 0:
-            exsys = bubble.findsystem(ex[0])
+            #exsys = bubble.findsystem(ex[0])
+            exsys = api.getsystem(ex[0])
             if exsys:
+                ex[2] = ex[2].replace('{inf}',f"{round(exsys['factions'][0]['influence'],1)}")                
                 messages.append(amessage(exsys, ex[1], ex[2]+'*',
                                         dIcons['override'] if ex[3] == '' else dIcons[ex[3]],'None'))
             else:

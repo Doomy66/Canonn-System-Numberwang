@@ -140,6 +140,7 @@ def getsystem(system_name, refresh=False): # elitebgs
                 f['active_states'] = f['faction_details']['faction_presence']['active_states']
                 f['pending_states'] = f['faction_details']['faction_presence']['pending_states']
                 f['recovering_states'] = f['faction_details']['faction_presence']['recovering_states']
+            myload['factions'].sort(key = lambda x: x['influence'], reverse=True)
         except:
             print(f'!Failed to find system "{system_name}"')
             myload = None

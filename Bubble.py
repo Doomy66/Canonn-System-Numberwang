@@ -255,6 +255,7 @@ class Bubble():
                 self.systems[id]['x'] = self.systems[id]['coords']['x']
                 self.systems[id]['y'] = self.systems[id]['coords']['y']
                 self.systems[id]['z'] = self.systems[id]['coords']['z']
+                self.systems[id]['factions'].sort(key = lambda x: x['influence'], reverse=True)
                 
             return self.systems[id]
         except StopIteration:
