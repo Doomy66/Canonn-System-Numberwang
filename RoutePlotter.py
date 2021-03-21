@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # What list of systems do want to use ?
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
-    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol','Combined'][4]
+    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol','Combined'][3]
 
     # Look in Journals so you start the route in your current location 
     system_names = [whereami()]

@@ -99,9 +99,8 @@ def Misson_Gen(argv=''):
         update_progress(i/len(faction_systems),key)
         sys = faction_systems[key]
         if sys:
-            # Sort all factions by influence
-            factions = sorted(sys['factions'],key=lambda x: x['influence'], reverse=True)
-            faction_systems[key]['factions'] = factions
+            sys['factions'].sort(key = lambda x: x['influence'],reverse=True)
+            factions =sys['factions']
             empire = sys['empire']
             happytext = empire['faction_details']['faction_presence']['happiness']
             happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else 'Pieved'
@@ -238,7 +237,7 @@ def Misson_Gen(argv=''):
         sys['minor_faction_presences'] = list() 
         sys['xcube'] = list()
         if sys['controlling_minor_faction'] in sys['pf']: # Policy is we allow NPC to arrive so they fill the system and block PC factions
-            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} : We should do something about this ({round(sys['influence'],1)}%)",dIcons['infgap']))
+            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} in {sys['cycles']} cycles : We should do something about this ({round(sys['influence'],1)}%)",dIcons['infgap']))
 
     # Lowest Gaps for PUSH message
     l = list(filter(lambda x: faction_systems[x]['override'] == 'Addition' or not hasmessage(
@@ -356,4 +355,4 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/Test1", "/!new"])
+    Misson_Gen(sys.argv[1:] + ["/Test1", "/new"])

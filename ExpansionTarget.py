@@ -146,7 +146,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
                 break
 
     print('')
-    print(f'# Quickest Expansions to {system} in {best} cycles')
+    print(f"# Quickest Expansions to {system} which has {len(targetsys['minor_faction_presences'])} factions in {best} cycles")
     for answer in answers:
         print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['beststation']}")
     return answers
@@ -211,6 +211,10 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
                     print(f"!! Dodgy Faction {target['name']} in {sys['name']}")
         # Sort all candidate systems in priority order
         sysInRange.sort(key=lambda x: x['sys_priority'])
+        cycles = 0
+        for cyclesys in sysInRange:
+            cycles += 1 if cyclesys['expansionType'][0] == 'S' else 2
+            cyclesys['cycles'] = cycles
 
     if show:
         print(f"Expansion from {sys['name']}:")
@@ -220,7 +224,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
             for cand in sysInRange[:8]:
                 if cand['sys_priority'] != 1000:
 
-                    print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}]")
+                    print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}] in {cand['cycles']} cycles")
     return sysInRange
 
 def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
@@ -273,6 +277,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
             if targets:
                 alertsystems.append(invader.copy())
                 alertsystems[-1]['invading']=targets[0]['name']
+                alertsystems[-1]['cycles'] = targets[0]['cycles']
             donesystems.append(invader['name'])
     update_progress(1)
 
@@ -281,7 +286,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['influence'], reverse=True)
             for alert in alertsystems:
-                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} (inf {round(alert['influence'],1)}%) ")
+                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} in {alert['cycles']} cycles (inf {round(alert['influence'],1)}%) ")
 
     return alertsystems
 
@@ -366,13 +371,20 @@ if __name__ == '__main__':
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionFromSystem("Col 285 Sector KS-T d3-78",True)
-    #ExpansionFromSystem("Luvalla",True)
-    #ExpansionFromSystem("Backlumba",True)
+    ExpansionFromSystem("Luvalla",True)
+    ExpansionFromSystem("Parezmia",True)
     #ExpansionFromSystem("Krinda",True)
+    
     #ExpansionFromSystem("Gluskabiku",True)
+
+    #ExpansionCandidates("Stellanebula Project",True,None)
+    #ExpansionFromSystem("HIP 117029",True)
+    #ExpansionFromSystem("Dakinn",True)
+    #ExpansionFromSystem("Kaititja",True)
     
 
-    #ExpansionToSystem("Wathlanukh",True,True)
+    ExpansionToSystem("Pipedu",True,True)
+    ExpansionToSystem("Col 285 Sector RE-P c6-5",True,True)
     #ExpansionToSystem("Wathlanukh")
 
     
@@ -381,7 +393,7 @@ if __name__ == '__main__':
     #ExpansionCandidates("Sanctified Chapter of Backlumba",True)
 
     #InvasionAlert("Canonn",70,True,4)
-    InvasionAlert("Canonn")
+    #InvasionAlert("Canonn")
 
     #InvasionRoute('Varati','Sol')
     
