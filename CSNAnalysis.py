@@ -237,7 +237,7 @@ def Misson_Gen(argv=''):
         sys['minor_faction_presences'] = list() 
         sys['xcube'] = list()
         if sys['controlling_minor_faction'] in sys['pf']: # Policy is we allow NPC to arrive so they fill the system and block PC factions
-            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} in {sys['cycles']} cycles : We should do something about this ({round(sys['influence'],1)}%)",dIcons['infgap']))
+            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} are targeting {sys['invading']} within {sys['cycles']} cycles : We should do something about this ({round(sys['influence'],1)}%)",dIcons['infgap']))
 
     # Lowest Gaps for PUSH message
     l = list(filter(lambda x: faction_systems[x]['override'] == 'Addition' or not hasmessage(
@@ -248,8 +248,9 @@ def Misson_Gen(argv=''):
 
     for x in l[:3]:
         sys = faction_systems[x]
-        messages.append(
-            amessage(sys, 5, f'Suggestion: {sys["empire"]["name"]} {availableactions(sys,factionnames)} (gap to {sys["factions"][1]["name"]} is {sys["factions"][0]["influence"]-sys["factions"][1]["influence"]:4.3}%)', dIcons['mininf']))
+        if sys["factions"][0]["influence"]-sys["factions"][1]["influence"] < 35: # At a 35% Gap, it becomes spam
+            messages.append(
+                amessage(sys, 5, f'Suggestion: {sys["empire"]["name"]} {availableactions(sys,factionnames)} (gap to {sys["factions"][1]["name"]} is {sys["factions"][0]["influence"]-sys["factions"][1]["influence"]:4.3}%)', dIcons['mininf']))
 
     messages.sort()
 
@@ -355,4 +356,4 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/Test1", "/new"])
+    Misson_Gen(sys.argv[1:] + ["/Test1", "/!new"])

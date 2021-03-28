@@ -3,6 +3,7 @@ import datetime
 import json
 from typing import AnyStr
 import urllib.request
+import tempfile
 
 def sysdist(s1, s2):
     '''
@@ -22,12 +23,12 @@ class EDDBFrame():
         EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
-        self._eddpopulate_cache = 'Data\EDDBSystemCache.json'
-        self._eddfaction_cache = 'Data\EDDBFactionCache.json'
-        self._eddstation_cache = 'Data\EDDBStationCache.json'
+        self._eddpopulate_cache = tempfile.gettempdir()+'\EDDBSystemCache.json'
+        self._eddfaction_cache = tempfile.gettempdir()+'\EDDBFactionCache.json'
+        self._eddstation_cache = tempfile.gettempdir()+'\EDDBStationCache.json'
 
         ## Get EDDB Data either from local cache or download a dump
-        if (not os.path.exists(self._eddpopulate_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddpopulate_cache))).seconds > 3*60*60:
+        if (not os.path.exists(self._eddpopulate_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddpopulate_cache))).seconds > 5*60*60:
             ## Download Nightly Dumps from EDDB if older than 3 hours
             print('Downloading from EDDB Dump...')
             req = urllib.request.Request(EDDBPOPULATED)
@@ -96,6 +97,9 @@ class EDDBFrame():
         '''
         Returns basic faction details give a faction name or ID
         '''
+        ## Player Factions that are unsupported, so can be considered NPC Factions
+        ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar']
+
         if type(idorname)==type(1):
             f = next((x for x in self.factions if x['id'] == idorname),None)
         else:
@@ -103,7 +107,11 @@ class EDDBFrame():
 
         if not f:
             print(f'! Faction Not Found : {idorname}')
+        elif f['is_player_faction'] and f['name'] in ignorepf:
+            f['is_player_faction'] = False
+
         return f
+        
 
     def systemscontroled(self,factionname):
         '''

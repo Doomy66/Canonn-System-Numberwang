@@ -136,19 +136,20 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
         for target in targets:
             cycles += 1 if target['expansionType'][0] == 'S' else 2
             if target['name'] == system:
-                print(sys['name'],sys['influence'],'>',target['name'],'x',cycles, '*' if cycles<=best else '')
-                if cycles<best:
+                print(f"{sys['name']} [{sys['controlling_minor_faction']}] ({round(sys['influence'],1)}%) in {cycles}{'*' if cycles<=best else ''}")
+                if max(2,cycles)<best:
                     answers = list()
                     best = min(best,cycles)
-                if cycles == best:
+                if cycles <= max(2,best):
                     eddb.getstations(sys['name'])
+                    sys['tocycles'] = cycles
                     answers.append(sys)
                 break
 
     print('')
     print(f"# Quickest Expansions to {system} which has {len(targetsys['minor_faction_presences'])} factions in {best} cycles")
     for answer in answers:
-        print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['beststation']}")
+        print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']}")
     return answers
 
 def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked = None):
@@ -370,12 +371,15 @@ if __name__ == '__main__':
     #EBGS_expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
-    #ExpansionFromSystem("Col 285 Sector KS-T d3-78",True)
-    ExpansionFromSystem("Luvalla",True)
-    ExpansionFromSystem("Parezmia",True)
-    #ExpansionFromSystem("Krinda",True)
-    
+    #ExpansionFromSystem("Kongi",True)
+    #ExpansionFromSystem("Luvalla",True)
+    #ExpansionFromSystem("Parezmia",True)
+    #ExpansionFromSystem("Ba Devaci",True)
+
+    # Currently Raising
+    #ExpansionFromSystem("Chelka",True)
     #ExpansionFromSystem("Gluskabiku",True)
+    #ExpansionFromSystem("Dvorotri",True)
 
     #ExpansionCandidates("Stellanebula Project",True,None)
     #ExpansionFromSystem("HIP 117029",True)
@@ -383,10 +387,13 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Kaititja",True)
     
 
-    ExpansionToSystem("Pipedu",True,True)
-    ExpansionToSystem("Col 285 Sector RE-P c6-5",True,True)
+    #ExpansionToSystem("Pipedu",True)
+    #ExpansionToSystem("Meinjhalie",True,True)
     #ExpansionToSystem("Wathlanukh")
-
+    #ExpansionToSystem("Njoere",True,True)
+    #ExpansionToSystem("Njoere")
+    ExpansionToSystem("Arine")
+ 
     
     #ExpansionCandidates("Canonn",True,None)
     #ExpansionCandidates("Marquis du Ma'a",True,None)
