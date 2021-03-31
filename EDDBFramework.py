@@ -196,7 +196,13 @@ class EDDBFrame():
             else:
                 ans = sys['stations']
         return ans
-        
+
+    def retreatafaction(self,sysname):
+        ## Simulate the lowest faction retreating
+        sys = self.system(sysname)
+        sys['minor_faction_presences'].pop()
+        return
+
 if __name__ == '__main__':
     ## Unit Test Harness
     g = EDDBFrame()
