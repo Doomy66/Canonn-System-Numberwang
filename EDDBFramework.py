@@ -4,6 +4,7 @@ import json
 from typing import AnyStr
 import urllib.request
 import tempfile
+import pickle
 
 def sysdist(s1, s2):
     '''
@@ -23,12 +24,10 @@ class EDDBFrame():
         EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
-        self._eddpopulate_cache = tempfile.gettempdir()+'\EDDBSystemCache.json'
-        self._eddfaction_cache = tempfile.gettempdir()+'\EDDBFactionCache.json'
-        self._eddstation_cache = tempfile.gettempdir()+'\EDDBStationCache.json'
+        self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
 
         ## Get EDDB Data either from local cache or download a dump
-        if (not os.path.exists(self._eddpopulate_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddpopulate_cache))).seconds > 5*60*60:
+        if (not os.path.exists(self._eddb_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds > 3*60*60:
             ## Download Nightly Dumps from EDDB if older than 3 hours
             print('Downloading from EDDB Dump...')
             req = urllib.request.Request(EDDBPOPULATED)
@@ -47,22 +46,18 @@ class EDDBFrame():
 
         else:
             #print('Using Local Cached EDDB Dump...')
-            with open(self._eddpopulate_cache, 'r') as io:
-                self.systems = json.load(io)
-            with open(self._eddfaction_cache, 'r') as io:
-                self.factions = json.load(io)
-            with open(self._eddstation_cache, 'r') as io:
-                self.stations = json.load(io)
+            with open(self._eddb_cache, 'rb') as io:
+                self.systems = pickle.load(io)
+                self.factions = pickle.load(io)
+                self.stations = pickle.load(io)
         return
 
     def savecache(self):
         print('Saving EDDB Dump Cache...')
-        with open(self._eddpopulate_cache, 'w') as io:
-            json.dump(self.systems,io)
-        with open(self._eddfaction_cache, 'w') as io:
-            json.dump(self.factions,io)
-        with open(self._eddstation_cache, 'w') as io:
-            json.dump(self.stations,io)
+        with open(self._eddb_cache, 'wb') as io:
+            pickle.dump(self.systems,io)
+            pickle.dump(self.factions,io)
+            pickle.dump(self.stations,io)
         return
 
     def system(self,idorname):
