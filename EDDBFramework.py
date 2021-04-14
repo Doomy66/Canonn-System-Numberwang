@@ -93,7 +93,7 @@ class EDDBFrame():
         Returns basic faction details give a faction name or ID
         '''
         ## Player Factions that are unsupported, so can be considered NPC Factions
-        ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar']
+        ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar','FDMA Security Service']
 
         if type(idorname)==type(1):
             f = next((x for x in self.factions if x['id'] == idorname),None)

@@ -77,7 +77,7 @@ def CSNOverRideRead():
         print('No data found.')
     else:
         for row in values:
-            #print(row)
+            #print(len(row))
             system, priority, Description, Emoji, OType = row if len(row)==5 else row+[''] if len(row)==4 else row+['']+[''] if len(row)==3 else row+['']+['']+['']
             if system != '' and system[0] != '!':
                 answer.append([system, int(priority), Description, Emoji, OType])
@@ -244,7 +244,7 @@ def CSNAttractions(cspace):
 
 
 def Test():
-    return('No Test Configured')
+    return(CSNOverRideRead())
 
 if __name__ == '__main__':
     print(Test())

@@ -164,6 +164,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
 
     # Default
     sys = eddb.system(system)
+    eddb.getstations(system)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
     if not factionpresence:
@@ -218,7 +219,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
             cyclesys['cycles'] = cycles
 
     if show:
-        print(f"Expansion from {sys['name']}:")
+        print(f"Expansion from {sys['name']} ({round(sys['influence'],1)}%):")
         if not sysInRange or sysInRange[0]['sys_priority'] == 1000:
             print(f" ! No Candidates ")
         else:
@@ -250,7 +251,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
         print(f"Expansion Candidates for {faction}:")
         for c in candidates:
             if c['expansion']:
-                print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} > {c['expansion']['name']} ({c['expansion']['expansionType']}){' ('+', '.join(c['expansion']['pf'])+')' if c['expansion']['pf'] else ''} [{c['expansion']['beststation']}]")
+                print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} {c['beststation'].ljust(15)}> {c['expansion']['name']} ({c['expansion']['expansionType']}){' ('+', '.join(c['expansion']['pf'])+')' if c['expansion']['pf'] else ''} [{c['expansion']['beststation']}]")
 
     return list(filter(lambda x: x['expansion'] , candidates))
         
@@ -375,16 +376,21 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Luvalla",True)
     #ExpansionFromSystem("Parezmia",True)
     #ExpansionFromSystem("Ba Devaci",True)
+    #ExpansionFromSystem("Azaleach",True)
+    #ExpansionFromSystem("Rishnum",True)
 
     # Currently Raising
     #ExpansionFromSystem("Chelka",True)
-    #ExpansionFromSystem("Gluskabiku",True)
     #ExpansionFromSystem("Dvorotri",True)
 
     #ExpansionCandidates("Stellanebula Project",True,None)
     #ExpansionFromSystem("HIP 117029",True)
     #ExpansionFromSystem("Dakinn",True)
     #ExpansionFromSystem("Kaititja",True)
+    #ExpansionFromSystem("Heheng De",True)
+    #ExpansionFromSystem("Menhitae",True)
+    
+    
     
 
     #ExpansionToSystem("Pipedu",True)
@@ -392,10 +398,15 @@ if __name__ == '__main__':
     #ExpansionToSystem("Wathlanukh")
     #ExpansionToSystem("Njoere",True,True)
     #ExpansionToSystem("Njoere")
-    ExpansionToSystem("Arine")
- 
+    #ExpansionToSystem("Kumata")
+    ExpansionToSystem("Rishnum",True,True)
+     
+   
+    
+   
     
     #ExpansionCandidates("Canonn",True,None)
+    #ExpansionCandidates("Canonn",True,None,40)
     #ExpansionCandidates("Marquis du Ma'a",True,None)
     #ExpansionCandidates("Sanctified Chapter of Backlumba",True)
 
@@ -403,4 +414,13 @@ if __name__ == '__main__':
     #InvasionAlert("Canonn")
 
     #InvasionRoute('Varati','Sol')
+
+    ## All Expansions from Orbital Systems with Simple Expansions still available
+    #allexp = ExpansionCandidates("Canonn",True,None,40)
+    #for exp in allexp:
+        #if exp['beststation'] == 'Orbital':
+            #if exp['expansion']['expansionType'][0] == 'S':
+                #ExpansionFromSystem(exp['name'],True)
+
+    
     
