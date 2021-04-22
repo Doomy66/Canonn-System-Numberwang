@@ -4,6 +4,11 @@ import os
 from datetime import datetime
 from Bubble import Bubble
 
+import gzip
+import pickle
+import bz2
+
+
 
 def SpanshDateTime(s):
     dformat = '%Y-%m-%d %H:%M:%S'  # so much grief from this function
@@ -45,8 +50,83 @@ def JournaliseRingScans():
     JournalDump(f'data\\fakejournal.log',rings)         # Write to Local
     return None
 
+def ReadNewSpanch(ifile='C:\Downloads\galaxy.json.gz'):
+    # Reads a full Spansh dump, extracts all systems close to Canonn Space
+    radius = 1000
+    centre = {}
+    rebuild = True
+    
+    print('Deep Thought...')
+    nyes = nno = nnew = 0
+    answer = list()
+    
+    with gzip.open(ifile,"r") as bstream:
+        while True:
+            l = bstream.readline().decode()
+            t = l.rstrip('\n').rstrip(',')
+            if len(t) > 6 != '':
+                t = json.loads(t)
+                d = max(abs(t['coords']['x']),abs(t['coords']['z']),abs(t['coords']['z']))
+                if d <= radius:
+                    nyes += 1
+                    nnew += 1
+                    print(f"New {t['date']} {t['name']}  {nnew:,}")
+                    answer.append(t)
+                else:
+                    nno += 1
+                    if nno % 500000 == 0:
+                        print(f'... {nno:,}')
+            if not l :
+                break
+        
+        # dont put it there, even 500ly = 5GB
+        #with open(f'C:\\Downloads\\spansh{radius}.pickle', 'wb') as io:
+        #    pickle.dump(answer,io)
+
+        with bz2.BZ2File(f'C:\\Downloads\\spansh{radius}.spickle', 'wb') as io:
+            pickle.dump(answer,io)
+    
+        # strip out BGS Info
+        for x in answer:
+            if x['bodies']:
+                x['bodies'] = None
+            if 'population' in x and x['population']:
+                x.pop('stations')
+                x.pop('factions')
+                x.pop('controllingFaction')
+           
+                x['stations'] = None
+                x['factions'] = None
+                x['controllingFaction'] = None
+            else:
+                x['population']=0
+
+                
+
+        with bz2.BZ2File(f'C:\\Downloads\\spansh{radius}map.spickle', 'wb') as io:
+            pickle.dump(answer,io)
+
+
+    return answer
+
 if __name__ == '__main__':
     JFOLDER = os.environ.get('USERPROFILE') + f'\\Saved Games\\Frontier Developments\\Elite Dangerous'
-    JournaliseRingScans()
+    #JournaliseRingScans()
+    ReadNewSpanch()
+
+    radius = 500
+    if False:
+        print('Load')
+        with open(f'C:\\Downloads\\spansh{radius}.pickle', 'rb') as io:
+            answer = pickle.load(io)
+
+        print('Save')
+        with bz2.BZ2File(f'C:\\Downloads\\spansh{radius}.spickle', 'wb') as io:
+            pickle.dump(answer,io)
+
+        print('Load S')
+        with bz2.BZ2File(f'C:\\Downloads\\spansh{radius}.spickle', 'rb') as io:
+            answer = pickle.load(io)
+
     print('Done')
 

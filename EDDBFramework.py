@@ -6,6 +6,7 @@ import urllib.request
 import tempfile
 import pickle
 
+
 def sysdist(s1, s2):
     '''
     Actual Distance between 2 systems
@@ -197,6 +198,21 @@ class EDDBFrame():
         sys = self.system(sysname)
         sys['minor_faction_presences'].pop()
         return
+    
+    def hasretreated(self,sysname,faction):
+        knownretreats = list()
+        knownretreats.append(["Cnephtha","The Digiel Aggregate"])
+        knownretreats.append(["Cephei Sector YZ-Y b4","Jaoi Flag"])
+        #Cephei Sector YZ-Y b4 , Jaoi Flag
+
+        #answer = list(filter(lambda x : x[0]==sysname and x[1]==faction,knownretreats))
+        answer = [sysname,faction] in knownretreats
+        if answer:
+            print(f"!{faction} has previously retreated from {sysname}")
+            return True
+        else:
+            return False
+
 
 if __name__ == '__main__':
     ## Unit Test Harness

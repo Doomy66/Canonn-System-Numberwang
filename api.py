@@ -296,9 +296,84 @@ def CSNPatrol():
 
 def apicount():
     return NREQ
-    
+
+def retreated_factions(system_name, count=1000): # elitebgs
+    '''
+    Return a list of all Factions that have ever retreated from system.
+    '''
+    global NREQ 
+    try:
+        url = f"{_ELITEBGSURL}systems"
+        payload = {'name':system_name, 'count':count}
+        resp = requests.get(url, params=payload)
+        myload = json.loads(resp._content)["docs"][0]
+        myload['system_name'] = myload['name']
+    except:
+        print(f'!Failed to find system "{system_name}"')
+        myload = None
+
+    factions = list()
+    retreated = list()
+    myload['history'].sort(key = lambda x: x['updated_at'])
+    for h in myload['history']:
+        for f in h['factions']:
+            if f['name'] not in factions:
+                #print(f">{f['name']} on {h['updated_at']}")
+                factions.append(f['name']) # Faction Arrived
+        for f in factions:
+            #f = next((x for x in self.factions if x['id'] == idorname),None)
+            if not next((x for x in h['factions'] if x['name']==f),None):
+                #print(f"<{f} on {h['updated_at']}")
+                retreated.append(f) # Faction Retreated
+                factions.remove(f)
+
+
+    NREQ += 1
+
+    return retreated
+
+def retreated_systems(faction, count=1000): # elitebgs
+    '''
+    Return a list of all Factions that have ever retreated from system.
+    '''
+    global NREQ 
+    try:
+        url = f"{_ELITEBGSURL}factions"
+        payload = {'name':faction, 'count':count}
+        resp = requests.get(url, params=payload)
+        myload = json.loads(resp._content)["docs"][0]
+        myload['system_name'] = myload['name']
+    except:
+        print(f'!Failed to find faction "{faction}"')
+        myload = None
+
+    systems = list()
+    retreated = list()
+    myload['history'].sort(key = lambda x: x['updated_at'])
+    for h in myload['history']:
+        for s in h['systems']:
+            if s['name'] not in systems:
+                #print(f">{s['name']} on {h['updated_at']}")
+                systems.append(s['name']) # Faction Arrived
+        for s in systems:
+            #f = next((x for x in self.factions if x['id'] == idorname),None)
+            if not next((x for x in h['systems'] if x['name']==s),None):
+                #print(f"<{s} on {h['updated_at']}")
+                retreated.append(s) # Faction Retreated
+                systems.remove(s)
+
+
+    NREQ += 1
+
+    return retreated
+
 if __name__ == '__main__':
     # Test Harness
     print('Test Harness for...')
+    s = retreated_factions('Cnephtha',1000)
+    print(s)
+    s = retreated_systems('Pipedu Prison Colony',1000)
+    print(s)
+
     print('Nothing')
     print(f'Done with {NREQ} requests')
