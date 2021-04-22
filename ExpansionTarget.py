@@ -123,7 +123,6 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
     global eddb
     if not eddb:
         eddb = EDDBFrame()
-    best = 99
     answers=list()
 
     # Default
@@ -136,19 +135,16 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
         for target in targets:
             cycles += 1 if target['expansionType'][0] == 'S' else 2
             if target['name'] == system:
-                print(f"{sys['name']} [{sys['controlling_minor_faction']}] ({round(sys['influence'],1)}%) in {cycles}{'*' if cycles<=best else ''}")
-                if max(2,cycles)<best:
-                    answers = list()
-                    best = min(best,cycles)
-                if cycles <= max(2,best):
-                    eddb.getstations(sys['name'])
-                    sys['tocycles'] = cycles
-                    answers.append(sys)
+                print(f"{sys['name']} [{sys['controlling_minor_faction']}] ({round(sys['influence'],1)}%) in {cycles}")
+                eddb.getstations(sys['name'])
+                sys['tocycles'] = cycles
+                answers.append(sys)
                 break
 
     print('')
-    print(f"# Quickest Expansions to {system} which has {len(targetsys['minor_faction_presences'])} factions in {best} cycles")
-    for answer in answers:
+    print(f"# Quickest Expansions to {system} which has {len(targetsys['minor_faction_presences'])} factions")
+    answers.sort(key=lambda x: x['tocycles'])
+    for answer in answers[:10]:
         print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']}")
     return answers
 
@@ -179,6 +175,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
     # Remove systems where faction is already present
     sysInRange = list(filter(lambda x: x not in factionpresence and x['name'] != sys['name'], sysInRange))
     sysInRange.sort(key=lambda x: cubedist(x,sys))
+    retreated = api.retreated_systems(sys['controlling_minor_faction'])
 
     if len(sysInRange):
         bestpriority = 1000
@@ -211,6 +208,10 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
                             break
                 except:
                     print(f"!! Dodgy Faction {target['name']} in {sys['name']}")
+            
+            if target['name'] in retreated:
+                target['sys_priority'] += 1000
+
         # Sort all candidate systems in priority order
         sysInRange.sort(key=lambda x: x['sys_priority'])
         cycles = 0
@@ -225,7 +226,6 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
         else:
             for cand in sysInRange[:8]:
                 if cand['sys_priority'] != 1000:
-
                     print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}] in {cand['cycles']} cycles")
     return sysInRange
 
@@ -380,8 +380,11 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Rishnum",True)
 
     # Currently Raising
-    #ExpansionFromSystem("Chelka",True)
+    ExpansionFromSystem("Chelka",True)
     #ExpansionFromSystem("Dvorotri",True)
+    #ExpansionFromSystem("Bhotepa",True) 
+    #ExpansionFromSystem("HIP 100284",True) 
+     
 
     #ExpansionCandidates("Stellanebula Project",True,None)
     #ExpansionFromSystem("HIP 117029",True)
@@ -389,26 +392,31 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Kaititja",True)
     #ExpansionFromSystem("Heheng De",True)
     #ExpansionFromSystem("Menhitae",True)
-    
+
+    ## IPX
+    #ExpansionFromSystem("Cephei Sector BA-A d85",True)
+    #ExpansionFromSystem("Keiadjara",True)
+    #ExpansionCandidates("Interplanetary Explorations",True,None)
     
     
 
-    #ExpansionToSystem("Pipedu",True)
+    ## System Under Threat
+    #ExpansionToSystem("Cnephtha",True)
+    #ExpansionToSystem("Pipedu",True,True)
     #ExpansionToSystem("Meinjhalie",True,True)
-    #ExpansionToSystem("Wathlanukh")
+    #ExpansionToSystem("Wathlanukh") ## FIXED
     #ExpansionToSystem("Njoere",True,True)
-    #ExpansionToSystem("Njoere")
     #ExpansionToSystem("Kumata")
-    ExpansionToSystem("Rishnum",True,True)
-     
    
     
    
     
-    #ExpansionCandidates("Canonn",True,None)
+    #ExpansionCandidates("Canonn",True)
     #ExpansionCandidates("Canonn",True,None,40)
     #ExpansionCandidates("Marquis du Ma'a",True,None)
     #ExpansionCandidates("Sanctified Chapter of Backlumba",True)
+    #ExpansionCandidates("Interplanetary Explorations",True,None,40)
+    
 
     #InvasionAlert("Canonn",70,True,4)
     #InvasionAlert("Canonn")
