@@ -5,6 +5,7 @@ from typing import AnyStr
 import urllib.request
 import tempfile
 import pickle
+import api
 
 
 def sysdist(s1, s2):
@@ -26,6 +27,15 @@ class EDDBFrame():
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
         self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
+
+
+        self._ebgs_systemhist_cache = 'data\\EBGS_SysHist.pickle'
+        self.systemhist = list()
+        if os.path.exists(self._ebgs_systemhist_cache):
+            with open(self._ebgs_systemhist_cache, 'rb') as io:
+                self.systemhist = pickle.load(io)
+
+
 
         ## Get EDDB Data either from local cache or download a dump
         if (not os.path.exists(self._eddb_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds > 3*60*60:
@@ -87,6 +97,27 @@ class EDDBFrame():
             # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
             sys['influence'] = sys['minor_faction_presences'][0]['influence'] if sys['minor_faction_presences'] else 0
+
+            # Update the cache that stores all Factions that have ever been in the system so that we can inferre which factions have ever retreated
+            # The initial data requires spamming of EBGS, which is only done the 1st time the system is accessed
+            # Subsequent loading of the system will simply add any new factions without any recourse to any API and immediatly save the cache as a pickle
+            # Only if a faction arrives and also retreats before the system is processed will this be incorrect. Reasonably possible in the case of a failed invasion.
+            # It may be wise to delete the pickle and regenerate every 6 months or so, but the inital gathering is HIGHLY api intensive (e.g. 12 hours). Send Garud some cash !
+            savepickle = False
+            if not 'historic' in sys.keys():
+                cached = next((x for x in self.systemhist if x['name'] == sys['name']),None)
+                if not cached:
+                    self.systemhist.append({'name':sys['name'], 'factions':api.factionsovertime(sys['name'])})
+                    cached = next((x for x in self.systemhist if x['name'] == sys['name']),None)
+                    savepickle = True
+                for f in sys['minor_faction_presences']:
+                    if f['name'] not in cached['factions']:
+                        savepickle = True
+                        cached['factions'].append(f['name'])
+                if savepickle:
+                    with open(self._ebgs_systemhist_cache, 'wb') as io:
+                        pickle.dump(self.systemhist,io)
+                sys['historic'] = cached['factions'] if cached else list()
         return sys
 
     def faction(self,idorname):
@@ -199,19 +230,6 @@ class EDDBFrame():
         sys['minor_faction_presences'].pop()
         return
     
-    def hasretreated(self,sysname,faction):
-        knownretreats = list()
-        knownretreats.append(["Cnephtha","The Digiel Aggregate"])
-        knownretreats.append(["Cephei Sector YZ-Y b4","Jaoi Flag"])
-        #Cephei Sector YZ-Y b4 , Jaoi Flag
-
-        #answer = list(filter(lambda x : x[0]==sysname and x[1]==faction,knownretreats))
-        answer = [sysname,faction] in knownretreats
-        if answer:
-            print(f"!{faction} has previously retreated from {sysname}")
-            return True
-        else:
-            return False
 
 
 if __name__ == '__main__':

@@ -6,7 +6,8 @@
 import requests
 import csv
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 
 from requests.models import Response
 
@@ -297,9 +298,10 @@ def CSNPatrol():
 def apicount():
     return NREQ
 
-def retreated_factions(system_name, count=1000): # elitebgs
+def retreated_factions(system_name, count=300): # elitebgs NO DONT USE
     '''
     Return a list of all Factions that have ever retreated from system.
+    Abandoned as a count of 300 was deemed excessive and should be done incrementally with timeMin and timeMax
     '''
     global NREQ 
     try:
@@ -332,48 +334,79 @@ def retreated_factions(system_name, count=1000): # elitebgs
 
     return retreated
 
-def retreated_systems(faction, count=1000): # elitebgs
+def retreated_systems(faction, count=300): # elitebgs NO DONT USE
     '''
-    Return a list of all Factions that have ever retreated from system.
+    Abandoned as a count of 300 was deemed excessive and should be done incrementally with timeMin and timeMax
     '''
     global NREQ 
+    systems = list()
+    retreated = list()
+
     try:
         url = f"{_ELITEBGSURL}factions"
         payload = {'name':faction, 'count':count}
         resp = requests.get(url, params=payload)
         myload = json.loads(resp._content)["docs"][0]
         myload['system_name'] = myload['name']
+        myload['history'].sort(key = lambda x: x['updated_at'])
+        for h in myload['history']:
+            for s in h['systems']:
+                if s['name'] not in systems:
+                    print(f">{s['name']} on {h['updated_at']}")
+                    systems.append(s['name']) # Faction Arrived
+                    if s['name'] in retreated:
+                        retreated.remove(s['name'])
+            for s in systems:
+                if not next((x for x in h['systems'] if x['name']==s),None):
+                    print(f"<{s} on {h['updated_at']}")
+                    retreated.append(s) # Faction Retreated
+                    systems.remove(s)
     except:
         print(f'!Failed to find faction "{faction}"')
-        myload = None
-
-    systems = list()
-    retreated = list()
-    myload['history'].sort(key = lambda x: x['updated_at'])
-    for h in myload['history']:
-        for s in h['systems']:
-            if s['name'] not in systems:
-                #print(f">{s['name']} on {h['updated_at']}")
-                systems.append(s['name']) # Faction Arrived
-        for s in systems:
-            #f = next((x for x in self.factions if x['id'] == idorname),None)
-            if not next((x for x in h['systems'] if x['name']==s),None):
-                #print(f"<{s} on {h['updated_at']}")
-                retreated.append(s) # Faction Retreated
-                systems.remove(s)
-
 
     NREQ += 1
 
     return retreated
 
+def factionsovertime(system_name, days=90): # elitebgs
+    '''
+    Return a list of all factions that have ever been in the system
+    Can be compared to current factions to identify historic retreats
+    '''
+    global NREQ 
+
+    factions = list()
+    maxTime = datetime.now()
+    print(f"Fetching Historic Faction Info for {system_name}")
+    while True:
+        minTime = maxTime+timedelta(hours=-24*days) ## Even using Khun, 30 days this only creates 43 History records max
+
+        try:
+            url = f"{_ELITEBGSURL}systems"
+            payload = {'name':system_name, 'timeMin':int(1000*time.mktime(minTime.timetuple())), 'timeMax':int(1000*time.mktime(maxTime.timetuple()))}
+            resp = requests.get(url, params=payload)
+            myload = json.loads(resp._content)["docs"][0]
+            NREQ += 1
+        except:
+            break
+
+        if myload['history']:
+            myload['system_name'] = myload['name']
+            myload['history'].sort(key = lambda x: x['updated_at'])
+            #print(myload['history'][0]['updated_at'],myload['history'][-1]['updated_at'],len(myload['history']))
+            for h in myload['history']:
+                for f in h['factions']:
+                    if f['name'] not in factions:
+                        factions.append(f['name']) # Faction Arrived
+        maxTime = minTime
+
+    return factions
+
 if __name__ == '__main__':
     # Test Harness
     print('Test Harness for...')
-    s = retreated_factions('Cnephtha',1000)
-    print(s)
-    s = retreated_systems('Pipedu Prison Colony',1000)
-    print(s)
+    print(factionsovertime('Cnephtha',90))
+    print(retreated_factions('Cnephtha',90))
 
     print('Nothing')
     print(f'Done with {NREQ} requests')
