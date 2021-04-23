@@ -131,7 +131,10 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
 
     # Default
     targetsys = eddb.system(system)
+    factionspresent = list(x['name'] for x in targetsys['minor_faction_presences'])
+
     sysInRange = eddb.cubearea(system, range)
+    sysInRange = list(filter(lambda x: x['controlling_minor_faction'] not in factionspresent,sysInRange))
     
     print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets')
     for i,sys in enumerate(sysInRange):
@@ -186,6 +189,8 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
     if len(sysInRange):
         bestpriority = 1000
         for target in sysInRange:
+            if target['name'] == 'DEBUG': ## DEBUG
+                print('')
             # Default in case nothing is found
             target['sys_priority'] = 1000
             target['expansionType'] = 'None'
@@ -279,7 +284,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
                         and x['name'] not in donesystems 
                         and x['population'] > 0
                         and x['influence'] > mininf
-                        , eddb.cubearea(home, 30))
+                        , eddb.cubearea(home, rangeExtended))
         for invader in invaders:
             targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'])[:lookahead])) # Check if next lookahead expansions will target the home faction
             if targets:
@@ -380,7 +385,7 @@ if __name__ == '__main__':
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
 
     # Currently Raising for Defensive Purposes
-    ExpansionFromSystem("Chelka",True)
+    #ExpansionFromSystem("Chelka",True)
     #ExpansionFromSystem("Dvorotri",True)
     #ExpansionFromSystem("HIP 100284",True) 
      
@@ -405,6 +410,7 @@ if __name__ == '__main__':
     #ExpansionToSystem("Meinjhalie",True,True)
     #ExpansionToSystem("Njoere",True,True)
     #ExpansionToSystem("Kumata")
+    ExpansionToSystem("Rishnum",True,True)
    
 
     ## Marquis du Ma'a

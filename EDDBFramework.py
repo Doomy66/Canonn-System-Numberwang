@@ -69,6 +69,10 @@ class EDDBFrame():
             pickle.dump(self.systems,io)
             pickle.dump(self.factions,io)
             pickle.dump(self.stations,io)
+        
+        # Apply all known factions to the known cache
+        for s in self.systemhist:
+            x=self.system(s['name'])
         return
 
     def system(self,idorname):
