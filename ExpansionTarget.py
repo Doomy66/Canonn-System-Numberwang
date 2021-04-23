@@ -380,7 +380,7 @@ if __name__ == '__main__':
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
 
     # Currently Raising for Defensive Purposes
-    #ExpansionFromSystem("Chelka",True)
+    ExpansionFromSystem("Chelka",True)
     #ExpansionFromSystem("Dvorotri",True)
     #ExpansionFromSystem("HIP 100284",True) 
      
@@ -399,7 +399,7 @@ if __name__ == '__main__':
     ## System Under Threat
     #InvasionAlert("Canonn",70,True,4)
     #InvasionAlert("Canonn")
-    ExpansionToSystem("Cnephtha",True,True)
+    #ExpansionToSystem("Cnephtha",True,True)
     #ExpansionToSystem("Cnephtha")
     #ExpansionToSystem("Pipedu",True,True)
     #ExpansionToSystem("Meinjhalie",True,True)

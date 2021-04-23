@@ -175,10 +175,9 @@ def Misson_Gen(argv=''):
 
             # GOLDRUSH
             if next((x for x in empire['active_states']+empire['pending_states'] if x['state'] in {'infrastructure failure'}),None):
-                if next((x for x in empire['active_states']+empire['pending_states'] if x['state'] in {'civil liberty'}),None):
-                    if next((x for x in sys['stations'] if x['economy'] in {'$economy_extraction;'}),None):
-                        messages.append(
-                            amessage(sys, 24, f'Gold Rush Active or Pending', dIcons['data']))
+                if next((x for x in sys['stations'] if x['economy'] in {'$economy_extraction;'}),None):
+                    messages.append(
+                        amessage(sys, 24, "Super " if next((x for x in empire['active_states']+empire['pending_states'] if x['state'] in {'civil liberty'}),None) else "" + f"Gold Rush Active or Pending", dIcons['data']))
 
             # Conflict Complete Info - Additional Message, not for Patrol, but for Discord
             if len(list(filter(lambda x: x['state'] in {'war', 'election', 'civilwar'}, empire['recovering_states']))) > 0:
