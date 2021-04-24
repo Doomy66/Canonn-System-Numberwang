@@ -119,6 +119,9 @@ def Misson_Gen(argv=''):
             oride = list(filter(lambda x: x[0] == sys["system_name"], orides))
             faction_systems[key]['override'] = oride[0][4] if oride else 'Natural'
 
+            if sys['name'] == 'DEBUG':
+                print(f'Debug')
+
             # Single Message per sysme for Patrol
             if faction_systems[key]['override'] != 'Natural':  # OVERRIDE!
                 messages.append(
@@ -174,7 +177,7 @@ def Misson_Gen(argv=''):
                     amessage(sys, 24, f'Tritium Opportunity Active', dIcons['data']))
 
             # GOLDRUSH
-            if next((x for x in empire['active_states']+empire['pending_states'] if x['state'] in {'infrastructure failure'}),None):
+            if next((x for x in empire['active_states']+empire['pending_states'] if x['state'] in {'infrastructurefailure'}),None):
                 if next((x for x in sys['stations'] if x['economy'] in {'$economy_extraction;'}),None):
                     messages.append(
                         amessage(sys, 24, "Super " if next((x for x in empire['active_states']+empire['pending_states'] if x['state'] in {'civil liberty'}),None) else "" + f"Gold Rush Active or Pending", dIcons['data']))

@@ -388,6 +388,7 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Chelka",True)
     #ExpansionFromSystem("Dvorotri",True)
     #ExpansionFromSystem("HIP 100284",True) 
+    ExpansionFromSystem("Kungati",True) 
      
     ## Canonn Exansion Planning
     #ExpansionCandidates("Canonn",True)
@@ -410,7 +411,9 @@ if __name__ == '__main__':
     #ExpansionToSystem("Meinjhalie",True,True)
     #ExpansionToSystem("Njoere",True,True)
     #ExpansionToSystem("Kumata")
-    ExpansionToSystem("Rishnum",True,True)
+    #ExpansionToSystem("Rishnum",True,True)
+    #ExpansionToSystem("Cephei Sector BA-A d107",True,True)
+    
    
 
     ## Marquis du Ma'a
