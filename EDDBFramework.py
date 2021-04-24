@@ -1,3 +1,4 @@
+from Bubble import update_progress
 import os
 import datetime
 import json
@@ -27,14 +28,8 @@ class EDDBFrame():
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
         self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
-
-
         self._ebgs_systemhist_cache = 'data\\EBGS_SysHist.pickle'
         self.systemhist = list()
-        if os.path.exists(self._ebgs_systemhist_cache):
-            with open(self._ebgs_systemhist_cache, 'rb') as io:
-                self.systemhist = pickle.load(io)
-
 
 
         ## Get EDDB Data either from local cache or download a dump
@@ -54,13 +49,14 @@ class EDDBFrame():
                 self.stations = json.loads(response.read().decode('utf8'))
 
             self.savecache()
-
+            self.retreatsload()
         else:
             #print('Using Local Cached EDDB Dump...')
             with open(self._eddb_cache, 'rb') as io:
                 self.systems = pickle.load(io)
                 self.factions = pickle.load(io)
                 self.stations = pickle.load(io)
+            self.retreatsload(False)
         return
 
     def savecache(self):
@@ -75,6 +71,57 @@ class EDDBFrame():
             x=self.system(s['name'])
         return
 
+    def retreatsload(self,refresh=True):
+        self.systemhist = list()
+        if os.path.exists(self._ebgs_systemhist_cache):
+            with open(self._ebgs_systemhist_cache, 'rb') as io:
+                self.systemhist = pickle.load(io)
+        if refresh:
+            self.retreatsrefresh()
+        return
+
+    def retreatssave(self):
+        '''
+        Called inside any function whenever the retreats data changes
+        '''
+        with open(self._ebgs_systemhist_cache, 'wb') as io:
+            pickle.dump(self.systemhist,io)
+        return
+
+    def retreatsrefresh(self):
+        '''
+        Update any cached retreat data with latest data from eddb
+        '''
+        save = False
+        for i,hist in enumerate(self.systemhist):
+            update_progress(i/len(self.systemhist),'Retreat Refresh')
+            sys = next((x for x in self.systems if x['name'] == hist['name']), None)
+            if sys:
+                for f in sys['minor_faction_presences']:
+                    if self.faction(f['minor_faction_id'])['name'] not in hist['factions']:
+                        save = True
+                        hist['factions'].append(f['name'])
+        if save:
+            self.retreatssave()
+        update_progress(1)
+        return
+
+
+    def retreats(self,system_name):
+        ''' 
+        Not actualy retreats, but a list of factions that have EVER been in system
+        Retreats can then be inferred
+        '''
+        cached = next((x for x in self.systemhist if x['name'] == system_name),None)
+        if not cached:
+            answer = api.factionsovertime(system_name)
+            self.systemhist.append({'name':system_name, 'factions':answer})
+            self.retreatssave()
+        else:
+            answer = cached['factions']
+        return answer
+
+
     def system(self,idorname):
         ''' 
         Returns System Data given a system name or ID 
@@ -87,7 +134,7 @@ class EDDBFrame():
 
         if not sys:
             print(f'! System Not Found : {idorname}')
-        else:
+        elif not 'pf' in sys.keys():
             #Denormalise for lazyness
             sys['pf'] = list()
             for mf in sys['minor_faction_presences']:
@@ -102,26 +149,10 @@ class EDDBFrame():
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
             sys['influence'] = sys['minor_faction_presences'][0]['influence'] if sys['minor_faction_presences'] else 0
 
-            # Update the cache that stores all Factions that have ever been in the system so that we can inferre which factions have ever retreated
-            # The initial data requires spamming of EBGS, which is only done the 1st time the system is accessed
-            # Subsequent loading of the system will simply add any new factions without any recourse to any API and immediatly save the cache as a pickle
-            # Only if a faction arrives and also retreats before the system is processed will this be incorrect. Reasonably possible in the case of a failed invasion.
-            # It may be wise to delete the pickle and regenerate every 6 months or so, but the inital gathering is HIGHLY api intensive (e.g. 12 hours). Send Garud some cash !
-            savepickle = False
-            if not 'historic' in sys.keys():
-                cached = next((x for x in self.systemhist if x['name'] == sys['name']),None)
-                if not cached:
-                    self.systemhist.append({'name':sys['name'], 'factions':api.factionsovertime(sys['name'])})
-                    cached = next((x for x in self.systemhist if x['name'] == sys['name']),None)
-                    savepickle = True
-                for f in sys['minor_faction_presences']:
-                    if f['name'] not in cached['factions']:
-                        savepickle = True
-                        cached['factions'].append(f['name'])
-                if savepickle:
-                    with open(self._ebgs_systemhist_cache, 'wb') as io:
-                        pickle.dump(self.systemhist,io)
-                sys['historic'] = cached['factions'] if cached else list()
+            # Additional data from other sources
+            sys['historic'] = self.retreats(sys['name'])
+
+
         return sys
 
     def faction(self,idorname):
@@ -243,6 +274,7 @@ if __name__ == '__main__':
     failed = g.system('I Dont Exist')
     canonn = g.faction('Canonn')
     failed = g.faction('I Dont Exist')
+    Sawadbhakui = g.system('Sawadbhakui')
     canonnowned = g.systemscontroled('Canonn')
     canonnspace = g.systemspresent('Canonn')
     aboutvarati = g.cubearea('Varati',30)

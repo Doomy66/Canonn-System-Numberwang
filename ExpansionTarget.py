@@ -388,7 +388,7 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Chelka",True)
     #ExpansionFromSystem("Dvorotri",True)
     #ExpansionFromSystem("HIP 100284",True) 
-    ExpansionFromSystem("Kungati",True) 
+    #ExpansionFromSystem("Kungati",True) 
      
     ## Canonn Exansion Planning
     #ExpansionCandidates("Canonn",True)
@@ -403,7 +403,7 @@ if __name__ == '__main__':
 
 
     ## System Under Threat
-    #InvasionAlert("Canonn",70,True,4)
+    InvasionAlert("Canonn",60,True,4)
     #InvasionAlert("Canonn")
     #ExpansionToSystem("Cnephtha",True,True)
     #ExpansionToSystem("Cnephtha")
