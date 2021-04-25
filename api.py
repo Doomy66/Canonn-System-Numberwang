@@ -8,6 +8,7 @@ import csv
 import json
 from datetime import datetime, timedelta
 import time
+import sys
 
 from requests.models import Response
 
@@ -368,45 +369,48 @@ def retreated_systems(faction, count=300): # elitebgs NO DONT USE
 
     return retreated
 
-def factionsovertime(system_name, days=90): # elitebgs
+def factionsovertime(system_name, days=30): # elitebgs
     '''
     Return a list of all factions that have ever been in the system
     Can be compared to current factions to identify historic retreats
+    Really sorry this takes so long, but ebgs is the ONLY source of this data
+    and a full scan through system history is the ONLY way to get the data out of ebgs
     '''
     global NREQ 
 
     factions = list()
     maxTime = datetime.now()
-    print(f"Fetching Historic Faction Info for {system_name}")
-    while True:
-        minTime = maxTime+timedelta(hours=-24*days) ## Even using Khun, 30 days this only creates 43 History records max
+    minTime = None 
+    earliest = datetime(2017,10,8) #Garud says 1st record is 8th Oct 1997
+    url = f"{_ELITEBGSURL}systems"
 
-        try:
-            url = f"{_ELITEBGSURL}systems"
-            payload = {'name':system_name, 'timeMin':int(1000*time.mktime(minTime.timetuple())), 'timeMax':int(1000*time.mktime(maxTime.timetuple()))}
-            resp = requests.get(url, params=payload)
-            myload = json.loads(resp._content)["docs"][0]
-            NREQ += 1
-        except:
-            break
+    sys.stdout.write(f"Historic Info for {system_name} ")
+    while minTime != earliest:
+        minTime = max(earliest,maxTime+timedelta(days=-days))
+
+        ## There is no TRY Block as it might make the cache invalid and cause a total rebuild
+        payload = {'name':system_name, 'timeMin':int(1000*time.mktime(minTime.timetuple())), 'timeMax':int(1000*time.mktime(maxTime.timetuple()))}
+        resp = requests.get(url, params=payload)
+        myload = json.loads(resp._content)["docs"][0]
+        sys.stdout.write(':' if myload['history'] else '.')
+        sys.stdout.flush()
+        NREQ += 1
 
         if myload['history']:
-            myload['system_name'] = myload['name']
-            myload['history'].sort(key = lambda x: x['updated_at'])
-            #print(myload['history'][0]['updated_at'],myload['history'][-1]['updated_at'],len(myload['history']))
             for h in myload['history']:
                 for f in h['factions']:
                     if f['name'] not in factions:
                         factions.append(f['name']) # Faction Arrived
         maxTime = minTime
-
+    print('')
     return factions
 
 if __name__ == '__main__':
     # Test Harness
     print('Test Harness for...')
-    print(factionsovertime('Cnephtha',90))
-    print(retreated_factions('Cnephtha',90))
+    print(factionsovertime('Cnephtha'))
+    #print(factionsovertime('Sol'))
+    #print(retreated_factions('Cnephtha'))
 
     print('Nothing')
     print(f'Done with {NREQ} requests')
