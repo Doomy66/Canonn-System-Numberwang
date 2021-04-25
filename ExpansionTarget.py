@@ -158,7 +158,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']}")
     return answers
 
-def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked = None):
+def ExpansionFromSystem(system_name, show = False, factionpresence = None, prebooked_system_name = None, useretreat = True):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -169,21 +169,24 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
         eddb = EDDBFrame()
 
     # Default
-    sys = eddb.system(system)
-    eddb.getstations(system)
+    sys = eddb.system(system_name)
+    eddb.getstations(system_name)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
     if not factionpresence:
         factionpresence = eddb.systemspresent(sys['controlling_minor_faction'])
     
-    if prebooked:
-        factionpresence.append(eddb.system(prebooked))
+    if prebooked_system_name:
+        factionpresence.append(eddb.system(prebooked_system_name))
 
-    sys['conflicts'] = eddb.activestates(system,True)
+    systoignore = list(x['name'] for x in factionpresence) ## Just using names as system can hold changing values 
+    ## TODO Investigate change factionpresence param to be a list of names so I dont have to gather it every cycle
+
+    sys['conflicts'] = eddb.activestates(system_name,True)
 
     sysInRange = eddb.cubearea(sys['name'], rangeExtended)
-    # Remove systems where faction is already present
-    sysInRange = list(filter(lambda x: x not in factionpresence and x['name'] != sys['name'], sysInRange))
+    # Remove systems where faction is already present or other reasons
+    sysInRange = list(filter(lambda x: x['name'] not in systoignore and x['name'] != sys['name'], sysInRange))
     sysInRange.sort(key=lambda x: cubedist(x,sys))
 
     if len(sysInRange):
@@ -198,15 +201,16 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
             eddb.getstations(target['name']) # Load Station and Beststation into System
 
             # System Priorties : 0 < Simple Expansion Dist < 100 < Extended Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 1000 < Nothing Found
-            if cubedist(target,sys) <= rangeSimple and len(target['minor_faction_presences']) < 7: # Simple Expansion
-                target['sys_priority'] = sysdist(target,sys)
+            ## ID Confirms priority is based on straight line distance NOT cubedist
+            if target['cubedist'] <= rangeSimple and len(target['minor_faction_presences']) < 7: # Simple Expansion
+                target['sys_priority'] = sysdist(target,sys) 
                 target['expansionType'] = f"Simple Expansion"
                 bestpriority = min(bestpriority, target['sys_priority'])
             elif len(target['minor_faction_presences']) < 7:  # Extended Expansion
                 target['sys_priority'] = 100 + sysdist(target,sys)
                 target['expansionType'] = f"Extended Expansion"
                 bestpriority = min(bestpriority, target['sys_priority'])
-            elif len(target['minor_faction_presences']) == 7:  # Invasion #NB Unknown if Invasion is limited to Simple range
+            elif len(target['minor_faction_presences']) == 7:  # Invasion # TODO Unknown if Invasion is limited to Simple range
                 natives = eddb.natives(target['name'])
                 try:
                     target['minor_faction_presences'].sort(
@@ -220,7 +224,7 @@ def ExpansionFromSystem(system, show = False, factionpresence = None, prebooked 
                 except:
                     print(f"!! Dodgy Faction {target['name']} in {sys['name']}")
             
-            if 'historic' in target.keys() and sys['controlling_minor_faction'] in target['historic']: # Has previously retreated
+            if useretreat and 'historic' in target.keys() and sys['controlling_minor_faction'] in target['historic']: # Has previously retreated
                 target['sys_priority'] += 300
 
         # Sort all candidate systems in priority order
@@ -296,6 +300,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
 
     if show:
         if alertsystems:
+            alertsystems.sort(key=lambda x: x['cycles'])
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['influence'], reverse=True)
             for alert in alertsystems:
@@ -303,7 +308,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
 
     return alertsystems
 
-def InvasionRoute(fromsys,tosys,maxcycles = 10):
+def InvasionRoute(fromsys,tosys,maxcycles = 5):
     '''
     Will calculate the quickest controlled expansion route between 2 systems.
     maxcycles is the number of additional cycles you are prepared to wait at each system
@@ -324,7 +329,7 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
                 allroutes.append(route.copy())
                 bestdist = min(routedist,bestdist) if bestdist else routedist
         else: # take the next set of expansions
-            exp = ExpansionFromSystem(currentsys['name'],False,route)
+            exp = ExpansionFromSystem(currentsys['name'],False,route,None,False)
             for sys in exp[:maxcycles]:
                 routedist += 1 if sys['expansionType'][0]=='S' else 2
                 sys['routedist'] = routedist
@@ -336,6 +341,7 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
                     sys['best'] = min(sys['best'],sys['routedist']+1) 
                 
                 route.append(sys.copy()) # expand
+                route[-1]['from'] = currentsys['name']
                 xdist = sysdist(sys,destsys)
                 if xdist < currentdist and ((not bestdist) or routedist<bestdist) and (sys['best'] > routedist): # follow the expansion if it is usefull
                     tdepth += 1
@@ -358,19 +364,19 @@ def InvasionRoute(fromsys,tosys,maxcycles = 10):
     totaldist = sysdist(startsys,destsys) # for progress bar
 
     route = [startsys]
+    route[0]['from'] = 'Start'
     route[0]['expansionType'] = 'Home'
     route[0]['routedist'] = 0
     allroutes = list()
     bestdist = None
     tdepth = 0
-    maxcycles = 30
     spider()
 
     if allroutes:
         allroutes.sort(key=lambda x: x[-1]['routedist'])
         print(f"\n**Route from {fromsys} to {tosys}:")
         for n in allroutes[0]:
-            print(f"{n['name']} : {n['expansionType']} ({n['routedist']})")
+            print(f"{n['from']} > {n['name']} ({n['controlling_minor_faction']}): {n['expansionType']} ({n['routedist']})")
     else:
         print('Failed for some unknown reason')
     
@@ -395,29 +401,30 @@ if __name__ == '__main__':
     #ExpansionCandidates("Canonn",True,None,40)
 
     #ExpansionFromSystem("Kongi",True)
-    #ExpansionFromSystem("Luvalla",True)
-    #ExpansionFromSystem("Parezmia",True)
-    #ExpansionFromSystem("Ba Devaci",True)
-    #ExpansionFromSystem("Azaleach",True)
     #ExpansionFromSystem("Rishnum",True)    
-
+    #ExpansionFromSystem("Bactrimpox",True)    
+    #ExpansionFromSystem("Chematja",True)    
+    #ExpansionFromSystem("Jarildekald",True)    
+    #ExpansionFromSystem("Lelalakan",True)    
+     
 
     ## System Under Threat
-    InvasionAlert("Canonn",60,True,4)
+    #InvasionAlert("Canonn",mininf = 50,lookahead = 4)
     #InvasionAlert("Canonn")
-    #ExpansionToSystem("Cnephtha",True,True)
-    #ExpansionToSystem("Cnephtha")
-    #ExpansionToSystem("Pipedu",True,True)
-    #ExpansionToSystem("Meinjhalie",True,True)
-    #ExpansionToSystem("Njoere",True,True)
-    #ExpansionToSystem("Kumata")
-    #ExpansionToSystem("Rishnum",True,True)
-    #ExpansionToSystem("Cephei Sector BA-A d107",True,True)
+    #ExpansionToSystem("Cnephtha",True,True)                ## 5
+    #ExpansionToSystem("Pipedu",True,True)                  ## 6
+    #ExpansionToSystem("Meinjhalie",True,True)              ## 5
+    #ExpansionToSystem("Njoere",True,True)                  ## 7 PROTECTED
+    #ExpansionToSystem("Rishnum",True,True)                 ## 6
+    #ExpansionToSystem("Cephei Sector BA-A d107",True,True) ## 3 Not enough available factions to try and fill
+    #ExpansionToSystem("HIP 54529")                         ## 5 Factions - Run EXTENTED, 5 Cycles is best for SIMPLE
+    
     
    
 
     ## Marquis du Ma'a
     #ExpansionCandidates("Marquis du Ma'a",True,None)
+    #ExpansionFromSystem("Luvalla",True)
 
 
     ## Stellanebula Project
@@ -426,7 +433,7 @@ if __name__ == '__main__':
     #ExpansionFromSystem("Dakinn",True)
     #ExpansionFromSystem("Kaititja",True)
     #ExpansionFromSystem("Heheng De",True)
-    #ExpansionFromSystem("Menhitae",True)
+
 
 
     ## IPX
@@ -437,6 +444,8 @@ if __name__ == '__main__':
 
 
     #InvasionRoute('Varati','Sol')
+    #InvasionRoute('Varati','Bactrimpox')
+    #InvasionRoute('Bactrimpox','Manktas',99)
 
     ## All Expansions from Orbital Systems with Simple Expansions still available
     #allexp = ExpansionCandidates("Canonn",True,None,40)
@@ -444,6 +453,6 @@ if __name__ == '__main__':
         #if exp['beststation'] == 'Orbital':
             #if exp['expansion']['expansionType'][0] == 'S':
                 #ExpansionFromSystem(exp['name'],True)
-
+    print(f"Done : API {api.NREQ}")
     
     
