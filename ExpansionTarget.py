@@ -158,7 +158,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False):
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, factionpresence = None, prebooked_system_name = None, useretreat = True):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -173,27 +173,24 @@ def ExpansionFromSystem(system_name, show = False, factionpresence = None, prebo
     eddb.getstations(system_name)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
-    if not factionpresence:
-        factionpresence = eddb.systemspresent(sys['controlling_minor_faction'])
+    if not avoided_systems:
+        avoided_systems = list(x['name'] for x in eddb.systemspresent(sys['controlling_minor_faction']))
     
-    if prebooked_system_name:
-        factionpresence.append(eddb.system(prebooked_system_name))
-
-    systoignore = list(x['name'] for x in factionpresence) ## Just using names as system can hold changing values 
-    ## TODO Investigate change factionpresence param to be a list of names so I dont have to gather it every cycle
+    if avoid_additional:
+        avoided_systems.append(avoid_additional)
 
     sys['conflicts'] = eddb.activestates(system_name,True)
 
     sysInRange = eddb.cubearea(sys['name'], rangeExtended)
     # Remove systems where faction is already present or other reasons
-    sysInRange = list(filter(lambda x: x['name'] not in systoignore and x['name'] != sys['name'], sysInRange))
+    sysInRange = list(filter(lambda x: x['name'] not in avoided_systems and x['name'] != sys['name'], sysInRange))
     sysInRange.sort(key=lambda x: cubedist(x,sys))
 
     if len(sysInRange):
         bestpriority = 1000
         for target in sysInRange:
             if target['name'] == 'DEBUG': ## DEBUG
-                print('')
+                print(f"{target['name']=}")
             # Default in case nothing is found
             target['sys_priority'] = 1000
             target['expansionType'] = 'None'
@@ -201,7 +198,7 @@ def ExpansionFromSystem(system_name, show = False, factionpresence = None, prebo
             eddb.getstations(target['name']) # Load Station and Beststation into System
 
             # System Priorties : 0 < Simple Expansion Dist < 100 < Extended Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 1000 < Nothing Found
-            ## ID Confirms priority is based on straight line distance NOT cubedist
+            ## IanD Confirms priority is based on straight line distance NOT cubedist
             if target['cubedist'] <= rangeSimple and len(target['minor_faction_presences']) < 7: # Simple Expansion
                 target['sys_priority'] = sysdist(target,sys) 
                 target['expansionType'] = f"Simple Expansion"
@@ -222,7 +219,7 @@ def ExpansionFromSystem(system_name, show = False, factionpresence = None, prebo
                             target['expansionType'] = f"Invasion of {targetfaction['name']}"
                             break
                 except:
-                    print(f"!! Dodgy Faction {target['name']} in {sys['name']}")
+                    print(f"!! Dodgy Faction {target['name']=} in {sys['name']=}")
             
             if useretreat and 'historic' in target.keys() and sys['controlling_minor_faction'] in target['historic']: # Has previously retreated
                 target['sys_priority'] += 300
@@ -254,7 +251,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
     candidates.sort(key=lambda x: -100*(x['minor_faction_presences'][0]['happiness_id'])+x['influence'], reverse=True)
     for counter, c in enumerate(candidates):
         update_progress(counter/len(candidates),c['name'])
-        alltargets = ExpansionFromSystem(c['name'],False,None,prebooked)
+        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
             ## TODO ## Conflict check for source system - Not really worth it while Happiness is so broken
@@ -308,7 +305,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
 
     return alertsystems
 
-def InvasionRoute(fromsys,tosys,maxcycles = 5):
+def InvasionRoute(start_system_name,destination_system_name,maxcycles = 100,faction=None):
     '''
     Will calculate the quickest controlled expansion route between 2 systems.
     maxcycles is the number of additional cycles you are prepared to wait at each system
@@ -319,54 +316,55 @@ def InvasionRoute(fromsys,tosys,maxcycles = 5):
         recursive depth first
         '''
         nonlocal route, allroutes, bestdist, tdepth
-        currentsys = route[-1]
-        currentdist = sysdist(currentsys,destsys)
-        routedist = currentsys['routedist'] if 'routedist' in currentsys.keys() else 0
-        db = list(x['name'] for x in route)
-        if currentsys['name'] == destsys['name']: #reached the end
-            print(f'! Route Found : Total Phases {routedist}')
-            if (not bestdist) or routedist < bestdist:
-                allroutes.append(route.copy())
-                bestdist = min(routedist,bestdist) if bestdist else routedist
-        else: # take the next set of expansions
-            exp = ExpansionFromSystem(currentsys['name'],False,route,None,False)
-            for sys in exp[:maxcycles]:
-                routedist += 1 if sys['expansionType'][0]=='S' else 2
-                sys['routedist'] = routedist
+        currentsys = route[-1]['sys']
+        currentdist = sysdist(currentsys,sys_destination)
+        thisstep = {'from':currentsys['name'],'expansionType':None,'to':None ,'routedist':route[-1]['routedist'],'owner':None,'sys':None}
+        controlled = list()
+        if faction:
+            controlled = list(x['name'] for x in eddb.systemspresent(faction))
 
-                # prevent backtracking
+
+        if currentsys['name'] == sys_destination['name']: #reached the end
+            print(f"! Route Found : Total Phases {route[-1]['routedist']}")
+            if (not bestdist) or route[-1]['routedist'] < bestdist:
+                allroutes.append(route.copy())
+                bestdist = min(route[-1]['routedist'],bestdist) if bestdist else route[-1]['routedist']
+        else: # take the next set of expansions
+            exp = ExpansionFromSystem(currentsys['name'],avoided_systems = controlled + list(x['to'] for x in route),useretreat = False)
+            for sys in exp[:maxcycles]:
+                thisstep['expansionType']=sys['expansionType']
+                thisstep['to']=sys['name']
+                thisstep['owner']=sys['controlling_minor_faction']
+                thisstep['sys']=sys
+                thisstep['routedist'] += 1 if sys['expansionType'][0]=='S' else 2
+
+                # TODO prevent backtracking
                 if 'best' not in sys.keys():        
-                    sys['best'] = sys['routedist']+1
+                    sys['best'] = thisstep['routedist']+1
                 else:
-                    sys['best'] = min(sys['best'],sys['routedist']+1) 
+                    sys['best'] = min(sys['best'],thisstep['routedist']+1) 
                 
-                route.append(sys.copy()) # expand
-                route[-1]['from'] = currentsys['name']
-                xdist = sysdist(sys,destsys)
-                if xdist < currentdist and ((not bestdist) or routedist<bestdist) and (sys['best'] > routedist): # follow the expansion if it is usefull
+                route.append(thisstep.copy()) # expand
+                xdist = sysdist(sys,sys_destination)
+                if xdist < currentdist and ((not bestdist) or thisstep['routedist']<bestdist) and (sys['best'] > thisstep['routedist']): # follow the expansion if it is usefull
+                    print(' '*tdepth+f"{currentsys['name']} > {sys['name']} ({thisstep['expansionType']}) ({thisstep['routedist']}) ({round(xdist,1)})")
                     tdepth += 1
-                    print(' '*tdepth+f"{currentsys['name']} > {sys['name']} ({routedist}) ({round(xdist,1)})")
                     spider()
 
             # all done, pop the route off
             for sys in exp[:maxcycles]:
-                routedist -= 1 if sys['expansionType'][0]=='S' else 2
                 route.pop()
         tdepth -= 1
         return
 
-    print(f"Invasion Route from {fromsys} to {tosys}:")
+    print(f"Invasion Route from {start_system_name} to {destination_system_name}:")
     if not eddb:
         eddb = EDDBFrame()
     
-    startsys = eddb.system(fromsys) # for distance calcs     
-    destsys = eddb.system(tosys) # for distance calcs
-    totaldist = sysdist(startsys,destsys) # for progress bar
+    sys_start = eddb.system(start_system_name) # for distance calcs     
+    sys_destination = eddb.system(destination_system_name) # for distance calcs
 
-    route = [startsys]
-    route[0]['from'] = 'Start'
-    route[0]['expansionType'] = 'Home'
-    route[0]['routedist'] = 0
+    route = [{'from':start_system_name,'expansionType':'Start','to':start_system_name,'routedist':0,'owener':sys_start['controlling_minor_faction'],'sys':sys_start}]
     allroutes = list()
     bestdist = None
     tdepth = 0
@@ -374,9 +372,9 @@ def InvasionRoute(fromsys,tosys,maxcycles = 5):
 
     if allroutes:
         allroutes.sort(key=lambda x: x[-1]['routedist'])
-        print(f"\n**Route from {fromsys} to {tosys}:")
-        for n in allroutes[0]:
-            print(f"{n['from']} > {n['name']} ({n['controlling_minor_faction']}): {n['expansionType']} ({n['routedist']})")
+        print(f"\n**Route from {start_system_name} to {destination_system_name}:")
+        for n in allroutes[0][1:]:
+            print(f"{n['from']} > {n['to']} ({n['owner']}): {n['expansionType']} ({n['routedist']})")
     else:
         print('Failed for some unknown reason')
     
@@ -443,9 +441,8 @@ if __name__ == '__main__':
 
 
 
-    #InvasionRoute('Varati','Sol')
-    #InvasionRoute('Varati','Bactrimpox')
-    #InvasionRoute('Bactrimpox','Manktas',99)
+    #InvasionRoute('Goplatrugba','Manktas',faction='Canonn')
+    ExpansionToSystem("Dvorotri",simpleonly=True)
 
     ## All Expansions from Orbital Systems with Simple Expansions still available
     #allexp = ExpansionCandidates("Canonn",True,None,40)

@@ -100,7 +100,7 @@ class EDDBFrame():
                 for f in sys['minor_faction_presences']:
                     if self.faction(f['minor_faction_id'])['name'] not in hist['factions']:
                         save = True
-                        hist['factions'].append(f['name'])
+                        hist['factions'].append(self.faction(f['minor_faction_id'])['name'])
         if save:
             self.retreatssave()
         update_progress(1)
