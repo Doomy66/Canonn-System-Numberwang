@@ -7,6 +7,7 @@ import urllib.request
 import tempfile
 import pickle
 import api
+from CSNSettings import ignorepf
 
 
 def sysdist(s1, s2):
@@ -51,6 +52,7 @@ class EDDBFrame():
             self.savecache()
             self.retreatsload()
         else:
+            print(datetime.datetime.today(),datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache)),(datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds)
             #print('Using Local Cached EDDB Dump...')
             with open(self._eddb_cache, 'rb') as io:
                 self.systems = pickle.load(io)
@@ -92,18 +94,20 @@ class EDDBFrame():
         '''
         Update any cached retreat data with latest data from eddb
         '''
-        save = False
+        saves = 0
         for i,hist in enumerate(self.systemhist):
             update_progress(i/len(self.systemhist),'Retreat Refresh')
             sys = next((x for x in self.systems if x['name'] == hist['name']), None)
             if sys:
                 for f in sys['minor_faction_presences']:
                     if self.faction(f['minor_faction_id'])['name'] not in hist['factions']:
-                        save = True
+                        saves += 1
                         hist['factions'].append(self.faction(f['minor_faction_id'])['name'])
-        if save:
+        if saves:
+            print(f'{saves} Expansions Detected')
             self.retreatssave()
         update_progress(1)
+        
         return
 
 
@@ -144,6 +148,8 @@ class EDDBFrame():
                     mf['detail'] = f
                     if f['is_player_faction']:
                         sys['pf'].append(f['name'])
+            
+            sys['numberoffactions'] = len(sys['minor_faction_presences'])
 
             # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
             sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
@@ -160,8 +166,7 @@ class EDDBFrame():
         Returns basic faction details give a faction name or ID
         '''
         ## Player Factions that are unsupported, so can be considered NPC Factions
-        ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar','FDMA Security Service']
-
+        
         if type(idorname)==type(1):
             f = next((x for x in self.factions if x['id'] == idorname),None)
         else:

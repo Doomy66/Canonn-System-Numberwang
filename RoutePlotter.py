@@ -95,12 +95,8 @@ if __name__ == '__main__':
         system_names = []
 
     if mode == 'Manual' or mode == 'Combined':  # Manual List (Currently Systems known to need suppressing)
-        system_names += """  Vorden
-            Backlumba
-            Ba Devaci
-            Luvalla
-            HIP 38225
-            HIP 117029""".split('\n')
+        system_names += """Jangman
+""".split('\n')
         system_names = list(map(lambda x: x.lstrip(),system_names))
         #print(system_names)
     if mode == 'Full Tour':  # All Faction Systems
@@ -123,5 +119,6 @@ if __name__ == '__main__':
 
 
     print('Done', api.NREQ)
+
 
 

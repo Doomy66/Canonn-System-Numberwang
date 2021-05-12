@@ -14,3 +14,6 @@ override_sheet = keys.override_sheet
 
 #factionnames = ['Canonn','Canonn Deep Space Research']
 factionnames = ['Canonn']
+
+# Player Factions to treat as NPCs, either because they are inactive or other reasons
+ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar','FDMA Security Service']

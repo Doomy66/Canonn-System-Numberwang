@@ -124,9 +124,10 @@ def Misson_Gen(argv=''):
 
             # Single Message per sysme for Patrol
             if faction_systems[key]['override'] != 'Natural':  # OVERRIDE!
-                messages.append(
-                    amessage(sys, oride[0][1], oride[0][2].format(gap=gap, inf=empire['influence'],happy=happy)+'*',
-                            dIcons['override'] if oride[0][3] == '' else dIcons[oride[0][3]]))
+                for newmessage in oride:
+                    messages.append(
+                        amessage(sys, newmessage[1], newmessage[2].format(gap=gap, inf=empire['influence'],happy=happy)+'*',
+                                dIcons['override'] if newmessage[3] == '' else dIcons[newmessage[3]]))
             
             if faction_systems[key]['override'] != 'Override':
                 # Conflict Active

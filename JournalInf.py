@@ -130,7 +130,7 @@ for f in dir:
                                   'BlackMarketSell', 1, 0, e['Count'], e['Count']*(e['SellPrice']-e['AvgPricePaid']))
                 elif e['SellPrice'] >= e['AvgPricePaid']:
                     myactions.add(currentsys, currentfaction, e['event'], 1, 0, e['Count'], e['Count']*(
-                        e['SellPrice']-e['AvgPricePaid']))
+                        min(2000,e['SellPrice']-e['AvgPricePaid'])))
                 else:
                     myactions.add(currentsys, currentfaction, e['event']+'Loss', -1, 0, e['Count'], e['Count']*(
                         e['SellPrice']-e['AvgPricePaid']))
@@ -172,16 +172,21 @@ print('')
 myactions = sorted(myactions, key=lambda i: systems.name(
     i['sys'])+i['faction']+i['event'])
 
+lastsys=None
 for a in myactions:
+    if lastsys != systems.name(a["sys"]):
+        print(f'{systems.name(a["sys"])}')
+        lastsys = systems.name(a["sys"])
+
     if a['inf'] != 0:
         print(
-            f'{systems.name(a["sys"])} : {a["faction"]} : {a["event"]} x {a["count"]} Inf {a["inf"]}')
+            f' {a["faction"]} : {a["event"]} x {a["count"]} Inf {a["inf"]}')
     elif a['ton'] != 0:
-        print(f'{systems.name(a["sys"])} : {a["faction"]} : {a["event"]} x {a["count"]} @ {a["ton"]/a["count"]:.0f}t {a["profit"]/a["ton"]:.0f}Cr/t {a["profit"]/1000000:.1f} MCr')
+        print(f' {a["faction"]} : {a["event"]} x {a["count"]} @ {a["ton"]/a["count"]:.0f}t {a["profit"]/a["ton"]:.0f}Cr/t')
     elif a['profit'] != 0:
         print(
-            f'{systems.name(a["sys"])} : {a["faction"]} : {a["event"]} x {a["count"]} total {a["profit"]/1000000:.1f} MCr')
+            f' {a["faction"]} : {a["event"]} x {a["count"]} total {a["profit"]/1000000:.1f} MCr')
     else:
         print(
-            f'{systems.name(a["sys"])} : {a["faction"]} : {a["event"]} x {a["count"]}')
+            f' {a["faction"]} : {a["event"]} x {a["count"]}')
 print('Done')
