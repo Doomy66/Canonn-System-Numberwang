@@ -404,100 +404,19 @@ def InvasionRoute(start_system_name,destination_system_name,maxcycles = 100,fact
 
 
 if __name__ == '__main__':
-    ## These functions use EliteBGS API, so the data is live, but uses a LOT of API Calls and is the slower method
+    ## These functions use EliteBGS API, so the data is live, but uses a LOT of API Calls and is the slower method. Not as developed as the EDDB Versions
     #EBGS_expansionTargets("Canonn","")
     #EBGS_expansionTargets("Marquis du Ma'a", "Menhitae") ## Give a faction AND System and it will list all Expansion Targets for that system
     
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
-
-    # Currently Raising for Defensive Purposes
-    #ExpansionFromSystem("Chelka",True)
-    #ExpansionFromSystem("Dvorotri",True)
-    #ExpansionFromSystem("HIP 100284",True) 
-    #ExpansionFromSystem("Kungati",True) 
-    #ExpansionFromSystem("Jangman",True) 
-     
-    ## Canonn Exansion Planning
-    ExpansionCandidates("Canonn",show=True)
-    #ExpansionCandidates("Canonn",True,None,50)
-      
-    ## TODO Project 11 Cephei
+    #ExpansionCandidates("Canonn",show=True)
+    #ExpansionFromSystem("Pachanu",True)   
     #ExpansionToSystem("11 Cephei",easyinvade=True)            
-    #ExpansionToSystem("Col 285 Sector KZ-C b14-1",simpleonly=True)            
-    ## TODO Project HR 8133
-    #ExpansionToSystem("HR 8133",easyinvade=True)    # Agri    
-    #InvasionRoute('Pachanu','HR 8133',faction='Canonn') ## TODO Make Target an easyinvasion
+    #ExpansionToSystem("Col 285 Sector KZ-C b14-1",simpleonly=True)      
     #InvasionRoute('Kongi','HR 8133',faction='Canonn')
-    #InvasionRoute('Wanggu','HR 8133',faction='Canonn')
-    #ExpansionFromSystem("Pachanu",True)    
-    #ExpansionFromSystem("Kongi",True)   
-    #   Kavalan : Simple Expansion [Outpost] in 1 cycles
-    #   Jungkurara : Simple Expansion [Outpost] in 2 cycles
-    #   HIP 108602 : Simple Expansion (Muro Independents) [Planetary] in 3 cycles 
-    #ExpansionFromSystem("Wanggu",True)    
-    #ExpansionFromSystem("Wanggu",True)    
-     
-     
-
-
-    ##ExpansionFromSystem("Rishnum")    # No Simples Left
-    #ExpansionFromSystem("Bactrimpox",True)    
-    #ExpansionFromSystem("Chematja",True)    
-    #ExpansionFromSystem("Jarildekald",True)    
-    #ExpansionFromSystem("Lelalakan",True)    
-     
-
-    ## System Under Threat
     #InvasionAlert("Canonn",mininf = 60,lookahead = 4)
-    #InvasionAlert("Canonn")
-    #ExpansionToSystem("Cnephtha",True,True)                ## 5
-    #ExpansionToSystem("Pipedu",True,True)                  ## 7 PROTECTED
-    #ExpansionToSystem("Meinjhalie",True,True)              ## 5    FDMA Security Service 
-    #ExpansionToSystem("Njoere",True,True)                  ## 7 PROTECTED
-    #ExpansionToSystem("Rishnum",True,True)                 ## 7 PROTECTED
-    #ExpansionToSystem("Cephei Sector BA-A d107",True,True) ## 3 Not enough available factions to try and fill
-    #ExpansionToSystem("HIP 54529",True)                    ## 5 !Run EXTENTED, 5 Cycles is best for SIMPLE
-    #ExpansionToSystem("Machadan",True,True)                ## 7 PROTECTED
-    #ExpansionToSystem("Hun Puggsa",True,True)              ## 4 The L.O.S.P.
-    #ExpansionToSystem("Pegasi Sector BL-X c1-25",True,True) ## 6 - The Coven
-    #ExpansionToSystem("HIP 94126",True)                    ## 5 Not Possible - The Dark Ancient Bounty Alliance  
-    #ExpansionToSystem("Col 285 Sector EI-G b12-2",True) ## 3 Min 5 Cycles - Marquis du Ma'a 
-    
-   
+ 
 
-    ## Marquis du Ma'a
-    #ExpansionCandidates("Marquis du Ma'a",True,None)
-    #ExpansionFromSystem("Luvalla",True)
-
-
-    ## Stellanebula Project
-    #ExpansionCandidates("Stellanebula Project",True,None)
-    #ExpansionFromSystem("HIP 117029",True)
-    #ExpansionFromSystem("Dakinn",True)
-    #ExpansionFromSystem("Kaititja",True)
-    #ExpansionFromSystem("Heheng De",True)
-
-
-
-    ## IPX
-    #ExpansionCandidates("Interplanetary Explorations",True,None)
-    #ExpansionFromSystem("Cephei Sector BA-A d85",True)
-    #ExpansionFromSystem("Keiadjara",True)
-
-    ## The Coven
-    #ExpansionFromSystem("Mimuthi",True)
-    
-
-
-    #InvasionRoute('Goplatrugba','Manktas',faction='Canonn')
-    #ExpansionToSystem("Dvorotri",simpleonly=True)
-
-    ## All Expansions from Orbital Systems with Simple Expansions still available
-    #allexp = ExpansionCandidates("Canonn",True,None,40)
-    #for exp in allexp:
-        #if exp['beststation'] == 'Orbital':
-            #if exp['expansion']['expansionType'][0] == 'S':
-                #ExpansionFromSystem(exp['name'],True)
     print(f"Done : API {api.NREQ}")
     
     
