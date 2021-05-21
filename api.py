@@ -130,6 +130,7 @@ def getsystem(system_name, refresh=False): # elitebgs
     if refresh or system_name not in _SYSTEMCACHE:
         try:
             url = f"{_ELITEBGSURL}systems"
+            #payload = {'name':system_name, 'factionDetails':'true', 'count':1} if type(system_name) == str else {'eddbid':system_name, 'factionDetails':'true', 'count':1}
             payload = {'name':system_name, 'factionDetails':'true'} if type(system_name) == str else {'eddbid':system_name, 'factionDetails':'true'}
             resp = requests.get(url, params=payload)
             myload = json.loads(resp._content)["docs"][0]
@@ -142,6 +143,11 @@ def getsystem(system_name, refresh=False): # elitebgs
                 f['active_states'] = f['faction_details']['faction_presence']['active_states']
                 f['pending_states'] = f['faction_details']['faction_presence']['pending_states']
                 f['recovering_states'] = f['faction_details']['faction_presence']['recovering_states']
+                if f['influence'] == 0:
+                    print(f"!!Zero Faction {f['name']} in {system_name}")
+            #if len(myload['factions']) != len(myload['history'][0]['factions']):
+            #    print(f"!!Faction Count WRONG in {system_name}")
+
             myload['factions'].sort(key = lambda x: x['influence'], reverse=True)
         except:
             print(f'!Failed to find system "{system_name}"')
@@ -401,6 +407,7 @@ def factionsovertime(system_name, days=30): # elitebgs
                 for f in h['factions']:
                     if f['name'] not in factions:
                         factions.append(f['name']) # Faction Arrived
+                        print(f"{f['name']} - {myload['updated_at']}")
         maxTime = minTime
     print('')
     return factions
@@ -408,8 +415,8 @@ def factionsovertime(system_name, days=30): # elitebgs
 if __name__ == '__main__':
     # Test Harness
     print('Test Harness for...')
-    print(factionsovertime('Cnephtha'))
-    #print(factionsovertime('Sol'))
+    print(getsystem('Jaoi'))
+    #print(factionsovertime('Jaoi'))
     #print(retreated_factions('Cnephtha'))
 
     print('Nothing')

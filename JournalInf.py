@@ -81,7 +81,8 @@ ignore = {'Music', 'ReceiveText', 'NpcCrewPaidWage', 'ReservoirReplenished', 'Do
           'Repair', 'HullDamage', 'LaunchFighter', 'WingAdd', 'WingJoin', 'CrewAssign', 'FighterDestroyed', 'RestockVehicle', 'ModuleBuy', 'WingLeave', 'DockFighter',
           'RepairAll', 'HeatWarning', 'BuyDrones', 'FSSAllBodiesFound', 'MaterialTrade', 'ShipyardSwap', 'ShipyardTransfer', 'StoredShips', 'FighterRebuilt', 'WingInvite',
           'EjectCargo', 'FuelScoop', 'Shipyard', 'Undocked', 'NavRoute', 'Outfitting', 'StoredModules', 'FetchRemoteModule', 'RebootRepair', 'ModuleRetrieve', 'BuyExplorationData',
-          'CarrierTradeOrder', 'CarrierStats', 'CarrierFinance', 'CarrierJumpRequest', 'CarrierBuy', 'CarrierCrewServices', 'CarrierBankTransfer', 'CargoTransfer', 'CarrierDepositFuel', '!CarrierJump'
+          'CarrierTradeOrder', 'CarrierStats', 'CarrierFinance', 'CarrierJumpRequest', 'CarrierBuy', 'CarrierCrewServices', 'CarrierBankTransfer', 'CargoTransfer', 'CarrierDepositFuel', '!CarrierJump',
+          'BackPack', 'BuySuit', 'BuyWeapon', 'CreateSuitLoadout', 'Disembark', 'Embark', 'LoadoutEquipModule', 'ShipLockerMaterials', 'SuitLoadout', 'SwitchSuitLoadout'
           }
 
 for f in dir:

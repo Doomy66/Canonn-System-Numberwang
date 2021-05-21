@@ -52,7 +52,7 @@ class EDDBFrame():
             self.savecache()
             self.retreatsload()
         else:
-            print(datetime.datetime.today(),datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache)),(datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds)
+            #print(datetime.datetime.today(),datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache)),(datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds)
             #print('Using Local Cached EDDB Dump...')
             with open(self._eddb_cache, 'rb') as io:
                 self.systems = pickle.load(io)

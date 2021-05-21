@@ -1,3 +1,4 @@
+from os.path import join
 from Bubble import Bubble, update_progress
 import simplejson as json
 import os
@@ -79,6 +80,7 @@ def Misson_Gen(argv=''):
     pending_states = []
     recovering_states = []
     ootsystems = []
+    detected_retreats = []
 
     dIcons = {"war": '<:EliteEagle:231083794700959744> ',
               "election": ':ballot_box: ',
@@ -217,7 +219,19 @@ def Misson_Gen(argv=''):
                 pending_states.append([sys["system_name"], x["state"]])
             for x in empire['recovering_states']:
                 recovering_states.append([sys["system_name"], x["state"]])
+
+            # Look for active Retreats
+            for faction in sys['factions']:
+                if next((x for x in faction['active_states'] if x['state'] == 'retreat'),None) and sys['name'] not in detected_retreats:
+                    detected_retreats.append(sys['name'])
+
     update_progress(1)
+
+    # Add Detected Retreats
+    if detected_retreats:
+        print('')
+        messages.append(amessage('Retreats Detected in',25,', '.join(detected_retreats),dIcons['data']))
+
     # All Canonn Systems Processed
     # Messages for External Systems
     for ex in orides[1:]:
@@ -339,7 +353,12 @@ def hasmessage(messages, sysname):
     return False
 
 def amessage(sys, p, message, icon='', empire=''):
-    return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon])
+    if isinstance(sys,str):
+        return([p, sys, 0, 0, 0, 0, '', message, icon])
+    else:
+        return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon])
+
+
 
 def availableactions(system,factionnames):
     '''
