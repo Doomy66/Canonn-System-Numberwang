@@ -87,6 +87,7 @@ if __name__ == '__main__':
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
     mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol','Combined'][3]
+    forcerefresh = False # When Tick updates are flacky
 
     # Look in Journals so you start the route in your current location 
     system_names = [whereami()]
@@ -111,7 +112,7 @@ if __name__ == '__main__':
         sys = api.getsystem(system_name)
         # discard any that have already been scanned this tick
         # allways add the 1st one, its your current location/starting point
-        if sys and ((not sys['fresh']) or (not route)):
+        if sys and ((forcerefresh or not sys['fresh']) or (not route)):
             route.append(sys)
 
     printRoute(simple(route[0], route[1::].copy(), None), mode)

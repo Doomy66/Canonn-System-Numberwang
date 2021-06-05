@@ -70,19 +70,22 @@ dir = sorted(filter(lambda x: isjfile(x), os.listdir(JFOLDER)), reverse=True)
 myactions = ActionLog()
 systems = SysNames()
 
-ignore = {'Music', 'ReceiveText', 'NpcCrewPaidWage', 'ReservoirReplenished', 'DockingGranted', 'DockingRequested', 'DockingDenied', 'Screenshot',
-          'Scan', 'NavBeaconScan', 'FSSSignalDiscovered', 'ShipTargeted', 'Loadout', 'EngineerProgress', 'FSDTarget', 'FSSDiscoveryScan', 'Scanned',
-          'RefuelAll', 'BuyAmmo', 'MaterialCollected', 'Fileheader', 'Commander', 'Synthesis', 'ModuleSwap', 'ModuleStore', 'ModuleSellRemote', 'MassModuleStore', 'ModuleSell',
-          'SetUserShipName', 'ShipyardBuy', 'ShipyardNew', 'EngineerCraft',
+ignore = {'Music', 'ReceiveText', 'NpcCrewPaidWage', 'ReservoirReplenished', 'DockingGranted', 'DockingRequested', 'DockingDenied', 'Screenshot', 'CarrierJump', 'CommunityGoal',
+          'Scan', 'NavBeaconScan', 'FSSSignalDiscovered', 'ShipTargeted', 'Loadout', 'EngineerProgress', 'FSDTarget', 'FSSDiscoveryScan', 'Scanned', 'MissionFailed', 'MissionAbandoned',
+          'RefuelAll', 'BuyAmmo', 'MaterialCollected', 'Fileheader', 'Commander', 'Synthesis', 'ModuleSwap', 'ModuleStore', 'ModuleSellRemote', 'MassModuleStore', 'ModuleSell', 'SellDrones', 
+          'SetUserShipName', 'ShipyardBuy', 'ShipyardNew', 'EngineerCraft', 'EscapeInterdiction', 'PayFines', 'HeatDamage', 'DockingCancelled', 'DataScanned', 
           'Materials', 'LoadGame', 'Rank', 'Progress', 'Reputation', 'Missions', 'Statistics', 'Cargo', 'Friends', 'SquadronStartup', 'SendText', 'SharedBookmarkToSquadron',
           'ModuleInfo', 'StartJump', 'SupercruiseExit', 'UnderAttack', 'Shutdown', 'USSDrop', 'MiningRefined', 'ProspectedAsteroid', 'SAASignalsFound',
           'LaunchDrone', 'ApproachSettlement', 'Market', 'MarketBuy', 'Deliver', 'Mission_Delivery', 'Collect', 'MissionAccepted', 'SupercruiseEntry', 'CargoDepot', 'ApproachBody',
-          'Bounty', 'Shutdown', 'SAAScanComplete', 'DatalinkScan', 'DatalinkVoucher', 'MissionRedirected', 'LeaveBody', 'Interdicted', 'PayBounties',
+          'Bounty', 'Shutdown', 'SAAScanComplete', 'DatalinkScan', 'DatalinkVoucher', 'MissionRedirected', 'LeaveBody', 'Interdicted', 'PayBounties', 'VehicleSwitch', 
           'Repair', 'HullDamage', 'LaunchFighter', 'WingAdd', 'WingJoin', 'CrewAssign', 'FighterDestroyed', 'RestockVehicle', 'ModuleBuy', 'WingLeave', 'DockFighter',
           'RepairAll', 'HeatWarning', 'BuyDrones', 'FSSAllBodiesFound', 'MaterialTrade', 'ShipyardSwap', 'ShipyardTransfer', 'StoredShips', 'FighterRebuilt', 'WingInvite',
           'EjectCargo', 'FuelScoop', 'Shipyard', 'Undocked', 'NavRoute', 'Outfitting', 'StoredModules', 'FetchRemoteModule', 'RebootRepair', 'ModuleRetrieve', 'BuyExplorationData',
-          'CarrierTradeOrder', 'CarrierStats', 'CarrierFinance', 'CarrierJumpRequest', 'CarrierBuy', 'CarrierCrewServices', 'CarrierBankTransfer', 'CargoTransfer', 'CarrierDepositFuel', '!CarrierJump',
-          'BackPack', 'BuySuit', 'BuyWeapon', 'CreateSuitLoadout', 'Disembark', 'Embark', 'LoadoutEquipModule', 'ShipLockerMaterials', 'SuitLoadout', 'SwitchSuitLoadout'
+          'CarrierTradeOrder', 'CarrierStats', 'CarrierFinance', 'CarrierJumpRequest', 'CarrierBuy', 'CarrierCrewServices', 'CarrierBankTransfer', 'CargoTransfer', 'CarrierDepositFuel', '!CarrierJump', 'CarrierDockingPermission',
+          'BackPack', 'BuySuit', 'BuyWeapon', 'CreateSuitLoadout', 'Disembark', 'Embark', 'LoadoutEquipModule', 'ShipLockerMaterials', 'SuitLoadout', 'SwitchSuitLoadout', 'DeleteSuitLoadout',
+          'BuyMicroResources', 'CrimeVictim', 
+          'BackpackChange', 'BookTaxi', 'CollectItems', 'Died', 'Resurrect', 'Liftoff', 'Touchdown', 'TransferMicroResources', 'ShieldState', 'Backpack', 'SellSuit', 'SellWeapon', 'BackPackMaterials',
+          'CodexEntry', 'ScanOrganic', 'LaunchSRV', 'DockSRV', 'CollectCargo'
           }
 
 for f in dir:
@@ -147,6 +150,7 @@ for f in dir:
                         ) else '',
                             'MissionTarget', 1,
                             -len(i['Influence']))
+
         elif e['event'] == 'RedeemVoucher':
             if e['Type'] == 'bounty':
                 for handin in e['Factions']:
@@ -161,6 +165,8 @@ for f in dir:
             myactions.add(currentsys, e['Faction'], e['event'], -1)
         elif e['event'] == 'FactionKillBond' or e['event'] == 'CapShipBond':
             myactions.add(currentsys, e['AwardingFaction'], e['event'])
+        elif e['event'] == 'SearchAndRescue':
+            myactions.add(currentsys, currentfaction, e['event'],e['Count'])
         elif not e['event'] in ignore:
             myactions.add(0, '<Unprocessed>', e['event'])
         else:
