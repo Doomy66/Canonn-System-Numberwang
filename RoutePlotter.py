@@ -6,7 +6,6 @@ import api
 def sysdist(s1, s2):
     return((s1['x']-s2['x'])**2 + (s1['y']-s2['y'])**2 + (s1['z']-s2['z'])**2) ** 0.5
 
-
 def simple(startsystem, thislist, bestans):
     '''
     Calulates an efficent route, from startsystem going to closest unvisited system each time.
@@ -25,7 +24,6 @@ def simple(startsystem, thislist, bestans):
         alist.append(startsystem)
 
     return({'route': alist, 'dist': bestans})
-
 
 def tsales(croute, cdist, rroute, best):
     '''
@@ -54,7 +52,6 @@ def tsales(croute, cdist, rroute, best):
     ##print('.', end='')
     return(best)
 
-
 def HeatDeath(faction):
     '''
     An early attempt to give the traveling salesman run a fighting chance by supplying the simple route as a starting point
@@ -69,7 +66,6 @@ def HeatDeath(faction):
         print(f"{p['system_name']} ({int(p.get('dist',0))})", end=" ")
     print(int(answer['dist']), 'ly')
     return None
-
 
 def printRoute(route, title):
     print(f"*** {title} Route ***")

@@ -83,7 +83,7 @@ ignore = {'Music', 'ReceiveText', 'NpcCrewPaidWage', 'ReservoirReplenished', 'Do
           'EjectCargo', 'FuelScoop', 'Shipyard', 'Undocked', 'NavRoute', 'Outfitting', 'StoredModules', 'FetchRemoteModule', 'RebootRepair', 'ModuleRetrieve', 'BuyExplorationData',
           'CarrierTradeOrder', 'CarrierStats', 'CarrierFinance', 'CarrierJumpRequest', 'CarrierBuy', 'CarrierCrewServices', 'CarrierBankTransfer', 'CargoTransfer', 'CarrierDepositFuel', '!CarrierJump', 'CarrierDockingPermission',
           'BackPack', 'BuySuit', 'BuyWeapon', 'CreateSuitLoadout', 'Disembark', 'Embark', 'LoadoutEquipModule', 'ShipLockerMaterials', 'SuitLoadout', 'SwitchSuitLoadout', 'DeleteSuitLoadout',
-          'BuyMicroResources', 'CrimeVictim', 
+          'BuyMicroResources', 'CrimeVictim', 'ShipLocker',
           'BackpackChange', 'BookTaxi', 'CollectItems', 'Died', 'Resurrect', 'Liftoff', 'Touchdown', 'TransferMicroResources', 'ShieldState', 'Backpack', 'SellSuit', 'SellWeapon', 'BackPackMaterials',
           'CodexEntry', 'ScanOrganic', 'LaunchSRV', 'DockSRV', 'CollectCargo'
           }
