@@ -196,4 +196,18 @@ for a in myactions:
     else:
         print(
             f' {a["faction"]} : {a["event"]} x {a["count"]}')
+
+with open(JFOLDER+'\\'+"Market.json", encoding="utf8") as io:
+    m = json.load(io)
+    if m['StationType'] == 'FleetCarrier':
+        print("..Fleet Carrier Market Detected")
+        m['Items'] = list(filter(lambda x: x['Producer'], m['Items']))
+        m['Items'].sort(key=lambda x: x['Category_Localised']+x['Name_Localised'])
+        with open(f"data\\Market_{m['StationName']}.json", 'w') as o:  # Dump to file for comparison next run
+            json.dump(m['Items'], o, indent=4)        
+        with open(f"data\\Market_{m['StationName']}.csv", 'w') as o:  
+            o.writelines(f'Catagory,Commodity,Stock,Price\n')
+            o.writelines(
+                f"{x['Category_Localised']},{x['Name_Localised']},{x['Stock']},{x['SellPrice']}\n" for x in m['Items'])
+
 print('Done')

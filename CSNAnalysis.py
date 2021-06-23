@@ -92,7 +92,8 @@ def Misson_Gen(argv=''):
               "mininf": ':chart_with_downwards_trend: ',
               "info": ':information_source: ',
               "end": ':clap: ',
-              "FC": ':anchor: '}
+              "FC": ':anchor: ', 
+              "notfresh": ':arrows_counterclockwise: '}
 
     print(f'CSN Missions:')
     # Create a single Message for each faction system
@@ -326,7 +327,7 @@ def Misson_Gen(argv=''):
         wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
                              adapter=RequestsWebhookAdapter())
         for x in filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges):
-            wh_text += f'{x[8]}{x[1]} : {x[7]}\n'
+            wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
         if wh_text != '':
             wh.send(
                 f'{"**Full Report**" if ("/new" in argv) else "Latest News"} <:canonn:231835416548999168> \n{wh_text}')
@@ -340,7 +341,6 @@ def Misson_Gen(argv=''):
 
     if '/new' in argv:
         CSNAttractions(faction_systems)
-
     print('*** Missions Generated : Consuming {0} requests ***'.format(api.NREQ))
     if ('/wait') in argv:
         input("Press Enter to continue...")
@@ -353,10 +353,11 @@ def hasmessage(messages, sysname):
     return False
 
 def amessage(sys, p, message, icon='', empire=''):
+    # 0 Priority, 1 System Name, 2 x, 3 y, 4 z, 5 ?, 6 Faction, 7 Message, 8 Icon, 9 Fresh
     if isinstance(sys,str):
-        return([p, sys, 0, 0, 0, 0, '', message, icon])
+        return([p, sys, 0, 0, 0, 0, '', message, icon, True])
     else:
-        return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon])
+        return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon, True])
 
 
 
