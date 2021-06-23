@@ -190,7 +190,7 @@ class Bubble():
                 pass
             else:
                 latest = api.getsystem(sys['system_name'],True)
-                if (not latest) or (latest['factions'] == localSpace[sys['system_name']]['factions']): ## Skip if API Fails or no channge in Factions (Tick Lag)
+                if (not latest) or (sys['system_name'] in localSpace and latest['factions'] == localSpace[sys['system_name']]['factions']): ## Skip if API Fails or no channge in Factions (Tick Lag)
                     continue
                 localSpace[sys['system_name']] = latest
                 localSpace[sys['system_name']]['empire'] = sys['empire']
