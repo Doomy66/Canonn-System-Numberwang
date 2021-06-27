@@ -200,7 +200,7 @@ for a in myactions:
 with open(JFOLDER+'\\'+"Market.json", encoding="utf8") as io:
     m = json.load(io)
     if m['StationType'] == 'FleetCarrier':
-        print("..Fleet Carrier Market Detected")
+        print(f"..Fleet Carrier Market {m['StationName']} Detected")
         m['Items'] = list(filter(lambda x: x['Producer'], m['Items']))
         m['Items'].sort(key=lambda x: x['Category_Localised']+x['Name_Localised'])
         with open(f"data\\Market_{m['StationName']}.json", 'w') as o:  # Dump to file for comparison next run

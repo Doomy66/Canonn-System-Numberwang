@@ -170,7 +170,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -187,7 +187,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
     if not avoided_systems:
-        avoided_systems = list(x['name'] for x in eddb.systemspresent(sys['controlling_minor_faction']))
+        avoided_systems = list(x['name'] for x in eddb.systemspresent(asfaction if asfaction else sys['controlling_minor_faction']))
     
     if avoid_additional:
         avoided_systems.append(avoid_additional)
@@ -229,8 +229,16 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                     for targetfaction in target['minor_faction_presences']:
                         # TODO could exclude factions in conflict, but this is transitory and probably needs manual monitoring (GIGO)
                         if targetfaction['name'] not in natives:
-                            target['sys_priority'] = 200 + targetfaction['influence']
-                            target['expansionType'] = f"Invasion of {targetfaction['name']}"
+                            if organisedinvasions:
+                                if target['cubedist'] <= rangeSimple:
+                                    target['sys_priority'] = sysdist(target,sys) 
+                                    target['expansionType'] = f"Simple Organised Invasion of {targetfaction['name']}"
+                                else:
+                                    target['sys_priority'] = 100 + targetfaction['influence']
+                                    target['expansionType'] = f"Organised Invasion of {targetfaction['name']}"
+                            else:
+                                target['sys_priority'] = 200 + targetfaction['influence']
+                                target['expansionType'] = f"Invasion of {targetfaction['name']}"
                             break
                 except:
                     print(f"!! Dodgy Faction {target['name']=} in {sys['name']=}")
