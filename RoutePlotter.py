@@ -1,6 +1,7 @@
 import json
 from Bubble import whereami, update_progress
 import api
+import win32clipboard
 
 
 def sysdist(s1, s2):
@@ -67,13 +68,23 @@ def HeatDeath(faction):
     print(int(answer['dist']), 'ly')
     return None
 
-def printRoute(route, title):
+def printRoute(route, title,step=False):
     print(f"*** {title} Route ***")
     jumps = 0
+
     for p in route['route']:
         if p.get('dist', 0) > 0:
-            print(f"{p['system_name']}")
             jumps += 1
+            if step:
+                win32clipboard.OpenClipboard()
+                win32clipboard.EmptyClipboard()
+                win32clipboard.SetClipboardText(p['system_name'])
+                win32clipboard.CloseClipboard()
+                cont = input(f"{p['system_name']} : Enter for next System")
+                if cont != '':
+                    break
+            else:
+                print(f"{p['system_name']}")
 
     print(f"*** {int(route['dist'])} ly, {jumps} Systems ***")
 
@@ -116,5 +127,7 @@ if __name__ == '__main__':
 
     print('Done', api.NREQ)
 
+    printRoute(simple(route[0], route[1::].copy(), None), mode,step=True)
 
+    
 
