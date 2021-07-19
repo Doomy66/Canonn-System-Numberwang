@@ -80,7 +80,7 @@ def printRoute(route, title,step=False):
                 win32clipboard.EmptyClipboard()
                 win32clipboard.SetClipboardText(p['system_name'])
                 win32clipboard.CloseClipboard()
-                cont = input(f"{p['system_name']} : Enter for next System")
+                cont = input(f"{p['system_name']} ({round(p['dist'],1)} ly) : Enter for next System (any character to exit) : ")
                 if cont != '':
                     break
             else:
