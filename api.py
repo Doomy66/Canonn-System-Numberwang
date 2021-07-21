@@ -375,7 +375,7 @@ def retreated_systems(faction, count=300): # elitebgs NO DONT USE
 
     return retreated
 
-def factionsovertime(system_name, days=30): # elitebgs
+def factionsovertime(system_name, days=30, earliest = datetime(2017,10,8) ): # elitebgs #Garud says 1st record is 8th Oct 1997
     '''
     Return a list of all factions that have ever been in the system
     Can be compared to current factions to identify historic retreats
@@ -412,10 +412,40 @@ def factionsovertime(system_name, days=30): # elitebgs
     print('')
     return factions
 
+def system_history(system_name, days=30, earliest = datetime(2017,10,8) ): # elitebgs #Garud says 1st record is 8th Oct 1997
+    global NREQ 
+
+    #factions = list()
+    history= list()
+    maxTime = datetime.now()
+    minTime = None 
+    #earliest = datetime(2017,10,8) #Garud says 1st record is 8th Oct 1997
+    url = f"{_ELITEBGSURL}systems"
+
+    sys.stdout.write(f"Historic Info for {system_name} ")
+    while minTime != earliest:
+        minTime = max(earliest,maxTime+timedelta(days=-days))
+
+        ## There is no TRY Block as it might make the cache invalid and cause a total rebuild
+        payload = {'name':system_name, 'factionHistory':'true', 'timeMin':int(1000*time.mktime(minTime.timetuple())), 'timeMax':int(1000*time.mktime(maxTime.timetuple()))}
+        #payload = {'name':system_name, 'factionDetails':'true'}
+        resp = requests.get(url, params=payload)
+        myload = json.loads(resp._content)["docs"][0]
+        sys.stdout.write(':' if myload['history'] else '.')
+        sys.stdout.flush()
+        NREQ += 1
+
+        if myload['faction_history']:
+            for h in myload['faction_history']:
+                history.append(h)
+        maxTime = minTime
+    print('')
+    return history
+
 if __name__ == '__main__':
     # Test Harness
     print('Test Harness for...')
-    print(getsystem('Jaoi'))
+    print(system_history('Khun',earliest=datetime(2021,7,15)))
     #print(factionsovertime('Jaoi'))
     #print(retreated_factions('Cnephtha'))
 

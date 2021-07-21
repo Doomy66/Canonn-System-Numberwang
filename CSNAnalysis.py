@@ -122,7 +122,7 @@ def Misson_Gen(argv=''):
             oride = list(filter(lambda x: x[0] == sys["system_name"], orides))
             faction_systems[key]['override'] = oride[0][4] if oride else 'Natural'
 
-            if sys['name'] == 'DEBUG':
+            if sys['name'] == 'Tarasa':
                 print(f'Debug')
 
             # Single Message per sysme for Patrol
@@ -144,6 +144,7 @@ def Misson_Gen(argv=''):
                             conflict["type"].title()),
                         dIcons[conflict["type"]],
                     ))
+                    faction_systems[key]['override'] = 'Done'
                 # Conflict Pending
                 elif len(list(filter(lambda x: x['state'] in {'war', 'election', 'civilwar'}, empire['pending_states']))) > 0:
                     conflict = empire["conflicts"][0]
@@ -153,6 +154,7 @@ def Misson_Gen(argv=''):
                             conflict["type"].title()),
                         dIcons[conflict["type"]],
                     ))
+                    faction_systems[key]['override'] = 'Done'
 
                 if (not conflict) and faction_systems[key]['override'] in {'Addition', 'Natural'}:
                     # Not yet in control

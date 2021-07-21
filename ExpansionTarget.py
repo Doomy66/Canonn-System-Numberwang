@@ -42,7 +42,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
         targets = ExpansionFromSystem(sys['name'])
         cycles = 0
         for target in targets:
-            cycles += 1 if target['expansionType'][0] == 'S' else 2
+            cycles += 1 if target['sys_priority'] < 300 else 2
             if target['name'] == system:
                 #print(f"{sys['name']} [{sys['controlling_minor_faction']}] ({round(sys['influence'],1)}%) in {cycles}")
                 eddb.getstations(sys['name'])
@@ -55,7 +55,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
         print('')
         print(f"# Quickest Expansions to {system} which has {len(targetsys['minor_faction_presences'])} factions")
         for answer in answers[:20]:
-            print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']}")
+            print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['expansionType']}")
     return answers
 
 def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False):
