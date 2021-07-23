@@ -39,6 +39,8 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
     print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets')
     for i,sys in enumerate(sysInRange):
         update_progress(i/len(sysInRange),sys['name'])
+        if sys['name'] == 'DEBUG':
+            print('Debug')
         targets = ExpansionFromSystem(sys['name'])
         cycles = 0
         for target in targets:
@@ -47,6 +49,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
                 #print(f"{sys['name']} [{sys['controlling_minor_faction']}] ({round(sys['influence'],1)}%) in {cycles}")
                 eddb.getstations(sys['name'])
                 sys['tocycles'] = cycles
+                sys['toexpansionType'] = target['expansionType']
                 answers.append(sys)
                 break
     update_progress(1)
@@ -55,7 +58,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
         print('')
         print(f"# Quickest Expansions to {system} which has {len(targetsys['minor_faction_presences'])} factions")
         for answer in answers[:20]:
-            print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['expansionType']}")
+            print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['toexpansionType']}")
     return answers
 
 def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False):
@@ -123,7 +126,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                             if organisedinvasions:
                                 target['expansionType'] = f"Organised Invasion of {targetfaction['name']}"
                             else:
-                                target['expansionType'] = f"Invasion of {targetfaction['name']}"
+                                target['expansionType'] = f"Invasion of {targetfaction['name']} {round(targetfaction['influence'],1)}"
                             break
                 except:
                     print(f"!! Dodgy Faction {target['name']=} in {sys['name']=}")
@@ -307,6 +310,9 @@ if __name__ == '__main__':
     #ExpansionToSystem("Col 285 Sector KZ-C b14-1",simpleonly=True)      
     #InvasionRoute('Kongi','HR 8133',faction='Canonn')
     #InvasionAlert("Canonn",mininf = 60,lookahead = 4)
+    #ExpansionFromSystem("Col 285 Sector XF-N c7-20",True)
+    #ExpansionToSystem("Wanggu",show=True,simpleonly=True)            
+    
  
 
     print(f"Done : API {api.NREQ}")
