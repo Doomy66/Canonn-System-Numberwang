@@ -122,7 +122,7 @@ def Misson_Gen(argv=''):
             oride = list(filter(lambda x: x[0] == sys["system_name"], orides))
             faction_systems[key]['override'] = oride[0][4] if oride else 'Natural'
 
-            if sys['name'] == 'Tarasa':
+            if sys['name'] == 'DUBUG':
                 print(f'Debug')
 
             # Single Message per sysme for Patrol
