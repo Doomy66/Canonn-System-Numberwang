@@ -161,10 +161,12 @@ def Misson_Gen(argv=''):
                     if factions[0]['name'] not in factionnames:
                         messages.append(
                             amessage(sys, 3, f'Urgent: {sys["empire"]["name"]} {availableactions(faction_systems[key],factionnames)} to gain system control (gap {gapfromtop:4.3}%)', dIcons['push']))
+                        faction_systems[key]['override'] = 'Done'
                     # Gap to 2nd place is low
                     elif gap < M_INFGAP:
                         messages.append(
                             amessage(sys, 4, f'Required: {sys["empire"]["name"]} {availableactions(faction_systems[key],factionnames)} ({factions[1]["name"]} is threatening, gap is only {gap:4.3}%)', dIcons['infgap']))
+                        faction_systems[key]['override'] = 'Done'
 
             # Multi Messages
             # Data out of date
