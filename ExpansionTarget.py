@@ -107,11 +107,14 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
             ## Jane Confirms Invasion happens before Extended (as we saw Aymarahuara > Tarasa)
             if target['cubedist'] <= rangeSimple and numberoffactions < 7: # Simple Expansion
                 target['sys_priority'] = sysdist(target,sys) 
-                target['expansionType'] = f"Simple Expansion"
+                target['expansionType'] = f"Expansion"
+                target['expansionDetail'] = f"Simple"
+
 
                 if useretreat and 'historic' in target.keys() and sys['controlling_minor_faction'] in target['historic']: # Has previously retreated
                     target['sys_priority'] += 100
                     target['expansionType'] += f" (Retreated)"
+                    target['expansionDetail'] = f"Retreated"
 
                 bestpriority = min(bestpriority, target['sys_priority'])
             elif target['cubedist'] <= rangeSimple and numberoffactions == 7:  # Invasion
@@ -124,15 +127,18 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                         if targetfaction['name'] not in natives:
                             target['sys_priority'] = 200 + targetfaction['influence']
                             if organisedinvasions:
-                                target['expansionType'] = f"Organised Invasion of {targetfaction['name']}"
+                                target['expansionType'] = f"Invasion of {targetfaction['name']} (Organised)"
+                                target['expansionDetail'] = f"{targetfaction['name']}"
                             else:
-                                target['expansionType'] = f"Invasion of {targetfaction['name']} {round(targetfaction['influence'],1)}"
+                                target['expansionType'] = f"Invasion of {targetfaction['name']} ({round(targetfaction['influence'],1)}%)"
+                                target['expansionDetail'] = f"{targetfaction['name']} ({round(targetfaction['influence'],1)}%)"
                             break
                 except:
                     print(f"!! Dodgy Faction {target['name']=} in {sys['name']=}")
             elif numberoffactions < 7:  # Extended Expansion
                 target['sys_priority'] = 300 + sysdist(target,sys)
-                target['expansionType'] = f"Extended Expansion"
+                target['expansionType'] = f"Expansion (Extended)"
+                target['expansionDetail'] = f"Extended"
                 bestpriority = min(bestpriority, target['sys_priority'])
 
         # Sort all candidate systems in priority order
@@ -207,6 +213,8 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
                 alertsystems.append(invader.copy())
                 alertsystems[-1]['invading']=targets[0]['name']
                 alertsystems[-1]['cycles'] = targets[0]['cycles']
+                alertsystems[-1]['invadetype'] = targets[0]['expansionType']
+                alertsystems[-1]['invademessage'] = 'Expand'  if targets[0]['expansionType'][0] == 'E' else 'Invade '+targets[0]['expansionDetail']
             donesystems.append(invader['name'])
     update_progress(1)
 
@@ -216,7 +224,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['influence'], reverse=True)
             for alert in alertsystems:
-                print(f" {alert['controlling_minor_faction']} from {alert['name']} targeting {alert['invading']} in {alert['cycles']} cycles (inf {round(alert['influence'],1)}%) ")
+                print(f" {alert['controlling_minor_faction']} ({round(alert['influence'],1)}%) from {alert['name']} will {alert['invademessage']} to {alert['invading']} in {alert['cycles']} cycles  ")
 
     return alertsystems
 
