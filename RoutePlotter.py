@@ -94,7 +94,7 @@ if __name__ == '__main__':
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
     
-    mode = ['Manual', 'Full Tour', 'Expansion Check', 'Patrol','Combined','Catchup'][5]
+    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol','!Combined','Catchup']
     forcerefresh = False # When Tick updates are flacky
 
     # Look in Journals so you start the route in your current location 
@@ -103,21 +103,22 @@ if __name__ == '__main__':
     if not system_names:
         system_names = []
 
-    if mode == 'Manual' or mode == 'Combined':  # Manual List (Currently Systems known to need suppressing)
+    if 'Manual' in mode :  # Manual List (Currently Systems known to need suppressing)
         system_names += """Kashis""".split('\n')
         system_names = list(map(lambda x: x.lstrip(),system_names))
         #print(system_names)
-    if mode == 'Full Tour':  # All Faction Systems
+    if 'Full Tour' in mode:  # All Faction Systems
         system_names += list(map(lambda x: x['system_name'],api.getfaction(faction)['faction_presence']))
-    if mode == 'Expansion Check':  # All factio Systems over 70% Inf
+    if 'Expansion Check' in mode:  # All factio Systems over 70% Inf
         system_names += list(map(lambda x: x['system_name'],filter(lambda x: x['influence'] >= 0.70,api.getfaction(faction)['faction_presence'])))
-    if mode == 'Patrol' or mode == 'Combined':  # All Systems mentioned on the CSNPatrol
+    if 'Patrol' in mode:  # All Systems mentioned on the CSNPatrol
         system_names += list(map(lambda x: x['system'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
-    if mode == 'Catchup':
-        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['updated_at'])))[:10]
+    if 'Catchup' in mode:
+        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['updated_at'])))[:5]
 
     # Now we have a simple list of the system names, get full system data
     route = list()
+    system_names = list(dict.fromkeys(system_names)) # Dedupe - No idea why it was needed, but I was getting shorter lists when combining modes.
     for system_name in system_names:
         sys = api.getsystem(system_name)
         # discard any that have already been scanned this tick
@@ -125,12 +126,12 @@ if __name__ == '__main__':
         if sys and ((forcerefresh or not sys['fresh']) or (not route)):
             route.append(sys)
 
-    printRoute(simple(route[0], route[1::].copy(), None), mode)
+    printRoute(simple(route[0], route[1::].copy(), None), list(filter(lambda x: x[0] != '!',mode)))
 
 
     print('Done', api.NREQ)
 
-    printRoute(simple(route[0], route[1::].copy(), None), mode,step=True)
+    printRoute(simple(route[0], route[1::].copy(), None), list(filter(lambda x: x[0] != '!',mode)),step=True)
 
     
 
