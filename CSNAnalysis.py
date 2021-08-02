@@ -230,6 +230,9 @@ def Misson_Gen(argv=''):
                 if next((x for x in faction['active_states'] if x['state'] == 'retreat'),None) and sys['name'] not in detected_retreats:
                     detected_retreats.append(sys['name'])
 
+            # Look for Non-Native Conflicts ##TODO But dont have Native Faction Info in Bubble. Hidden in the heavy load of EDDBFrame
+
+
     update_progress(1)
 
     # Add Detected Retreats
@@ -251,8 +254,8 @@ def Misson_Gen(argv=''):
                 print(f'!Override Ignored : {ex[0]} {ex[2]}')
 
     # Invasion Alert
-    if '/new' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
-        invaders = InvasionAlert(factionnames[0])
+    if '/new' in argv or '/invade' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
+        invaders = InvasionAlert(factionnames[0],live=True)
     for sys in invaders:
         sys["system_name"] = sys["name"]
         # trim spurious data that was giving circular reference errors when trying to save

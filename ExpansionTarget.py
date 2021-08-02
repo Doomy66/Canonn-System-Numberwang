@@ -9,7 +9,7 @@ eddb = None # Global Variabel to store an instance of the EDDBFramework
 rangeSimple = 20
 rangeExtended = 30
 
-def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,easyinvade=False):
+def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,easyinvade=False,live=False):
     ''' 
     Returns systems that would expand INTO a given system the soonest 
     simplyonly = restricts range
@@ -23,7 +23,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
     answers=list()
 
     # Default
-    targetsys = eddb.system(system)
+    targetsys = eddb.system(system,live=live)
     factionspresent = list(x['name'] for x in targetsys['minor_faction_presences'])
     if assumeretreat:
         targetsys['numberoffactions'] = min(6,targetsys['numberoffactions'])
@@ -61,7 +61,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['toexpansionType']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -73,7 +73,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
         eddb = EDDBFrame()
 
     # Default
-    sys = eddb.system(system_name)
+    sys = eddb.system(system_name,live=live)
     eddb.getstations(system_name)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
@@ -160,7 +160,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
 
     return sysInRange
 
-def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
+def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=False):
     global eddb
     print(f"Expansion Candidates for {faction}:")
     if not eddb:
@@ -172,7 +172,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
         if c['name'] == 'DEBUG':
             print('debug')
         update_progress(counter/len(candidates),c['name'])
-        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked)
+        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked,live=live)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
             ## TODO ## Conflict check for source system - Not really worth it while Happiness is so broken
@@ -188,7 +188,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70):
 
     return list(filter(lambda x: x['expansion'] , candidates))
         
-def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
+def InvasionAlert(faction,mininf=70, show=True, lookahead=3, live=False):
     '''
     Will report all systems that would expand into a faction system within lookahead cycles
     '''
@@ -197,7 +197,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
         eddb = EDDBFrame()
     alertsystems = list()
 
-    homesystems = list((x['name'] for x in eddb.systemspresent(faction)))
+    homesystems = list((x['name'] for x in eddb.systemspresent(faction,live=live)))
     donesystems = list()
     print(f'Checking for Future Invasions of {faction} Systems:')
     for counter, home in enumerate(homesystems):
@@ -206,9 +206,9 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3):
                         and x['name'] not in donesystems 
                         and x['population'] > 0
                         and x['influence'] > mininf
-                        , eddb.cubearea(home, rangeExtended))
+                        , eddb.cubearea(home, rangeExtended,live=live))
         for invader in invaders:
-            targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'])[:lookahead])) # Check if next lookahead expansions will target the home faction
+            targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'],live=live)[:lookahead])) # Check if next lookahead expansions will target the home faction
             if targets:
                 alertsystems.append(invader.copy())
                 alertsystems[-1]['invading']=targets[0]['name']
@@ -253,13 +253,13 @@ def InvasionRoute(start_system_name,destination_system_name,maxcycles = 100,fact
                 allroutes.append(route.copy())
                 bestdist = min(route[-1]['routedist'],bestdist) if bestdist else route[-1]['routedist']
         else: # take the next set of expansions
-            exp = ExpansionFromSystem(currentsys['name'],avoided_systems = controlled + list(x['to'] for x in route),useretreat = False)
+            exp = ExpansionFromSystem(currentsys['name'],avoided_systems = controlled + list(x['to'] for x in route),useretreat = False,organisedinvasions=True)
             for sys in exp[:maxcycles]:
                 thisstep['expansionType']=sys['expansionType']
                 thisstep['to']=sys['name']
                 thisstep['owner']=sys['controlling_minor_faction']
                 thisstep['sys']=sys
-                thisstep['routedist'] += 1 if sys['expansionType'][0]=='S' else 2
+                thisstep['routedist'] += 1 ## To Extended takes 2
 
                 # TODO prevent backtracking
                 if 'best' not in sys.keys():        

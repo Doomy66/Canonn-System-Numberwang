@@ -28,7 +28,8 @@ class EDDBFrame():
         EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
-        self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
+        #self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
+        self._eddb_cache = 'data\\EDDBCache_1.pickle'
         self._ebgs_systemhist_cache = 'data\\EBGS_SysHist.pickle'
         self.systemhist = list()
 
@@ -126,7 +127,7 @@ class EDDBFrame():
         return answer
 
 
-    def system(self,idorname):
+    def system(self,idorname,live=False):
         ''' 
         Returns System Data given a system name or ID 
         Faction Names and Details are denormalised
@@ -138,7 +139,7 @@ class EDDBFrame():
 
         if not sys:
             print(f'! System Not Found : {idorname}')
-        elif not 'pf' in sys.keys():
+        elif not 'pf' in sys.keys() or (live and 'ebgs' not in sys.keys()):
             #Denormalise for lazyness
             sys['pf'] = list()
             for mf in sys['minor_faction_presences']:
@@ -148,7 +149,16 @@ class EDDBFrame():
                     mf['detail'] = f
                     if f['is_player_faction']:
                         sys['pf'].append(f['name'])
-            
+
+            ## Get live ebgs data when the dump is just not good enough
+            if live and 'ebgs' not in sys.keys():
+                ebgs = api.getsystem(sys['name'])
+                sys['ebgs'] = ebgs
+                for f in sys['minor_faction_presences']:
+                    newinf = next((x for x in ebgs['factions'] if x['name']==f['name']),{'influence':0})['influence']
+                    #print(f['name'],f['influence'],newinf)
+                    f['influence'] = newinf
+
             sys['numberoffactions'] = len(sys['minor_faction_presences'])
 
             # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
@@ -157,6 +167,8 @@ class EDDBFrame():
 
             # Additional data from other sources
             sys['historic'] = self.retreats(sys['name'])
+
+
 
 
         return sys
@@ -180,7 +192,7 @@ class EDDBFrame():
         return f
         
 
-    def systemscontroled(self,factionname):
+    def systemscontroled(self,factionname, live=False):
         '''
         Returns all Systems controled by the faction
         '''
@@ -188,10 +200,10 @@ class EDDBFrame():
         ans = list()
         for s in self.systems:
             if s['controlling_minor_faction'] == factionname:
-                ans.append(self.system(s['name'])) # Denormalised
+                ans.append(self.system(s['name'],live=live)) # Denormalised
         return ans
 
-    def systemspresent(self,factionname):
+    def systemspresent(self,factionname,live=False):
         '''
         Returns list of systems (Syustem Name only) controled by the faction
         '''
@@ -202,16 +214,16 @@ class EDDBFrame():
             for sys in self.systems:
                 for f in sys['minor_faction_presences']:
                     if f['minor_faction_id'] == faction['id']:
-                        ans.append(self.system(sys['name'])) # Denormalised
+                        ans.append(self.system(sys['name'],live=live)) # Denormalised
             faction['faction_presence'] = ans # cache the result
         return faction['faction_presence']
 
-    def cubearea(self,sysname,range):
+    def cubearea(self,sysname,range,live=False):
         '''
          All Populated Systems within the cube around sysname
         '''
         #print(f'.Cube around {sysname}')
-        sys = self.system(sysname)
+        sys = self.system(sysname,live=live)
         ans = list()
         if range==30: #expansion request
             if 'xcube' in sys.keys(): #cached
@@ -219,19 +231,19 @@ class EDDBFrame():
         
         if not ans:
             for s in filter(lambda x: cubedist(x,sys)<=range,self.systems):
-                ans.append(self.system(s['name'])) # Denormalised
+                ans.append(self.system(s['name'],live=live)) # Denormalised
 
         if range==30 and 'xcube' not in sys.keys(): # save cache
             sys['xcube'] = ans
         return ans
 
 
-    def activestates(self,sysname,conflicts=False):
+    def activestates(self,sysname,conflicts=False,live=False):
         '''
         Returns active states for all faction in a system, with an option to only report Conflicts
         '''
         ans = list()
-        sys = self.system(sysname)
+        sys = self.system(sysname,live=live)
         for f in sys['minor_faction_presences']:
             for state in f['active_states']:
                 state['faction'] = f['name']
@@ -250,8 +262,8 @@ class EDDBFrame():
                 ans.append(f['name'])
         return ans
 
-    def getstations(self,sysname):
-        sys = self.system(sysname)
+    def getstations(self,sysname,live=False):
+        sys = self.system(sysname,live=live)
         ans = list()
         if sys:
             if 'stations' not in sys.keys():
@@ -275,6 +287,7 @@ class EDDBFrame():
 if __name__ == '__main__':
     ## Unit Test Harness
     g = EDDBFrame()
+    khun = g.system('Khun',live=True)
     varati = g.system('Varati')
     failed = g.system('I Dont Exist')
     canonn = g.faction('Canonn')
