@@ -45,7 +45,7 @@ def Misson_Gen(argv=''):
     bubble = Bubble.Bubble()
     faction_systems = bubble.localspace
     factionnames = bubble.factionnames
-    orides = list
+    all_overrides = list
 
     if LOCAL_OVERRIDE:
         # Local Overrides
@@ -53,15 +53,15 @@ def Misson_Gen(argv=''):
         if os.path.isfile(oridefile):
             with open(oridefile, newline='') as io:
                 reader = csv.reader(io, delimiter='\t')
-                orides = list(reader)
-            for x in orides[1:]:  # Yeah, can probably be done in 1 statement
+                all_overrides = list(reader)
+            for x in all_overrides[1:]:  # Yeah, can probably be done in 1 statement
                 x[1] = int(x[1])
     elif '/safe' in argv:
         # Google Sheet Via Read
-        orides = CSNOverRideReadSafe()
+        all_overrides = CSNOverRideReadSafe()
     else:
         # Google Sheet via API
-        orides = CSNOverRideRead()
+        all_overrides = CSNOverRideRead()
 
     try:
         with open(f'data\\{factionnames[0]}Message.json', 'r') as io:
@@ -119,17 +119,32 @@ def Misson_Gen(argv=''):
 
             updated = Bubble.EliteBGSDateTime(sys["updated_at"])
             age = datetime.now() - updated
-            oride = list(filter(lambda x: x[0] == sys["system_name"], orides))
-            faction_systems[key]['override'] = oride[0][4] if oride else 'Natural'
+            system_overrides = list(filter(lambda x: x[0] == sys["system_name"], all_overrides))
+            faction_systems[key]['override'] = system_overrides[0][4] if system_overrides else 'Natural'
 
-            if sys['name'] == 'DUBUG':
+            if sys['name'] == 'Debug':
                 print(f'Debug')
 
             # Single Message per sysme for Patrol
             if faction_systems[key]['override'] != 'Natural':  # OVERRIDE!
-                for newmessage in oride:
+                for newmessage in system_overrides:
+                    # Default to Empire Faction
+                    message_faction = empire['name']
+                    message_inf = round(empire['influence'],1)
+                    message_conflict = ''
+                    # Look for another faction mentioned in the override
+                    for f in faction_systems[key]['factions']:
+                        if f['name'] in newmessage[2] and f['name'] != empire['name']:
+                            message_faction = f['name']
+                            message_inf = round(f['influence'],1)
+                            if len(f['conflicts']): # There is a conflict
+                                opponent = list(filter(lambda x: x['name']==f['conflicts'][0]['opponent_name'],faction_systems[key]['factions']))
+                                if opponent:
+                                    message_conflict = f"({f['conflicts'][0]['days_won']} v {opponent[0]['conflicts'][0]['days_won']})"
+                                    #print(message_conflict)
+
                     messages.append(
-                        amessage(sys, newmessage[1], newmessage[2].format(gap=gap, inf=empire['influence'],happy=happy)+'*',
+                        amessage(sys, newmessage[1], newmessage[2].format(gap=gap, inf=message_inf,happy=happy,conflict=message_conflict)+'*',
                                 dIcons['override'] if newmessage[3] == '' else dIcons[newmessage[3]]))
             
             if faction_systems[key]['override'] != 'Override':
@@ -242,16 +257,33 @@ def Misson_Gen(argv=''):
 
     # All Canonn Systems Processed
     # Messages for External Systems
-    for ex in orides[1:]:
-        if sum(faction_systems[x]["system_name"] == ex[0] for x in faction_systems) == 0:
+    for newmessage in all_overrides[1:]:
+        if sum(faction_systems[x]["system_name"] == newmessage[0] for x in faction_systems) == 0:
             #exsys = bubble.findsystem(ex[0])
-            exsys = api.getsystem(ex[0])
+            exsys = api.getsystem(newmessage[0])
             if exsys:
-                ex[2] = ex[2].replace('{inf}',f"{round(exsys['factions'][0]['influence'],1)}")                
-                messages.append(amessage(exsys, ex[1], ex[2]+'*',
-                                        dIcons['override'] if ex[3] == '' else dIcons[ex[3]],'None'))
+                message_inf = round(exsys['factions'][0]['influence'],1)
+                message_conflict = ''
+
+                # Look for another faction mentioned in the override
+                for f in exsys['factions']:
+                    if f['name'] in newmessage[2] and f['name'] != exsys['controlling_minor_faction_cased']:
+                        message_faction = f['name']
+                        message_inf = round(f['influence'],1)
+                        if len(f['conflicts']): # There is a conflict
+                            opponent = list(filter(lambda x: x['name']==f['conflicts'][0]['opponent_name'],faction_systems[key]['factions']))
+                            if opponent:
+                                message_conflict = f"({f['conflicts'][0]['days_won']} v {opponent[0]['conflicts'][0]['days_won']})"
+                                #print(message_conflict)
+
+
+
+                newmessage[2] = newmessage[2].replace('{inf}',f"{message_inf}")                
+                newmessage[2] = newmessage[2].replace('{conflict}',f"{message_conflict}")                
+                messages.append(amessage(exsys, newmessage[1], newmessage[2]+'*',
+                                        dIcons['override'] if newmessage[3] == '' else dIcons[newmessage[3]],'None'))
             else:
-                print(f'!Override Ignored : {ex[0]} {ex[2]}')
+                print(f'!Override Ignored : {newmessage[0]} {newmessage[2]}')
 
     # Invasion Alert
     if '/new' in argv or '/invade' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
@@ -266,7 +298,7 @@ def Misson_Gen(argv=''):
             #print('')
 
     # Lowest Gaps for PUSH message
-    l = list(filter(lambda x: faction_systems[x]['override'] == 'Addition' or not hasmessage(
+    l = list(filter(lambda x: faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
         messages, faction_systems[x]['system_name']), faction_systems))
 
     l.sort(key=lambda s: faction_systems[s]['factions'][0]['influence'] - faction_systems[s]['factions']
