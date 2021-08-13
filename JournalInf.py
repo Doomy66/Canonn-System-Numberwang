@@ -71,7 +71,7 @@ myactions = ActionLog()
 systems = SysNames()
 
 ignore = {'Music', 'ReceiveText', 'NpcCrewPaidWage', 'ReservoirReplenished', 'DockingGranted', 'DockingRequested', 'DockingDenied', 'Screenshot', 'CarrierJump', 'CommunityGoal',
-          'Scan', 'NavBeaconScan', 'FSSSignalDiscovered', 'ShipTargeted', 'Loadout', 'EngineerProgress', 'FSDTarget', 'FSSDiscoveryScan', 'Scanned', 'MissionFailed', 'MissionAbandoned',
+          'Scan', 'NavBeaconScan', 'FSSSignalDiscovered', 'FSSBodySignals', 'ShipTargeted', 'Loadout', 'EngineerProgress', 'FSDTarget', 'FSSDiscoveryScan', 'Scanned', 'MissionFailed', 'MissionAbandoned',
           'RefuelAll', 'BuyAmmo', 'MaterialCollected', 'Fileheader', 'Commander', 'Synthesis', 'ModuleSwap', 'ModuleStore', 'ModuleSellRemote', 'MassModuleStore', 'ModuleSell', 'SellDrones', 
           'SetUserShipName', 'ShipyardBuy', 'ShipyardNew', 'EngineerCraft', 'EscapeInterdiction', 'PayFines', 'HeatDamage', 'DockingCancelled', 'DataScanned', 
           'Materials', 'LoadGame', 'Rank', 'Progress', 'Reputation', 'Missions', 'Statistics', 'Cargo', 'Friends', 'SquadronStartup', 'SendText', 'SharedBookmarkToSquadron',
