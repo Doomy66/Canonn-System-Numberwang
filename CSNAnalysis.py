@@ -140,7 +140,7 @@ def Misson_Gen(argv=''):
                             if len(f['conflicts']): # There is a conflict
                                 opponent = list(filter(lambda x: x['name']==f['conflicts'][0]['opponent_name'],faction_systems[key]['factions']))
                                 if opponent:
-                                    message_conflict = f"({f['conflicts'][0]['days_won']} v {opponent[0]['conflicts'][0]['days_won']})"
+                                    message_conflict = f"({f['conflicts'][0]['status'].capitalize() if f['conflicts'][0]['status'] else 'Complete'} {f['conflicts'][0]['days_won']} v {opponent[0]['conflicts'][0]['days_won']})"
                                     #print(message_conflict)
 
                     messages.append(
@@ -273,7 +273,7 @@ def Misson_Gen(argv=''):
                         if len(f['conflicts']): # There is a conflict
                             opponent = list(filter(lambda x: x['name']==f['conflicts'][0]['opponent_name'],faction_systems[key]['factions']))
                             if opponent:
-                                message_conflict = f"({f['conflicts'][0]['days_won']} v {opponent[0]['conflicts'][0]['days_won']})"
+                                message_conflict = f"({f['conflicts'][0]['status'].capitalize() if f['conflicts'][0]['status'] else 'Complete'} {f['conflicts'][0]['days_won']} v {opponent[0]['conflicts'][0]['days_won']})"
                                 #print(message_conflict)
 
 
