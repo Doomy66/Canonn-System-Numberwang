@@ -94,7 +94,7 @@ if __name__ == '__main__':
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
     
-    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol','!Combined','Catchup']
+    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol', 'Catchup']
     forcerefresh = False # When Tick updates are flacky
 
     # Look in Journals so you start the route in your current location 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     if 'Patrol' in mode:  # All Systems mentioned on the CSNPatrol
         system_names += list(map(lambda x: x['system'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
     if 'Catchup' in mode:
-        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['updated_at'])))[:5]
+        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['updated_at'])))[:6]
 
     # Now we have a simple list of the system names, get full system data
     route = list()
