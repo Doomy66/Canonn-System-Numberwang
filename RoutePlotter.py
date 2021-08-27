@@ -1,7 +1,8 @@
 import json
-from Bubble import whereami, update_progress
+from Bubble import whereami, update_progress,EliteBGSDateTime
 import api
 import win32clipboard
+from datetime import datetime
 
 
 def sysdist(s1, s2):
@@ -88,6 +89,9 @@ def printRoute(route, title,step=False):
 
     print(f"*** {int(route['dist'])} ly, {jumps} Systems ***")
 
+def updatedage(updated_at):
+    updated = datetime.now() - EliteBGSDateTime(updated_at)
+    return updated.total_seconds()
 
 if __name__ == '__main__':
     # What list of systems do want to use ?
@@ -114,7 +118,8 @@ if __name__ == '__main__':
     if 'Patrol' in mode:  # All Systems mentioned on the CSNPatrol
         system_names += list(map(lambda x: x['system'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
     if 'Catchup' in mode:
-        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['updated_at'])))[:6]
+        f = api.getfaction(faction)['faction_presence']
+        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['influence']/updatedage(x['updated_at']))  ))[:6]
 
     # Now we have a simple list of the system names, get full system data
     route = list()

@@ -152,12 +152,15 @@ class EDDBFrame():
 
             ## Get live ebgs data when the dump is just not good enough
             if live and 'ebgs' not in sys.keys():
-                ebgs = api.getsystem(sys['name'])
-                sys['ebgs'] = ebgs
-                for f in sys['minor_faction_presences']:
-                    newinf = next((x for x in ebgs['factions'] if x['name']==f['name']),{'influence':0})['influence']
-                    #print(f['name'],f['influence'],newinf)
-                    f['influence'] = newinf
+                if ebgs := api.getsystem(sys['name']): # Some systems are missing or named differently
+                    sys['ebgs'] = ebgs
+                    for f in sys['minor_faction_presences']:
+                        newinf = next((x for x in ebgs['factions'] if x['name']==f['name']),{'influence':0})
+                        if newinf: # Faction may have retreated
+                            newinf = newinf['influence']
+                            f['influence'] = newinf
+                        else:
+                            print('Bug')
 
             sys['numberoffactions'] = len(sys['minor_faction_presences'])
 
