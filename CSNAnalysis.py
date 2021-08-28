@@ -106,7 +106,7 @@ def Misson_Gen(argv=''):
             factions =sys['factions']
             empire = sys['empire']
             happytext = empire['faction_details']['faction_presence']['happiness']
-            happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else 'Pieved'
+            happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else '<SNAFU '+ happytext+'>'
 
             conflict = None
 
