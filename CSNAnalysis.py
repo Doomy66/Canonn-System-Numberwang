@@ -122,7 +122,7 @@ def Misson_Gen(argv=''):
             system_overrides = list(filter(lambda x: x[0] == sys["system_name"], all_overrides))
             faction_systems[key]['override'] = system_overrides[0][4] if system_overrides else 'Natural'
 
-            if sys['name'] == 'Debug':
+            if sys['name'] == 'debug':
                 print(f'Debug')
 
             # Single Message per sysme for Patrol
@@ -294,7 +294,7 @@ def Misson_Gen(argv=''):
         sys['minor_faction_presences'] = list() 
         sys['xcube'] = list()
         if sys['controlling_minor_faction'] in sys['pf']: # Policy is we allow NPC to arrive so they fill the system and block PC factions
-            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} ({round(sys['influence'],1)}%) will {sys['invademessage']} {'to' if sys['invadetype'][0]=='E' else 'in'} {sys['invading']} within {sys['cycles']} cycles : {('Support Non-Native Factions in '+sys['invading']) if sys['invadetype'][0]=='I' else 'Reduce their Inf below 70%'}",dIcons['data']))
+            messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} ({round(sys['influence'],1)}%) will {sys['invademessage']} {'to' if sys['invadetype'][0]=='E' else 'in'} {sys['invading']} within {sys['cycles']} cycles : {('Support Non-Native Factions in '+sys['invading']) if sys['invadetype'][0]=='I' else ''}",dIcons['data']))
             #print('')
 
     # Lowest Gaps for PUSH message

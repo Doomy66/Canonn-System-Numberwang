@@ -98,7 +98,7 @@ if __name__ == '__main__':
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
     
-    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol', 'Catchup']
+    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol', 'Catchup','!Project']
     forcerefresh = False # When Tick updates are flacky
 
     # Look in Journals so you start the route in your current location 
@@ -107,10 +107,25 @@ if __name__ == '__main__':
     if not system_names:
         system_names = []
 
-    if 'Manual' in mode :  # Manual List (Currently Systems known to need suppressing)
-        system_names += """Kashis""".split('\n')
+    if 'Project' in mode :  # Manual List (Currently Systems known to need suppressing)
+        system_names += """Omanmatho
+                        Awngtei
+                        Halbarapii
+                        Nyamad
+                        Wikmeang
+                        Susama
+                        Wunian
+                        HIP 111496
+                        Kungati
+                        HR 8133
+                        HIP 108110
+                        Tiguai
+                        Xi Wangkala""".split('\n')
         system_names = list(map(lambda x: x.lstrip(),system_names))
-        #print(system_names)
+    if 'Manual' in mode :  # Manual List (Currently Systems known to need suppressing)
+        system_names += """Rishnum
+                        Kavalan""".split('\n')
+        system_names = list(map(lambda x: x.lstrip(),system_names))
     if 'Full Tour' in mode:  # All Faction Systems
         system_names += list(map(lambda x: x['system_name'],api.getfaction(faction)['faction_presence']))
     if 'Expansion Check' in mode:  # All factio Systems over 70% Inf

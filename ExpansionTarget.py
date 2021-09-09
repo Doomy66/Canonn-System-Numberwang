@@ -33,7 +33,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             if f['name'] not in natives:
                 f['influence'] = 0.01
 
-    sysInRange = eddb.cubearea(system, range)
+    sysInRange = eddb.cubearea(system, range, live=live)
     sysInRange = list(filter(lambda x: x['controlling_minor_faction'] not in factionspresent,sysInRange))
     
     print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets')
@@ -61,7 +61,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['toexpansionType']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False, reportsize = 8):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -85,7 +85,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
 
     sys['conflicts'] = eddb.activestates(system_name,True)
 
-    sysInRange = eddb.cubearea(sys['name'], rangeExtended)
+    sysInRange = eddb.cubearea(sys['name'], rangeExtended,live=live)
     # Remove systems where faction is already present or other reasons
     sysInRange = list(filter(lambda x: x['name'] not in avoided_systems and x['name'] != sys['name'], sysInRange))
     sysInRange.sort(key=lambda x: cubedist(x,sys))
@@ -154,7 +154,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
         if not sysInRange or sysInRange[0]['sys_priority'] == 1000:
             print(f" ! No Candidates ")
         else:
-            for cand in sysInRange[:8]:
+            for cand in sysInRange[:reportsize]:
                 if cand['sys_priority'] != 1000:
                     print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}] in {cand['cycles']} cycles")
 
