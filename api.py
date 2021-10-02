@@ -397,18 +397,22 @@ def factionsovertime(system_name, days=30, earliest = datetime(2017,10,8) ): # e
         ## There is no TRY Block as it might make the cache invalid and cause a total rebuild
         payload = {'name':system_name, 'timeMin':int(1000*time.mktime(minTime.timetuple())), 'timeMax':int(1000*time.mktime(maxTime.timetuple()))}
         resp = requests.get(url, params=payload)
-        myload = json.loads(resp._content)["docs"][0]
-        sys.stdout.write(':' if myload['history'] else '.')
-        sys.stdout.flush()
-        NREQ += 1
+        myload = json.loads(resp._content)["docs"]
+        if len(myload): # Was getting nothing for a specific Detention Center
+            myload = myload[0]
+            sys.stdout.write(':' if myload['history'] else '.')
+            sys.stdout.flush()
+            NREQ += 1
 
-        if myload['history']:
-            for h in myload['history']:
-                for f in h['factions']:
-                    if f['name'] not in factions:
-                        factions.append(f['name']) # Faction Arrived
-                        print(f"{f['name']} - {myload['updated_at']}")
-        maxTime = minTime
+            if myload['history']:
+                for h in myload['history']:
+                    for f in h['factions']:
+                        if f['name'] not in factions:
+                            factions.append(f['name']) # Faction Arrived
+                            print(f"{f['name']} - {myload['updated_at']}")
+            maxTime = minTime
+        else:
+            break
     print('')
     return factions
 

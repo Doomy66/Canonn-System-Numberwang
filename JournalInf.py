@@ -88,7 +88,7 @@ ignore = {'Music', 'ReceiveText', 'NpcCrewPaidWage', 'ReservoirReplenished', 'Do
           'BackPack', 'BuySuit', 'BuyWeapon', 'CreateSuitLoadout', 'Disembark', 'Embark', 'LoadoutEquipModule', 'ShipLockerMaterials', 'SuitLoadout', 'SwitchSuitLoadout', 'DeleteSuitLoadout',
           'BuyMicroResources', 'CrimeVictim', 'ShipLocker',
           'BackpackChange', 'BookTaxi', 'CollectItems', 'Died', 'Resurrect', 'Liftoff', 'Touchdown', 'TransferMicroResources', 'ShieldState', 'Backpack', 'SellSuit', 'SellWeapon', 'BackPackMaterials',
-          'CodexEntry', 'ScanOrganic', 'LaunchSRV', 'DockSRV', 'CollectCargo'
+          'CodexEntry', 'ScanOrganic', 'LaunchSRV', 'DockSRV', 'CollectCargo', 'ScanBaryCentre'
           }
 
 for f in dir:
@@ -163,7 +163,7 @@ for f in dir:
                             currentsys, handin['Faction'], e['event']+e['Type'].title(),1,0,0,e['Amount'])
             elif e['Type'] == 'CombatBond' and e['Faction'] != '':
                 myactions.add(currentsys, e['Faction'],
-                              e['event']+e['Type'].title())
+                              e['event']+e['Type'].title(),1,0,0,e['Amount'])
         elif e['event'] == 'CommitCrime':
             myactions.add(currentsys, e['Faction'], e['event'], -1)
         elif e['event'] == 'FactionKillBond' or e['event'] == 'CapShipBond':

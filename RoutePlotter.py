@@ -3,6 +3,7 @@ from Bubble import whereami, update_progress,EliteBGSDateTime
 import api
 import win32clipboard
 from datetime import datetime
+import time
 
 
 def sysdist(s1, s2):
@@ -81,9 +82,17 @@ def printRoute(route, title,step=False):
                 win32clipboard.EmptyClipboard()
                 win32clipboard.SetClipboardText(p['system_name'])
                 win32clipboard.CloseClipboard()
-                cont = input(f"{p['system_name']} ({round(p['dist'],1)} ly) : Enter for next System (any character to exit) : ")
-                if cont != '':
-                    break
+
+                # Automatic detection and copy to clipboard
+                print(f"{p['system_name']} ({round(p['dist'],1)} ly)")
+                while p['system_name'] != whereami():
+                    time.sleep(3)
+
+                # Manual version
+                if False:                    
+                    cont = input(f"{p['system_name']} ({round(p['dist'],1)} ly) : Enter for next System (any character to exit) : ")
+                    if cont != '':
+                        break
             else:
                 print(f"{p['system_name']}")
 
@@ -98,7 +107,7 @@ if __name__ == '__main__':
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
     
-    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol', 'Catchup','!Project']
+    mode = ['Manual', '!Full Tour', '!Expansion Check', 'Patrol', 'Catchup','Project']
     forcerefresh = False # When Tick updates are flacky
 
     # Look in Journals so you start the route in your current location 
@@ -108,23 +117,23 @@ if __name__ == '__main__':
         system_names = []
 
     if 'Project' in mode :  # Manual List (Currently Systems known to need suppressing)
-        system_names += """Omanmatho
-                        Awngtei
-                        Halbarapii
-                        Nyamad
-                        Wikmeang
-                        Susama
-                        Wunian
-                        HIP 111496
-                        Kungati
-                        HR 8133
-                        HIP 108110
-                        Tiguai
-                        Xi Wangkala""".split('\n')
+        system_names += """HR 8133
+            HIP 111496
+            Wunian
+            Nyamad
+            Tiguai
+            Kungati
+            Xi Wangkala
+            HIP 108110
+            Awngtei
+            Susama
+            Halbarapii""".split('\n')
         system_names = list(map(lambda x: x.lstrip(),system_names))
     if 'Manual' in mode :  # Manual List (Currently Systems known to need suppressing)
-        system_names += """Rishnum
-                        Kavalan""".split('\n')
+        system_names += """Mimuthi
+                        Pegasi Sector BL-X c1-25
+                        11 Cephei
+                        Jetes""".split('\n')
         system_names = list(map(lambda x: x.lstrip(),system_names))
     if 'Full Tour' in mode:  # All Faction Systems
         system_names += list(map(lambda x: x['system_name'],api.getfaction(faction)['faction_presence']))

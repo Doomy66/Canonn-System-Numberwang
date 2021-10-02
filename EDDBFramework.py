@@ -7,6 +7,7 @@ import urllib.request
 import tempfile
 import pickle
 import api
+import requests
 from CSNSettings import ignorepf
 
 
@@ -38,17 +39,28 @@ class EDDBFrame():
         if (not os.path.exists(self._eddb_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds > 3*60*60:
             ## Download Nightly Dumps from EDDB if older than 3 hours
             print('Downloading from EDDB Dump...')
-            req = urllib.request.Request(EDDBPOPULATED)
-            with urllib.request.urlopen(req) as response:
-                self.systems = json.loads(response.read().decode('utf8'))
+            if False: # Started to fail with SSL Issues
+                req = urllib.request.Request(EDDBPOPULATED)
+                with urllib.request.urlopen(req) as response:
+                    self.systems = json.loads(response.read().decode('utf8'))
 
-            req = urllib.request.Request(EDDBFACTIONS)
-            with urllib.request.urlopen(req) as response:
-                self.factions = json.loads(response.read().decode('utf8'))
+                req = urllib.request.Request(EDDBFACTIONS)
+                with urllib.request.urlopen(req) as response:
+                    self.factions = json.loads(response.read().decode('utf8'))
 
-            req = urllib.request.Request(EDDBSTAIONS)
-            with urllib.request.urlopen(req) as response:
-                self.stations = json.loads(response.read().decode('utf8'))
+                req = urllib.request.Request(EDDBSTAIONS)
+                with urllib.request.urlopen(req) as response:
+                    self.stations = json.loads(response.read().decode('utf8'))
+            else:
+                req = requests.get(EDDBPOPULATED)
+                self.systems = req.json()
+    
+                req = requests.get(EDDBFACTIONS)
+                self.factions = req.json()
+
+                req = requests.get(EDDBSTAIONS)
+                self.stations = req.json()
+
 
             self.savecache()
             self.retreatsload()

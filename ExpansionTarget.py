@@ -111,7 +111,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                 target['expansionDetail'] = f"Simple"
 
 
-                if useretreat and 'historic' in target.keys() and sys['controlling_minor_faction'] in target['historic']: # Has previously retreated
+                if useretreat and 'historic' in target.keys() and (asfaction if asfaction else sys['controlling_minor_faction']) in target['historic']: # Has previously retreated
                     target['sys_priority'] += 100
                     target['expansionType'] += f" (Retreated)"
                     target['expansionDetail'] = f"Retreated"

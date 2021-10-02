@@ -81,6 +81,7 @@ def Misson_Gen(argv=''):
     recovering_states = []
     ootsystems = []
     detected_retreats = []
+    surrendered_systems = ['Sekenks'] # No orders to boost inf for system control etc. Leave it to the system owner.
 
     dIcons = {"war": '<:EliteEagle:231083794700959744> ',
               "election": ':ballot_box: ',
@@ -94,6 +95,7 @@ def Misson_Gen(argv=''):
               "end": ':clap: ',
               "FC": ':anchor: ', 
               "notfresh": ':arrows_counterclockwise: '}
+    
 
     print(f'CSN Missions:')
     # Create a single Message for each faction system
@@ -171,7 +173,7 @@ def Misson_Gen(argv=''):
                     ))
                     faction_systems[key]['override'] = 'Done'
 
-                if (not conflict) and faction_systems[key]['override'] in {'Addition', 'Natural'}:
+                if (not conflict) and faction_systems[key]['override'] in {'Addition', 'Natural'} and sys['name'] not in surrendered_systems:
                     # Not yet in control
                     if factions[0]['name'] not in factionnames:
                         messages.append(
@@ -298,8 +300,8 @@ def Misson_Gen(argv=''):
             #print('')
 
     # Lowest Gaps for PUSH message
-    l = list(filter(lambda x: faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
-        messages, faction_systems[x]['system_name']), faction_systems))
+    l = list(filter(lambda x: x not in surrendered_systems and (faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
+        messages, faction_systems[x]['system_name'])), faction_systems))
 
     l.sort(key=lambda s: faction_systems[s]['factions'][0]['influence'] - faction_systems[s]['factions']
            [1]['influence'] if len(faction_systems[s]['factions']) > 1 else 100)
@@ -353,10 +355,10 @@ def Misson_Gen(argv=''):
     with open(f'data\\{factionnames[0]}DiscordPatrol.txt', 'w') as io:  # Text Version for Discord
         io.writelines(f'Canonn System Numberwang\n')
         io.writelines(f'{x[8]}{x[1]} : {x[7]}\n' for x in filter(
-            lambda x: x[0] < 11 or x[0] > 20, messages))
+            lambda x: x[0] <= 10 or (x[0] > 20 and x[0] <=30) , messages))
     with open(f'data\\{factionnames[0]}DiscordWebhook.txt', 'w') as io:  # Webhook Text Version for Discord
         io.writelines(f'{x[8]}{x[1]} : {x[7]}\n' for x in filter(
-            lambda x: x[0] < 11 or x[0] > 20, messagechanges))
+            lambda x: x[0] < 11 or (x[0] > 20 and x[0] <=30), messagechanges))
     with open(f'data\\{factionnames[0]}Message.json', 'w') as io:  # Dump to file for comparison next run
         json.dump(messages, io, indent=4)
     with open(f'data\\{factionnames[0]}Invaders.json', 'w') as io:  # Dump to file for comparison next run
@@ -367,7 +369,7 @@ def Misson_Gen(argv=''):
         wh_text = ''
         wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
                              adapter=RequestsWebhookAdapter())
-        for x in filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges):
+        for x in filter(lambda x: x[0] < 11 or (x[0] > 20 and x[0]<=30), messagechanges):
             wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
         if wh_text != '':
             wh.send(
