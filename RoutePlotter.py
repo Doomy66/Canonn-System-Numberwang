@@ -107,7 +107,7 @@ if __name__ == '__main__':
     faction = 'Canonn'
     #faction = "Marquis du Ma'a"
     
-    mode = ['Manual', '!Full Tour', '!Expansion Check', 'Patrol', 'Catchup','Project']
+    mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol', '!Catchup','!Project']
     forcerefresh = False # When Tick updates are flacky
 
     # Look in Journals so you start the route in your current location 

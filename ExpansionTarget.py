@@ -156,7 +156,12 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
         else:
             for cand in sysInRange[:reportsize]:
                 if cand['sys_priority'] != 1000:
-                    print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}] in {cand['cycles']} cycles")
+                    any_retreating = False
+                    for f in cand['minor_faction_presences']:
+                        if 'Retreat' in list(x['name'] for x in f['active_states']) + list(x['name'] for x in f['pending_states']):
+                            any_retreating = True
+
+                    print(f" {cand['name']} : {cand['expansionType']}{' ('+', '.join(cand['pf'])+')' if cand['pf'] else ''} [{cand['beststation']}] in {cand['cycles']} cycles {'[Retreat Detected !!!]' if any_retreating else ''}")
 
     return sysInRange
 
