@@ -160,7 +160,7 @@ for f in dir:
                     # No data to distiguish betwen a FC or IF. Would have to search for factions in system to check if the Inf Counts
                     if (currentfaction == 'FleetCarrier' or not 'BrokerPercentage' in e) and handin['Faction'] != '':
                         myactions.add(
-                            currentsys, handin['Faction'], e['event']+e['Type'].title(),1,0,0,e['Amount'])
+                            currentsys, handin['Faction'], e['event']+e['Type'].title(),1,0,0,handin['Amount'])
             elif e['Type'] == 'CombatBond' and e['Faction'] != '':
                 myactions.add(currentsys, e['Faction'],
                               e['event']+e['Type'].title(),1,0,0,e['Amount'])
