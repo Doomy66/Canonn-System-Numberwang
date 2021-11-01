@@ -118,7 +118,8 @@ if __name__ == '__main__':
 
     if 'Project' in mode :  # Manual List (Currently Systems known to need suppressing)
         system_names += """HR 8133
-            HIP 111496
+            HIP 109479
+            Ross 211
             Wunian
             Nyamad
             Tiguai
@@ -127,7 +128,15 @@ if __name__ == '__main__':
             HIP 108110
             Awngtei
             Susama
-            Halbarapii""".split('\n')
+            Halbarapii
+            Nicobarese
+            Ngaislan
+            Wei Jung
+            Zombo
+            HIP 113477
+            Mehua
+            Jetes
+            Nemepawe""".split('\n')
         system_names = list(map(lambda x: x.lstrip(),system_names))
     if 'Manual' in mode :  # Manual List (Currently Systems known to need suppressing)
         system_names += """Mimuthi
@@ -143,7 +152,7 @@ if __name__ == '__main__':
         system_names += list(map(lambda x: x['system'],filter(lambda x: x['icon'] not in [':information_source: ', ':clap: ', ':anchor: '],api.CSNPatrol())))
     if 'Catchup' in mode:
         f = api.getfaction(faction)['faction_presence']
-        system_names += list(map(lambda x: x['system_name'],sorted(api.getfaction(faction)['faction_presence'], key = lambda x: x['influence']/updatedage(x['updated_at']))  ))[:6]
+        system_names += list(map(lambda x: x['system_name'],sorted(f, key = lambda x: x['influence']/updatedage(x['updated_at']))  ))[:6]
 
     # Now we have a simple list of the system names, get full system data
     route = list()
