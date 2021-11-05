@@ -108,7 +108,8 @@ if __name__ == '__main__':
     #faction = "Marquis du Ma'a"
     
     mode = ['!Manual', '!Full Tour', '!Expansion Check', 'Patrol', '!Catchup','!Project']
-    forcerefresh = False # When Tick updates are flacky
+    forcerefresh = False # Normal
+    #forcerefresh = True # When Tick updates are dodgy
 
     # Look in Journals so you start the route in your current location 
     system_names = [whereami()]

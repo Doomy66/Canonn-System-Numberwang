@@ -113,8 +113,8 @@ def Misson_Gen(argv=''):
             conflict = None
 
             if len(factions) > 1:
-                gap = factions[0]["influence"]-factions[1]["influence"]
-                gapfromtop = factions[0]["influence"]-(empire['influence'])
+                gap = round(factions[0]["influence"]-factions[1]["influence"],1)
+                gapfromtop = round(factions[0]["influence"]-(empire['influence']),1)
             else:
                 gap = 100
                 gapfromtop = 0
@@ -265,6 +265,7 @@ def Misson_Gen(argv=''):
             exsys = api.getsystem(newmessage[0])
             if exsys:
                 message_inf = round(exsys['factions'][0]['influence'],1)
+                message_gap = round(exsys['factions'][0]['influence']-message_inf,1) 
                 message_conflict = ''
 
                 # Look for another faction mentioned in the override
@@ -272,6 +273,8 @@ def Misson_Gen(argv=''):
                     if f['name'] in newmessage[2] and f['name'] != exsys['controlling_minor_faction_cased']:
                         message_faction = f['name']
                         message_inf = round(f['influence'],1)
+                        message_gap = round(exsys['factions'][0]['influence']-message_inf,1) 
+
                         if len(f['conflicts']): # There is a conflict
                             opponent = list(filter(lambda x: x['name']==f['conflicts'][0]['opponent_name'],exsys['factions']))
                             if opponent:
@@ -281,6 +284,7 @@ def Misson_Gen(argv=''):
 
 
                 newmessage[2] = newmessage[2].replace('{inf}',f"{message_inf}")                
+                newmessage[2] = newmessage[2].replace('{gap}',f"{message_gap}")                
                 newmessage[2] = newmessage[2].replace('{conflict}',f"{message_conflict}")                
                 messages.append(amessage(exsys, newmessage[1], newmessage[2]+'*',
                                         dIcons['override'] if newmessage[3] == '' else dIcons[newmessage[3]],'None'))
