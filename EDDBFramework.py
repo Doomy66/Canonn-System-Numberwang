@@ -30,8 +30,9 @@ class EDDBFrame():
         EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
         #self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
-        self._eddb_cache = 'data\\EDDBCache_1.pickle'
-        self._ebgs_systemhist_cache = 'data\\EBGS_SysHist.pickle'
+        self._data_dir = 'data'
+        self._eddb_cache = os.path.join(self._data_dir, 'EDDBCache_1.pickle')
+        self._ebgs_systemhist_cache = os.path.join(self._data_dir, 'EBGS_SysHist.pickle')
         self.systemhist = list()
 
 
@@ -76,6 +77,7 @@ class EDDBFrame():
 
     def savecache(self):
         print('Saving EDDB Dump Cache...')
+        os.makedirs(self._data_dir, exist_ok=True)
         with open(self._eddb_cache, 'wb') as io:
             pickle.dump(self.systems,io)
             pickle.dump(self.factions,io)
@@ -99,6 +101,7 @@ class EDDBFrame():
         '''
         Called inside any function whenever the retreats data changes
         '''
+        os.makedirs(self._data_dir, exist_ok=True)
         with open(self._ebgs_systemhist_cache, 'wb') as io:
             pickle.dump(self.systemhist,io)
         return
