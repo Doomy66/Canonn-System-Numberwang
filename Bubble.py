@@ -8,8 +8,11 @@ import CSNSettings
 from datetime import datetime
 import api
 
-journalfolder = os.environ.get('USERPROFILE') + f'\\Saved Games\\Frontier Developments\\Elite Dangerous'
-harddrive = os.environ.get('USERPROFILE') + f'\\Downloads\\'
+home = os.environ.get('USERPROFILE')
+if home == None:
+    home = ""
+journalfolder = home + f'\\Saved Games\\Frontier Developments\\Elite Dangerous'
+harddrive = home + f'\\Downloads\\'
 
 def filetimestamp(file):
     try:
