@@ -48,7 +48,8 @@ def _ebgsDateTime(dateTimeString):
     Not exposed as all API calls should have code do all converstions
     '''
     dformat = '%Y-%m-%dT%H:%M:%S'
-    return(datetime.strptime(dateTimeString[:len(dformat) + 2], dformat).replace(tzinfo=timezone.utc))
+    #return(datetime.strptime(dateTimeString[:len(dformat) + 2], dformat).replace(tzinfo=timezone.utc)) ## TypeError: can't compare offset-naive and offset-aware datetimes
+    return(datetime.strptime(dateTimeString[:len(dformat) + 2], dformat))
 
 def _ebgsDateTimeString(dateTime):
     '''
