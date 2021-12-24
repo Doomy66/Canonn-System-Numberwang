@@ -6,7 +6,7 @@
 import requests
 import csv
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import sys
 
@@ -48,7 +48,7 @@ def _ebgsDateTime(dateTimeString):
     Not exposed as all API calls should have code do all converstions
     '''
     dformat = '%Y-%m-%dT%H:%M:%S'
-    return(datetime.strptime(dateTimeString[:len(dformat) + 2], dformat))
+    return(datetime.strptime(dateTimeString[:len(dformat) + 2], dformat).replace(tzinfo=timezone.utc))
 
 def _ebgsDateTimeString(dateTime):
     '''
