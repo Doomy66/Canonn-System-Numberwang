@@ -17,3 +17,6 @@ factionnames = ['Canonn']
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar','FDMA Security Service', 'Wings Of Justice']
+
+# No orders to boost inf for system control etc. Leave it to the system owner.
+surrendered_systems = ['Sekenks'] 

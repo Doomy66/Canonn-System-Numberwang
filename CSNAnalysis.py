@@ -81,7 +81,7 @@ def Misson_Gen(argv=''):
     recovering_states = []
     ootsystems = []
     detected_retreats = []
-    surrendered_systems = ['Sekenks'] # No orders to boost inf for system control etc. Leave it to the system owner.
+    #surrendered_systems = ['Sekenks'] # No orders to boost inf for system control etc. Leave it to the system owner.
 
     dIcons = {"war": '<:EliteEagle:231083794700959744> ',
               "election": ':ballot_box: ',
@@ -173,7 +173,7 @@ def Misson_Gen(argv=''):
                     ))
                     faction_systems[key]['override'] = 'Done'
 
-                if (not conflict) and faction_systems[key]['override'] in {'Addition', 'Natural'} and sys['name'] not in surrendered_systems:
+                if (not conflict) and faction_systems[key]['override'] in {'Addition', 'Natural'} and sys['name'] not in CSNSettings.surrendered_systems:
                     # Not yet in control
                     if factions[0]['name'] not in factionnames:
                         messages.append(
@@ -304,7 +304,7 @@ def Misson_Gen(argv=''):
             #print('')
 
     # Lowest Gaps for PUSH message
-    l = list(filter(lambda x: x not in surrendered_systems and (faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
+    l = list(filter(lambda x: x not in CSNSettings.surrendered_systems and (faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
         messages, faction_systems[x]['system_name'])), faction_systems))
 
     l.sort(key=lambda s: faction_systems[s]['factions'][0]['influence'] - faction_systems[s]['factions']
