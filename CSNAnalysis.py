@@ -1,11 +1,12 @@
 from os.path import join
+from re import T
 from Bubble import Bubble, update_progress
 import simplejson as json
 import os
 import sys
 import csv
 import CSNSettings
-from ExpansionTarget import InvasionAlert
+from ExpansionTarget import EDDBReset, ExpansionCandidates, InvasionAlert
 from discord import Webhook, RequestsWebhookAdapter
 from datetime import datetime
 from Overrides import CSNAttractions, CSNOverRideRead, CSNSchedule
@@ -30,6 +31,8 @@ def Misson_Gen(argv=''):
         print(" /safe = Do not post results to Google")
         print(" /wait = Pause console at end to review output")
         print(" /schedule = Run according to Patrol Schedule")
+        print(" /invade = Check for Invasions (part of /new)")
+        print(" /expansion = Recalculate Expansion Targets (part of /new)")
 
         quit
 
@@ -75,13 +78,23 @@ def Misson_Gen(argv=''):
     except:
         invaders = []
 
+    
+    # Expansion Targets
+    if '/new' in argv or '/expansion' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
+        ExpansionCandidates(factionnames[0],inflevel=60,live=True)  # Will save results as a json for loading
+        EDDBReset() # EDDB Frame may be mangled, reset so Invasion Alert still works
+    try:
+        with open(f'data\\{factionnames[0]}ExpansionTargets.json', 'r') as io:
+            expansiontargets = json.load(io)
+    except:
+        expansiontargets = []
+
+
     messages = []
     active_states = []
     pending_states = []
     recovering_states = []
-    ootsystems = []
     detected_retreats = []
-    #surrendered_systems = ['Sekenks'] # No orders to boost inf for system control etc. Leave it to the system owner.
 
     dIcons = {"war": '<:EliteEagle:231083794700959744> ',
               "election": ':ballot_box: ',
@@ -98,6 +111,7 @@ def Misson_Gen(argv=''):
     
 
     print(f'CSN Missions:')
+
     # Create a single Message for each faction system
     faction_systems = dict(filter(lambda x: x[1],faction_systems.items()))
     for i, key in enumerate(faction_systems):
@@ -109,6 +123,11 @@ def Misson_Gen(argv=''):
             empire = sys['empire']
             happytext = empire['faction_details']['faction_presence']['happiness']
             happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else '<SNAFU '+ happytext+'>'
+            expandto = 'None Detected'
+            for e in expansiontargets:
+                if e['name'] == sys['name']:
+                    expandto = e['target']
+            #print(f"{sys['name']} expanding to {expandto}")
 
             conflict = None
 
@@ -146,7 +165,7 @@ def Misson_Gen(argv=''):
                                     #print(message_conflict)
 
                     messages.append(
-                        amessage(sys, newmessage[1], newmessage[2].format(gap=gap, inf=message_inf,happy=happy,conflict=message_conflict)+'*',
+                        amessage(sys, newmessage[1], newmessage[2].format(gap=gap, inf=message_inf,happy=happy,conflict=message_conflict,expandto=expandto)+'*',
                                 dIcons['override'] if newmessage[3] == '' else dIcons[newmessage[3]]))
             
             if faction_systems[key]['override'] != 'Override':
@@ -352,6 +371,7 @@ def Misson_Gen(argv=''):
         print(f'{m[1]} : {m[7]}')
 
     # Write Orders various formats
+    print('Saving Local Text...')
     with open(f'data\\{factionnames[0]}Patrol.Csv', 'w') as io:  # CSV for Humans
         io.writelines(f'System,X,Y,Z,Priority,Message\n')
         io.writelines(
@@ -369,6 +389,8 @@ def Misson_Gen(argv=''):
         json.dump(invaders, io, indent=4)
 
     # Discord Webhook
+    print('Webhook...')
+
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
         wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
@@ -384,10 +406,13 @@ def Misson_Gen(argv=''):
     for x in filter(lambda x: x[0] <= 20, messages):
         patrol.append(x[1:9])
     if not('/safe' in argv):
+        print('Google Patrol...')
+
         CSNPatrolWrite(patrol)
 
     if '/new' in argv:
-        CSNAttractions(faction_systems)
+        print('Google Attractions...')
+        #CSNAttractions(faction_systems)    ## TODO Check - It looked like it was causing a hang but could just be too long
     print('*** Missions Generated : Consuming {0} requests ***'.format(api.NREQ))
     if ('/wait') in argv:
         input("Press Enter to continue...")
@@ -426,4 +451,4 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/Test1", "/!new"])
+    Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new"])
