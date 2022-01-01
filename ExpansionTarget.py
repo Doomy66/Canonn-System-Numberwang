@@ -4,6 +4,7 @@ from Bubble import update_progress
 import api
 from datetime import datetime
 from EDDBFramework import EDDBFrame, cubedist, sysdist
+import simplejson as json
 
 eddb = None # Global Variabel to store an instance of the EDDBFramework
 rangeSimple = 20
@@ -191,6 +192,14 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=Fa
             if c['expansion']:
                 print(f" {'+' if c['influence']<75 else '^' if c['minor_faction_presences'][0]['happiness_id'] == 1  else ' '} {c['name'].ljust(26)} {c['beststation'].ljust(15)}> {c['expansion']['name']} ({c['expansion']['expansionType']}){' ('+', '.join(c['expansion']['pf'])+')' if c['expansion']['pf'] else ''} [{c['expansion']['beststation']}]")
 
+    # Save simple next expansion results as json for CSN and others 
+    savelist = []
+    for e in list(filter(lambda x: x['expansion'] , candidates)): ## Strip down data to stop Circular Ref during dump
+        savelist.append({'name':e['name'], 'target':e['expansion']['name'], 'expansionType':e['expansion']['expansionType']})
+    with open(f'data\\{faction}ExpansionTargets.json', 'w') as io:  # Dump to file 
+        json.dump(savelist, io, indent=4)
+
+
     return list(filter(lambda x: x['expansion'] , candidates))
         
 def InvasionAlert(faction,mininf=70, show=True, lookahead=3, live=False):
@@ -314,6 +323,9 @@ def InvasionRoute(start_system_name,destination_system_name,maxcycles = 100,fact
     
     return
 
+def EDDBReset():
+    global eddb
+    eddb = None
 
 if __name__ == '__main__':
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
