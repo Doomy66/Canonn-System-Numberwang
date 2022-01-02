@@ -124,7 +124,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                 try:
                     target['minor_faction_presences'].sort(
                         key=lambda x: x['influence'])
-                    for targetfaction in target['minor_faction_presences'][1:]: # Cannot Invade Controlling Faction
+                    for targetfaction in target['minor_faction_presences'][:-1]: # Cannot Invade Controlling Faction
                         # TODO could exclude factions in conflict, but this is transitory and probably needs manual monitoring (GIGO)
                         if targetfaction['name'] not in natives:
                             target['sys_priority'] = 200 + targetfaction['influence']
