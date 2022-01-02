@@ -103,9 +103,10 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
             numberoffactions = target['numberoffactions']
             eddb.getstations(target['name']) # Load Station and Beststation into System
 
-            # System Priorties : 0 < Simple Expansion Dist < 100 < Extended Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 1000 < Nothing Found
+            # System Priorties : 0 < Simple Expansion Dist < 200 < Invasion + Lowest Non Native Ind < 300 < Extended Expansion Dist < 1000 < Nothing Found
             ## IanD Confirms priority is based on straight line distance NOT cubedist
             ## Jane Confirms Invasion happens before Extended (as we saw Aymarahuara > Tarasa)
+            ## Cannot Invade Controlling Faction
             if target['cubedist'] <= rangeSimple and numberoffactions < 7: # Simple Expansion
                 target['sys_priority'] = sysdist(target,sys) 
                 target['expansionType'] = f"Expansion"
@@ -123,7 +124,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                 try:
                     target['minor_faction_presences'].sort(
                         key=lambda x: x['influence'])
-                    for targetfaction in target['minor_faction_presences']:
+                    for targetfaction in target['minor_faction_presences'][1:]: # Cannot Invade Controlling Faction
                         # TODO could exclude factions in conflict, but this is transitory and probably needs manual monitoring (GIGO)
                         if targetfaction['name'] not in natives:
                             target['sys_priority'] = 200 + targetfaction['influence']
