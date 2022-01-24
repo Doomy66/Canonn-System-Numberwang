@@ -37,7 +37,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
     sysInRange = eddb.cubearea(system, range, live=live)
     sysInRange = list(filter(lambda x: x['controlling_minor_faction'] not in factionspresent,sysInRange))
     
-    print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets')
+    print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets' + (", assuming a Retreat happens" if assumeretreat else "") + (", avoiding "+avoidsystem if avoidsystem else ""))
     for i,sys in enumerate(sysInRange):
         update_progress(i/len(sysInRange),sys['name'])
         if sys['name'] == 'DEBUG':
