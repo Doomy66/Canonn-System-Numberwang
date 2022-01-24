@@ -10,7 +10,7 @@ eddb = None # Global Variabel to store an instance of the EDDBFramework
 rangeSimple = 20
 rangeExtended = 30
 
-def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,easyinvade=False,live=False):
+def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,easyinvade=False,live=False,avoidsystem=''):
     ''' 
     Returns systems that would expand INTO a given system the soonest 
     simplyonly = restricts range
@@ -42,7 +42,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
         update_progress(i/len(sysInRange),sys['name'])
         if sys['name'] == 'DEBUG':
             print('Debug')
-        targets = ExpansionFromSystem(sys['name'])
+        targets = ExpansionFromSystem(sys['name'],avoid_additional=avoidsystem)
         cycles = 0
         for target in targets:
             cycles += 1 if target['sys_priority'] < 300 else 2
