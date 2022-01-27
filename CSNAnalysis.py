@@ -122,7 +122,7 @@ def Misson_Gen(argv=''):
             factions =sys['factions']
             empire = sys['empire']
             happytext = empire['faction_details']['faction_presence']['happiness']
-            happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else '<SNAFU '+ happytext+'>'
+            happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else 'Discontent' if happytext=='$faction_happinessband3;' else '<SNAFU '+ happytext+'>'
             #happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' # Forget about the "none" bug. SEP
             expandto = 'None Detected'
             for e in expansiontargets:
@@ -398,6 +398,7 @@ def Misson_Gen(argv=''):
                              adapter=RequestsWebhookAdapter())
         for x in filter(lambda x: x[0] < 11 or (x[0] > 20 and x[0]<=30), messagechanges):
             wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
+        print(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)}")
         if wh_text != '':
             wh.send(
                 f'{"**Full Report**" if ("/new" in argv) else "Latest News"} <:canonn:231835416548999168> \n{wh_text}')
