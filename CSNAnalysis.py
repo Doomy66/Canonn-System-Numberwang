@@ -24,7 +24,6 @@ LOCAL_OVERRIDE = not CSNSettings.override_sheet
 
 def Misson_Gen(argv=''):
 
-    argv = argv.lower()
     # print(argv)
     if "/?" in argv:
         print("Canonn System Numberwang:")
@@ -41,7 +40,7 @@ def Misson_Gen(argv=''):
     if "/schedule" in argv:
         schedule = CSNSchedule()
         if schedule:
-            argv += [f"/{schedule}".lower()]
+            argv += [f"/{schedule}"]
         else:
             print('No Schedule')
             return None
