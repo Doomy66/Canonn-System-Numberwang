@@ -83,7 +83,7 @@ def CSNOverRideRead():
                 answer.append([system, int(priority), Description, Emoji, OType])
     return(answer)
 
-def CSNSchedule(now = datetime.now().hour):
+def CSNSchedule(now = datetime.utcnow().hour):
     answer = []
     if CSNSettings.override_workbook:
         mysheet_id = CSNSettings.override_workbook

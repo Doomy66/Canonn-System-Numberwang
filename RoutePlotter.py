@@ -1,5 +1,4 @@
-import json
-from Bubble import whereami, update_progress,EliteBGSDateTime
+from Bubble import whereami, EliteBGSDateTime
 import api
 import win32clipboard
 from datetime import datetime
