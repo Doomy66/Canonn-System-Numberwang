@@ -394,14 +394,22 @@ def Misson_Gen(argv=''):
 
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
+        wh_text_continued = ''
         wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
                              adapter=RequestsWebhookAdapter())
         for x in filter(lambda x: x[0] < 11 or (x[0] > 20 and x[0]<=30), messagechanges):
-            wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
-        print(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)}")
+            if len(wh_text) < 1850: # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
+                wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
+            else:
+                wh_text_continued += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
+
+        print(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)} + {len(wh_text_continued)}")
         if wh_text != '':
             wh.send(
                 f'{"**Full Report**" if ("/new" in argv) else "Latest News"} <:canonn:231835416548999168> \n{wh_text}')
+        if wh_text_continued != '':
+            wh.send(
+                f'"...continued <:canonn:231835416548999168> \n{wh_text_continued}')
 
     # Patrol to send to Google
     patrol = []
