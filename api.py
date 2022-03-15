@@ -16,7 +16,7 @@ from requests.models import Response
 NREQ = 0  # Count of all api calls made to monitor your own usage. Its nice when you care.
 _SYSTEMCACHE = dict()
 _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
-_EDDBURL = 'https://eddbapi.kodeblox.com/api/v4/'
+_EDDBURL = 'https://eddbapi.elitebgs.app/api/v4/'
 _EDSMURL = 'https://www.edsm.net/api-v1/' 
 _CANONN = 'https://us-central1-canonn-api-236217.cloudfunctions.net/'
 _RAWLASTTICK = None
@@ -227,12 +227,13 @@ def getlasttick(raw=False): # elitebgs
 def eddbSystem(sysnameid):
     '''
     Given a system name (string) or system id (int)
-    Fetches system daya from eddb 24 hour cache (kodeblox)
+    Fetches system daya from eddb 24 hour cache
     Documentation https://elitebgs.app/api/eddb
     Only required when source data is also eddb (e.g. Fleet Carriers)
     '''
     global NREQ
-    url = 'https://eddbapi.kodeblox.com/api/v4/systems'
+    #url = 'https://eddbapi.kodeblox.com/api/v4/systems'    ## endpoint changed
+    url = 'https://eddbapi.elitebgs.app/api/v4/systems'
     payload = {'eddbid': sysnameid} if type(sysnameid) == int else {'name': sysnameid}
 
     r = requests.get(url, params=payload)
@@ -254,7 +255,7 @@ def eddbNatives(system_name):
     Documentation https://elitebgs.app/api/eddb
     '''
     global NREQ
-    url = 'https://eddbapi.kodeblox.com/api/v4/factions'
+    url = 'https://eddbapi.elitebgs.app/api/v4/factions'
     payload = {'homesystemname': system_name}
     r = requests.get(url, params=payload)
     myload = json.loads(r._content)["docs"]
@@ -273,7 +274,7 @@ def eddbAllStations(sysnameid):
     NB Body Information is only an ID which does not seem to match any available body id source
     '''
     global NREQ
-    url = 'https://eddbapi.kodeblox.com/api/v4/stations'
+    url = 'https://eddbapi.elitebgs.app/api/v4/stations'
     payload = {'eddbid': sysnameid} if type(sysnameid) == int else {'systemname': sysnameid}
 
     r = requests.get(url, params=payload)
