@@ -214,6 +214,12 @@ class Bubble():
 
             localSpace[sys['system_name']]['fresh'] = self.lastick < EliteBGSDateTime(localSpace[sys['system_name']]['updated_at'])
 
+        # Remove Retreated Systems
+        for s in localSpace.copy():
+            if s in list(x['system_name'] for x in faction_systems):
+                pass
+            else:
+                del localSpace[s]
 
 
         # Save Faction File
