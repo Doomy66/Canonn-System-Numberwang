@@ -80,7 +80,7 @@ def CSNOverRideRead():
             #print(len(row))
             system, priority, Description, Emoji, OType = row if len(row)==5 else row+[''] if len(row)==4 else row+['']+[''] if len(row)==3 else row+['']+['']+['']
             if system != '' and system[0] != '!':
-                answer.append([system, int(priority), Description, Emoji, OType])
+                answer.append([system, int(priority) if priority else 1, Description, Emoji, OType]) ## blank priority now has a default and not fail to cast
     return(answer)
 
 def CSNSchedule(now = datetime.utcnow().hour):
