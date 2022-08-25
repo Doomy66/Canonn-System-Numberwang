@@ -128,6 +128,10 @@ def Misson_Gen(argv=''):
             for e in expansiontargets:
                 if e['name'] == sys['name']:
                     expandto = e['target']
+                    if e['expansionType'] == 'Expansion (Extended)':
+                        expandto += ' (Extended)'
+                    elif e['expansionType'][0] == 'I':
+                        expandto += ' ('+e['expansionType']+')'
             #print(f"{sys['name']} expanding to {expandto}")
 
             conflict = None
