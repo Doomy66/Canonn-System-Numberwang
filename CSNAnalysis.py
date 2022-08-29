@@ -317,7 +317,7 @@ def Misson_Gen(argv=''):
 
     # Invasion Alert
     if '/new' in argv or '/invade' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
-        invaders = InvasionAlert(factionnames[0],live=True)
+        invaders = InvasionAlert(factionnames[0],live=True,lookahead=2)
     for sys in invaders:
         sys["system_name"] = sys["name"]
         # trim spurious data that was giving circular reference errors when trying to save
