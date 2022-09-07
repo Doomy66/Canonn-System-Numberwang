@@ -294,7 +294,7 @@ def Misson_Gen(argv=''):
 
                 # Look for another faction mentioned in the override
                 for f in exsys['factions']:
-                    if f['name'] in newmessage[2] and f['name'] != exsys['controlling_minor_faction_cased']:
+                    if f['name'] in newmessage[2]: #and f['name'] != exsys['controlling_minor_faction_cased']: ## Not sure what that limitation was for, but was preventing reporting of Conflict of Controlling Faction
                         message_faction = f['name']
                         message_inf = round(f['influence'],1)
                         message_gap = round(exsys['factions'][0]['influence']-message_inf,1) 
