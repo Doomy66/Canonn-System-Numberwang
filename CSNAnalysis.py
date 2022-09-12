@@ -96,11 +96,11 @@ def Misson_Gen(argv=''):
     recovering_states = []
     detected_retreats = []
 
-    dIcons = {"war": '<:EliteEagle:231083794700959744> ',
+    dIcons = {"war": ':gun: ', #12/09/22 Stnadard Icons due to dead Discord
               "election": ':ballot_box: ',
-              "civilwar": '<:EliteEagle:231083794700959744> ',
-              "override": '<:canonn:231835416548999168> ',
-              "push": '<:Salute2:500679418692501506> ',
+              "civilwar": ':gun: ',
+              "override": ':dart: ',
+              "push": ':arrow_heading_up: ',
               "data": ':eyes: ',
               "infgap": ':dagger: ',
               "mininf": ':chart_with_downwards_trend: ',
@@ -408,12 +408,14 @@ def Misson_Gen(argv=''):
                 wh_text_continued += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
 
         print(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)} + {len(wh_text_continued)}")
+        ## csnicon = '<:canonn:231835416548999168>'
+        csnicon = ':eye:'
         if wh_text != '':
             wh.send(
-                f'{"**Full Report**" if ("/new" in argv) else "Latest News"} <:canonn:231835416548999168> \n{wh_text}')
+                f'{"**Full Report**" if ("/new" in argv) else "Latest News"} {csnicon} \n{wh_text}')
         if wh_text_continued != '':
             wh.send(
-                f'"...continued <:canonn:231835416548999168> \n{wh_text_continued}')
+                f'"...continued {csnicon} \n{wh_text_continued}')
 
     # Patrol to send to Google
     patrol = []
