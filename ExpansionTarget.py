@@ -62,7 +62,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['toexpansionType']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False, reportsize = 8):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False, reportsize = 8, extendedphase = False):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -138,7 +138,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                 except:
                     print(f"!! Dodgy Faction {target['name']=} in {sys['name']=}")
             elif numberoffactions < 7:  # Extended Expansion
-                target['sys_priority'] = 300 + sysdist(target,sys)
+                target['sys_priority'] = sysdist(target,sys) + 50 if extendedphase else 300
                 target['expansionType'] = f"Expansion (Extended)"
                 target['expansionDetail'] = f"Extended"
                 bestpriority = min(bestpriority, target['sys_priority'])
