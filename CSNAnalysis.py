@@ -98,8 +98,8 @@ def Misson_Gen(argv=''):
 
     dIcons = {"war": ':gun: ', #12/09/22 Stnadard Icons due to dead Discord
               "election": ':ballot_box: ',
-              "civilwar": ':gun: ',
-              "override": ':dart: ',
+              "civilwar": '<:EliteEagle:1020771075207991407> ',
+              "override": '<:Salute2:1020771111073480715> ',
               "push": ':arrow_heading_up: ',
               "data": ':eyes: ',
               "infgap": ':dagger: ',
@@ -409,7 +409,7 @@ def Misson_Gen(argv=''):
 
         print(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)} + {len(wh_text_continued)}")
         ## csnicon = '<:canonn:231835416548999168>'
-        csnicon = ':eye:'
+        csnicon = '<:canonn:1020771055532511312>'
         if wh_text != '':
             wh.send(
                 f'{"**Full Report**" if ("/new" in argv) else "Latest News"} {csnicon} \n{wh_text}')
