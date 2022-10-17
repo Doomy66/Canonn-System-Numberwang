@@ -81,7 +81,7 @@ def Misson_Gen(argv=''):
     
     # Expansion Targets
     if '/new' in argv or '/expansion' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
-        ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1])  # Will save results as a json for loading
+        ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1],extenedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
         EDDBReset() # EDDB Frame may be mangled, reset so Invasion Alert still works
     try:
         with open(f'data\\{factionnames[0]}ExpansionTargets.json', 'r') as io:

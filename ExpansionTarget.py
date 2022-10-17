@@ -107,7 +107,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
             ## IanD Confirms priority is based on straight line distance NOT cubedist
             ## Jane Confirms Invasion happens before Extended (as we saw Aymarahuara > Tarasa)
             ## Cannot Invade Controlling Faction
-            if target['cubedist'] <= rangeSimple and numberoffactions < 7: # Simple Expansion
+            if (target['cubedist'] <= rangeSimple or extendedphase) and numberoffactions < 7: # Simple Expansion
                 target['sys_priority'] = sysdist(target,sys) 
                 target['expansionType'] = f"Expansion"
                 target['expansionDetail'] = f"Simple"
@@ -138,7 +138,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
                 except:
                     print(f"!! Dodgy Faction {target['name']=} in {sys['name']=}")
             elif numberoffactions < 7:  # Extended Expansion
-                target['sys_priority'] = sysdist(target,sys) + 50 if extendedphase else 300
+                target['sys_priority'] = sysdist(target,sys) + 300
                 target['expansionType'] = f"Expansion (Extended)"
                 target['expansionDetail'] = f"Extended"
                 bestpriority = min(bestpriority, target['sys_priority'])
@@ -167,7 +167,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
 
     return sysInRange
 
-def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=False):
+def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=False,extenedphase=False):
     global eddb
     print(f"Expansion Candidates for {faction}:")
     if not eddb:
@@ -179,7 +179,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=Fa
         if c['name'] == 'DEBUG':
             print('debug')
         update_progress(counter/len(candidates),c['name'])
-        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked,live=live)
+        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked,live=live,extendedphase=extenedphase)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
             ## TODO ## Conflict check for source system - Not really worth it while Happiness is so broken
