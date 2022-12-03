@@ -268,7 +268,7 @@ def Misson_Gen(argv=''):
 
             # Look for active Retreats
             for faction in sys['factions']:
-                if next((x for x in faction['active_states'] if x['state'] == 'retreat'),None) and sys['name'] not in detected_retreats:
+                if next((x for x in faction['active_states'] if x['state'] == 'retreat'),None) and sys['name'] not in detected_retreats and len(sys['factions'])>6:
                     detected_retreats.append(sys['name'])
 
             # Look for Non-Native Conflicts ##TODO But dont have Native Faction Info in Bubble. Hidden in the heavy load of EDDBFrame
