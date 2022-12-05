@@ -62,7 +62,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['toexpansionType']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False, reportsize = 8, extendedphase = False):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False, reportsize = 8, extendedphase = False, simpleonly=False):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -86,7 +86,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
 
     sys['conflicts'] = eddb.activestates(system_name,True)
 
-    sysInRange = eddb.cubearea(sys['name'], rangeExtended,live=live)
+    sysInRange = eddb.cubearea(sys['name'], rangeSimple if simpleonly else rangeExtended,live=live)
     # Remove systems where faction is already present or other reasons
     sysInRange = list(filter(lambda x: x['name'] not in avoided_systems and x['name'] != sys['name'], sysInRange))
     sysInRange.sort(key=lambda x: cubedist(x,sys))
@@ -221,9 +221,9 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3, live=False):
                         and x['name'] not in donesystems 
                         and x['population'] > 0
                         and x['influence'] > mininf
-                        , eddb.cubearea(home, rangeExtended,live=live))
+                        , eddb.cubearea(home, rangeSimple,live=live)) # 03/12/22 Only bother with Simple Range
         for invader in invaders:
-            targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'],live=live)[:lookahead])) # Check if next lookahead expansions will target the home faction
+            targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'],live=live,simpleonly=True)[:lookahead])) # Check if next lookahead expansions will target the home faction
             if targets:
                 alertsystems.append(invader.copy())
                 alertsystems[-1]['invading']=targets[0]['name']
