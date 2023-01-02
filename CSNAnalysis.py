@@ -267,12 +267,14 @@ def Misson_Gen(argv=''):
                 recovering_states.append([sys["system_name"], x["state"]])
 
             # Look for active Retreats
-            for faction in sys['factions']:
-                if next((x for x in faction['active_states'] if x['state'] == 'retreat'),None) and sys['name'] not in detected_retreats and len(sys['factions'])>6:
-                    detected_retreats.append(sys['name'])
-                if next((x for x in faction['pending_states'] if x['state'] == 'retreat'),None) and sys['name'] not in detected_retreats and len(sys['factions'])>6:
-                    detected_retreats.append(sys['name'])
-            # Look for Non-Native Conflicts ##TODO But dont have Native Faction Info in Bubble. Hidden in the heavy load of EDDBFrame
+            if len(sys['factions'])>6:
+                for faction in sys['factions']:
+                    if sys['name'] not in detected_retreats:
+                        if next((x for x in faction['active_states'] if x['state'] == 'retreat'),None) or next((x for x in faction['pending_states'] if x['state'] == 'retreat'),None):
+                            detected_retreats.append(sys['name'])
+                            messages.append(amessage(sys, 7, f"Support {faction['name']} to be above 5% to prevent Retreat ({round(faction['influence'],1)}%)", dIcons['override']))
+
+                # Look for Non-Native Conflicts ##TODO But dont have Native Faction Info in Bubble. Hidden in the heavy load of EDDBFrame
 
 
     update_progress(1)
