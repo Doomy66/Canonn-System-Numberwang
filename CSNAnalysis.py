@@ -89,6 +89,10 @@ def Misson_Gen(argv=''):
     except:
         expansiontargets = []
 
+    #DCOH Data
+    dcoh = api.dcohsummary()
+
+
 
     messages = []
     active_states = []
@@ -107,7 +111,8 @@ def Misson_Gen(argv=''):
               "info": ':information_source: ',
               "end": ':clap: ',
               "FC": ':anchor: ', 
-              "notfresh": ':arrows_counterclockwise: '}
+              "notfresh": ':arrows_counterclockwise: ',
+              "thargoid1": '<:Thargoid:1020771117939568660>'}
     
 
     print(f'CSN Missions:')
@@ -209,6 +214,13 @@ def Misson_Gen(argv=''):
                             amessage(sys, 4, f'Required: {sys["empire"]["name"]} {availableactions(faction_systems[key],factionnames)} ({factions[1]["name"]} is threatening, gap is only {gap:4.3}%)', dIcons['infgap']))
                         faction_systems[key]['override'] = 'Done'
 
+                # DCOH Threat                    
+                dcohthreat = next((x for x in dcoh if x['sys_name'] == sys["system_name"]),None)
+                if dcohthreat:
+                    ## print("DCOH !! "+sys["system_name"],dcohthreat['threat'])
+                    messages.append(
+                        amessage(sys, 9, f'Thargoid {dcohthreat["threat"]}', dIcons['thargoid1']))
+
             # Multi Messages
             # Data out of date
             if age.days > (factions[0]['influence']/10):
@@ -257,6 +269,9 @@ def Misson_Gen(argv=''):
                         conflict["type"].title(),
                         asset),
                     dIcons["info"]))
+
+
+
 
             # Record All States for Usefull Summary Information
             for x in empire['active_states']:

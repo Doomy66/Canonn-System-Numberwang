@@ -418,6 +418,26 @@ def factionsovertime(system_name, days=30, earliest = datetime(2017,10,8) ): # e
     print('')
     return factions
 
+def dcohsummary():
+    ''' 
+    Summarise DCOH Watchlist to list of system names and threat name
+    '''
+    answer = list()
+    url = f"https://dcoh.watch/api/v1/overwatch/systems"
+    payload = {'ngsw-bypass':True}
+    try:
+        resp = requests.get(url, params=payload)
+        content = json.loads(resp._content)
+        thargsystems = content["systems"]
+        for sys in thargsystems:
+            ##print(sys["name"],sys["thargoidLevel"]["name"])
+            answer.append({"sys_name":sys["name"],"threat":sys["thargoidLevel"]["name"]})
+    except:
+        print("!!DCOH Error")
+
+    print('DCOH Complete')
+    return answer
+
 if __name__ == '__main__':
     # Test Harness
     print('Test Harness for...')
