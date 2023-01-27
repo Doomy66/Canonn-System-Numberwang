@@ -219,7 +219,7 @@ def Misson_Gen(argv=''):
                 if dcohthreat:
                     ## print("DCOH !! "+sys["system_name"],dcohthreat['threat'])
                     messages.append(
-                        amessage(sys, 9, f'Thargoid {dcohthreat["threat"]} : Progress {dcohthreat["progress"]:2}%', dIcons['thargoid1']))
+                        amessage(sys, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', dIcons['thargoid1']))
 
             # Multi Messages
             # Data out of date
