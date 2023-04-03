@@ -430,8 +430,8 @@ def dcohsummary():
         content = json.loads(resp._content)
         thargsystems = content["systems"]
         for sys in thargsystems:
-            ##print(sys["name"],sys["thargoidLevel"]["name"])
-            answer.append({"sys_name":sys["name"],"threat":sys["thargoidLevel"]["name"],"level":sys["thargoidLevel"]["level"],"progress":sys["progressPercent"]})
+            #print(sys["name"],sys["thargoidLevel"]["name"],100*sys["progressPercent"] if sys["progressPercent"] else 0)
+            answer.append({"sys_name":sys["name"],"threat":sys["thargoidLevel"]["name"],"level":sys["thargoidLevel"]["level"],"progress":100*sys["progressPercent"] if sys["progressPercent"] else 0})
     except:
         print("!!DCOH Error")
 
@@ -443,7 +443,7 @@ if __name__ == '__main__':
     print('Test Harness for...')
     #print(factionsovertime('Jaoi'))
     #print(retreated_factions('Cnephtha'))
-    #print(dcohsummary())
+    print(dcohsummary())
 
     print('Nothing')
     print(f'Done with {NREQ} requests')

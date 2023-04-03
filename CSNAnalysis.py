@@ -216,7 +216,7 @@ def Misson_Gen(argv=''):
 
                 # DCOH Threat                    
                 dcohthreat = next((x for x in dcoh if x['sys_name'] == sys["system_name"]),None)
-                if dcohthreat:
+                if dcohthreat and dcohthreat["progress"]<100:
                     ## print("DCOH !! "+sys["system_name"],dcohthreat['threat'])
                     messages.append(
                         amessage(sys, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', dIcons['thargoid1']))
