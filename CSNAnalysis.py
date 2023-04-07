@@ -7,7 +7,8 @@ import sys
 import csv
 import CSNSettings
 from ExpansionTarget import EDDBReset, ExpansionCandidates, InvasionAlert
-from discord import Webhook, RequestsWebhookAdapter
+#from discord import Webhook, RequestsWebhookAdapter
+from discord import SyncWebhook
 from datetime import datetime
 from Overrides import CSNAttractions, CSNOverRideRead, CSNSchedule
 from Overrides import CSNOverRideReadSafe
@@ -417,8 +418,7 @@ def Misson_Gen(argv=''):
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
         wh_text_continued = ''
-        wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
-                             adapter=RequestsWebhookAdapter())
+        wh = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
         for x in filter(lambda x: x[0] < 11 or (x[0] > 20 and x[0]<=30), messagechanges):
             if len(wh_text) < 1850: # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
                 wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
