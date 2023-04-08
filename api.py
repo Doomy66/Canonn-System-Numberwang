@@ -16,8 +16,8 @@ from requests.models import Response
 NREQ = 0  # Count of all api calls made to monitor your own usage. Its nice when you care.
 _SYSTEMCACHE = dict()
 _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
-##_EDDBURL = 'https://eddbapi.elitebgs.app/api/v4/'
-##_EDSMURL = 'https://www.edsm.net/api-v1/' 
+_EDDBURL = 'https://eddbapi.elitebgs.app/api/v4/'
+_EDSMURL = 'https://www.edsm.net/api-v1/' 
 _CANONN = 'https://us-central1-canonn-api-236217.cloudfunctions.net/'
 _RAWLASTTICK = None
 

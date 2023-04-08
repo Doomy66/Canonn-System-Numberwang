@@ -7,74 +7,74 @@ import urllib.request
 import tempfile
 import pickle
 import api
-
-## import requests
+import requests
 from CSNSettings import ignorepf
+
+
+def sysdist(s1, s2):
+    '''
+    Actual Distance between 2 systems
+    '''
+    return((s1['x']-s2['x'])**2 + (s1['y']-s2['y'])**2 + (s1['z']-s2['z'])**2) ** 0.5
+
+def cubedist(s1, s2):
+    '''
+    Cube Distance between 2 systems - The maximum delta
+    '''
+    return(max(abs(s1['x']-s2['x']) , abs(s1['y']-s2['y']) , abs(s1['z']-s2['z'])))
 
 class EDDBFrame():
 
     def __init__(self):
-        ## EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
-        ## EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
-        ## EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
+        EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
+        EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
+        EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
         #self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
         self._data_dir = 'data'
         self._eddb_cache = os.path.join(self._data_dir, 'EDDBCache_1.pickle')
         self._ebgs_systemhist_cache = os.path.join(self._data_dir, 'EBGS_SysHist.pickle')
         self.systemhist = list()
-        self.systems = list()
-        self.factions = list()
-        self.stations = list()
 
-        """
-        EDDB Closed Down
-            ## Get EDDB Data either from local cache or download a dump
-            if (not os.path.exists(self._eddb_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds > 3*60*60:
-                ## Download Nightly Dumps from EDDB if older than 3 hours
-                print('Downloading from EDDB Dump...')
-                if False: # Started to fail with SSL Issues
-                    req = urllib.request.Request(EDDBPOPULATED)
-                    with urllib.request.urlopen(req) as response:
-                        self.systems = json.loads(response.read().decode('utf8'))
 
-                    req = urllib.request.Request(EDDBFACTIONS)
-                    with urllib.request.urlopen(req) as response:
-                        self.factions = json.loads(response.read().decode('utf8'))
+        ## Get EDDB Data either from local cache or download a dump
+        if (not os.path.exists(self._eddb_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds > 3*60*60:
+            ## Download Nightly Dumps from EDDB if older than 3 hours
+            print('Downloading from EDDB Dump...')
+            if False: # Started to fail with SSL Issues
+                req = urllib.request.Request(EDDBPOPULATED)
+                with urllib.request.urlopen(req) as response:
+                    self.systems = json.loads(response.read().decode('utf8'))
 
-                    req = urllib.request.Request(EDDBSTAIONS)
-                    with urllib.request.urlopen(req) as response:
-                        self.stations = json.loads(response.read().decode('utf8'))
-                else:
-                    req = requests.get(EDDBPOPULATED)
-                    self.systems = req.json()
-        
-                    req = requests.get(EDDBFACTIONS)
-                    self.factions = req.json()
+                req = urllib.request.Request(EDDBFACTIONS)
+                with urllib.request.urlopen(req) as response:
+                    self.factions = json.loads(response.read().decode('utf8'))
 
-                    req = requests.get(EDDBSTAIONS)
-                    self.stations = req.json()
-                self.savecache()
-                self.retreatsload()
+                req = urllib.request.Request(EDDBSTAIONS)
+                with urllib.request.urlopen(req) as response:
+                    self.stations = json.loads(response.read().decode('utf8'))
             else:
-                #print(datetime.datetime.today(),datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache)),(datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds)
-                #print('Using Local Cached EDDB Dump...')
-                with open(self._eddb_cache, 'rb') as io:
-                    self.systems = pickle.load(io)
-                    self.factions = pickle.load(io)
-                    self.stations = pickle.load(io)
-                self.retreatsload(False)
-        """
+                req = requests.get(EDDBPOPULATED)
+                self.systems = req.json()
+    
+                req = requests.get(EDDBFACTIONS)
+                self.factions = req.json()
 
-        if (os.path.exists(self._eddb_cache)):
+                req = requests.get(EDDBSTAIONS)
+                self.stations = req.json()
+
+
+            self.savecache()
+            self.retreatsload()
+        else:
+            #print(datetime.datetime.today(),datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache)),(datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds)
+            #print('Using Local Cached EDDB Dump...')
             with open(self._eddb_cache, 'rb') as io:
                 self.systems = pickle.load(io)
                 self.factions = pickle.load(io)
                 self.stations = pickle.load(io)
             self.retreatsload(False)
+        return
 
-        return 
-
-    """
     def savecache(self):
         print('Saving EDDB Dump Cache...')
         os.makedirs(self._data_dir, exist_ok=True)
@@ -87,15 +87,14 @@ class EDDBFrame():
         for s in self.systemhist:
             x=self.system(s['name'])
         return
-    """
 
-    def retreatsload(self,refresh=True): ## Refresh not possible due to EDDB Closed
+    def retreatsload(self,refresh=True):
         self.systemhist = list()
         if os.path.exists(self._ebgs_systemhist_cache):
             with open(self._ebgs_systemhist_cache, 'rb') as io:
                 self.systemhist = pickle.load(io)
-        ## if refresh:
-        ##    self.retreatsrefresh()
+        if refresh:
+            self.retreatsrefresh()
         return
 
     def retreatssave(self):
@@ -107,8 +106,6 @@ class EDDBFrame():
             pickle.dump(self.systemhist,io)
         return
 
-    ## Refresh not possible due to EDDB Closed
-    """
     def retreatsrefresh(self):
         '''
         Update any cached retreat data with latest data from eddb
@@ -128,7 +125,7 @@ class EDDBFrame():
         update_progress(1)
         
         return
-    """
+
 
     def retreats(self,system_name):
         ''' 
@@ -145,7 +142,7 @@ class EDDBFrame():
         return answer
 
 
-    def system(self,idorname,live=True):
+    def system(self,idorname,live=False):
         ''' 
         Returns System Data given a system name or ID 
         Faction Names and Details are denormalised
@@ -221,7 +218,7 @@ class EDDBFrame():
         ans = list()
         for s in self.systems:
             if s['controlling_minor_faction'] == factionname:
-                ans.append(self.system(s['name'])) # Denormalised
+                ans.append(self.system(s['name'],live=live)) # Denormalised
         return ans
 
     def systemspresent(self,factionname,live=False):
@@ -235,16 +232,16 @@ class EDDBFrame():
             for sys in self.systems:
                 for f in sys['minor_faction_presences']:
                     if f['minor_faction_id'] == faction['id']:
-                        ans.append(self.system(sys['name'])) # Denormalised
+                        ans.append(self.system(sys['name'],live=live)) # Denormalised
             faction['faction_presence'] = ans # cache the result
         return faction['faction_presence']
 
-    def cubearea(self,sysname,range):
+    def cubearea(self,sysname,range,live=False):
         '''
          All Populated Systems within the cube around sysname
         '''
         #print(f'.Cube around {sysname}')
-        sys = self.system(sysname)
+        sys = self.system(sysname,live=live)
         ans = list()
         if range==30: #expansion request
             if 'xcube' in sys.keys(): #cached
@@ -252,19 +249,19 @@ class EDDBFrame():
         
         if not ans:
             for s in filter(lambda x: cubedist(x,sys)<=range,self.systems):
-                ans.append(self.system(s['name'])) # Denormalised
+                ans.append(self.system(s['name'],live=live)) # Denormalised
 
         if range==30 and 'xcube' not in sys.keys(): # save cache
             sys['xcube'] = ans
         return ans
 
 
-    def activestates(self,sysname,conflicts=False):
+    def activestates(self,sysname,conflicts=False,live=False):
         '''
         Returns active states for all faction in a system, with an option to only report Conflicts
         '''
         ans = list()
-        sys = self.system(sysname)
+        sys = self.system(sysname,live=live)
         for f in sys['minor_faction_presences']:
             for state in f['active_states']:
                 state['faction'] = f['name']
@@ -283,8 +280,8 @@ class EDDBFrame():
                 ans.append(f['name'])
         return ans
 
-    def getstations(self,sysname):
-        sys = self.system(sysname)
+    def getstations(self,sysname,live=False):
+        sys = self.system(sysname,live=live)
         ans = list()
         if sys:
             if 'stations' not in sys.keys():
@@ -304,16 +301,11 @@ class EDDBFrame():
         return
     
 
-def cubedist(s1, s2):
-    '''
-    Cube Distance between 2 systems - The maximum delta
-    '''
-    return(max(abs(s1['x']-s2['x']) , abs(s1['y']-s2['y']) , abs(s1['z']-s2['z'])))
 
 if __name__ == '__main__':
     ## Unit Test Harness
     g = EDDBFrame()
-    khun = g.system('Khun')
+    khun = g.system('Khun',live=True)
     varati = g.system('Varati')
     failed = g.system('I Dont Exist')
     canonn = g.faction('Canonn')

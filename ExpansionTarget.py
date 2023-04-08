@@ -3,21 +3,14 @@ from typing import Iterable
 from Bubble import update_progress
 import api
 from datetime import datetime
-from EDDBFramework import EDDBFrame, cubedist
+from EDDBFramework import EDDBFrame, cubedist, sysdist
 import simplejson as json
 
 eddb = None # Global Variabel to store an instance of the EDDBFramework
 rangeSimple = 20
 rangeExtended = 30
 
-def sysdist(s1, s2):
-    '''
-    Actual Distance between 2 systems
-    '''
-    return((s1['x']-s2['x'])**2 + (s1['y']-s2['y'])**2 + (s1['z']-s2['z'])**2) ** 0.5
-
-
-def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,easyinvade=False, avoidsystem=''):
+def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,easyinvade=False,live=False,avoidsystem=''):
     ''' 
     Returns systems that would expand INTO a given system the soonest 
     simplyonly = restricts range
@@ -31,7 +24,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
     answers=list()
 
     # Default
-    targetsys = eddb.system(system)
+    targetsys = eddb.system(system,live=live)
     factionspresent = list(x['name'] for x in targetsys['minor_faction_presences'])
     if assumeretreat:
         targetsys['numberoffactions'] = min(6,targetsys['numberoffactions'])
@@ -41,7 +34,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             if f['name'] not in natives:
                 f['influence'] = 0.01
 
-    sysInRange = eddb.cubearea(system, range)
+    sysInRange = eddb.cubearea(system, range, live=live)
     sysInRange = list(filter(lambda x: x['controlling_minor_faction'] not in factionspresent,sysInRange))
     
     print(f'# Looking for {"Simple " if simpleonly else""}expansions TO {system} in {len(sysInRange)} targets' + (", assuming a Retreat happens" if assumeretreat else "") + (", avoiding "+avoidsystem if avoidsystem else ""))
@@ -69,7 +62,7 @@ def ExpansionToSystem(system,show=True,simpleonly = False,assumeretreat=False,ea
             print(f"{answer['name']} ({round(answer['influence'],1)}%) {answer['controlling_minor_faction']}- {answer['beststation']} * {answer['tocycles']} {answer['toexpansionType']}")
     return answers
 
-def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, reportsize = 8, extendedphase = False, simpleonly=False):
+def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid_additional = None, useretreat = True, asfaction = None, organisedinvasions = False, live=False, reportsize = 8, extendedphase = False, simpleonly=False):
     '''
     Reports best expansion target for a faction from a system
     factionpresence option will ignore who owns the faction, and just ignore systems in the list - for long term planning where ownership may change.
@@ -81,7 +74,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
         eddb = EDDBFrame()
 
     # Default
-    sys = eddb.system(system_name)
+    sys = eddb.system(system_name,live=live)
     eddb.getstations(system_name)
     sys['target'] = 'No Expansion Available'  
     sys['priority'] = 1000
@@ -93,7 +86,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
 
     sys['conflicts'] = eddb.activestates(system_name,True)
 
-    sysInRange = eddb.cubearea(sys['name'], rangeSimple if simpleonly else rangeExtended)
+    sysInRange = eddb.cubearea(sys['name'], rangeSimple if simpleonly else rangeExtended,live=live)
     # Remove systems where faction is already present or other reasons
     sysInRange = list(filter(lambda x: x['name'] not in avoided_systems and x['name'] != sys['name'], sysInRange))
     sysInRange.sort(key=lambda x: cubedist(x,sys))
