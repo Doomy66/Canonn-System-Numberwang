@@ -3,13 +3,13 @@ import os
 import datetime
 import json
 from typing import AnyStr
-import urllib.request
-import tempfile
 import pickle
 import api
 import requests
 from CSNSettings import ignorepf
-
+import requests
+import gzip
+import json
 
 def sysdist(s1, s2):
     '''
@@ -21,64 +21,69 @@ def cubedist(s1, s2):
     '''
     Cube Distance between 2 systems - The maximum delta
     '''
-    return(max(abs(s1['x']-s2['x']) , abs(s1['y']-s2['y']) , abs(s1['z']-s2['z'])))
+    return(max(abs(s1['coords']['x']-s2['coords']['x']) , abs(s1['coords']['y']-s2['coords']['y']) , abs(s1['coords']['z']-s2['coords']['z'])))
 
-class EDDBFrame():
+class SpanshBGS():
 
     def __init__(self):
-        EDDBPOPULATED = 'https://eddb.io/archive/v6/systems_populated.json'
-        EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json'
+        EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json' ## Used For Home System
         EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
+        SPANSHPOPULATED = "https://downloads.spansh.co.uk/galaxy_populated.json.gz"
+
         #self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
         self._data_dir = 'data'
-        self._eddb_cache = os.path.join(self._data_dir, 'EDDBCache_1.pickle')
+        self._spanshcache = os.path.join(self._data_dir, 'SpanshCache_1.pickle')
         self._ebgs_systemhist_cache = os.path.join(self._data_dir, 'EBGS_SysHist.pickle')
+        self._eddb_factions = os.path.join(self._data_dir, 'EDDBFactions.pickle') ## Archive from end of EDDB
         self.systemhist = list()
+        self.factions = list()  ## Home System
+        self.stations = list()  ## Max Pad Size
 
+        # Get Modified Dates to check if it needs downloading again
+        if os.path.exists(self._spanshcache):
+            cachedate = datetime.datetime.fromtimestamp(os.path.getmtime(self._spanshcache))
+        resp = requests.head(SPANSHPOPULATED)
+        lastmoddt = datetime.datetime.strptime(resp.headers._store['last-modified'][1],'%a, %d %b %Y %H:%M:%S %Z')
+        ## print(cachedate,lastmoddt,lastmoddt > cachedate)
 
-        ## Get EDDB Data either from local cache or download a dump
-        if False and ((not os.path.exists(self._eddb_cache)) or (datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds > 3*60*60):
-            ## Download Nightly Dumps from EDDB if older than 3 hours
-            print('Downloading from EDDB Dump...')
-            if False: # Started to fail with SSL Issues
-                req = urllib.request.Request(EDDBPOPULATED)
-                with urllib.request.urlopen(req) as response:
-                    self.systems = json.loads(response.read().decode('utf8'))
+        ## Get Cache Data either from local cache or download a dump
+        if (not os.path.exists(self._spanshcache)) or lastmoddt > cachedate:
+            print('Downloading Dump for Cache...')
+            ## Download Nightly Dump if older local cache
+            resp = requests.get(SPANSHPOPULATED)
+            content = resp.content
+            self.systems = json.loads(gzip.decompress(content).decode('utf-8'))
+            print('Cleaning Dump for Cache...')
+            for sys in self.systems: ## Strip Useless Data
+                x = sys.pop('bodies',None)
+                for station in sys['stations']:
+                    if station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
+                        sys['stations'].remove(station)     ## Kill non-staions
+                    else:
+                        x = station.pop('market','')        ## Kill data
+                        x = station.pop('outfitting','')    ## Kill data
+                        x = station.pop('shipyard','')      ## Kill data
+                        x = station.pop('services','')      ## Kill data
 
-                req = urllib.request.Request(EDDBFACTIONS)
-                with urllib.request.urlopen(req) as response:
-                    self.factions = json.loads(response.read().decode('utf8'))
-
-                req = urllib.request.Request(EDDBSTAIONS)
-                with urllib.request.urlopen(req) as response:
-                    self.stations = json.loads(response.read().decode('utf8'))
-            else:
-                req = requests.get(EDDBPOPULATED)
-                self.systems = req.json()
-    
-                req = requests.get(EDDBFACTIONS)
-                self.factions = req.json()
-
-                req = requests.get(EDDBSTAIONS)
-                self.stations = req.json()
-
+            with open(self._eddb_factions, 'rb') as io:
+                self.factions = pickle.load(io)
 
             self.savecache()
             self.retreatsload()
         else:
-            #print(datetime.datetime.today(),datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache)),(datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(self._eddb_cache))).seconds)
-            #print('Using Local Cached EDDB Dump...')
-            with open(self._eddb_cache, 'rb') as io:
+            print('Using Local Cached Dump...')
+            with open(self._spanshcache, 'rb') as io:
                 self.systems = pickle.load(io)
                 self.factions = pickle.load(io)
                 self.stations = pickle.load(io)
-            self.retreatsload(False)
+            self.retreatsload(False) 
         return
 
     def savecache(self):
-        print('Saving EDDB Dump Cache...')
+        print('Saving Dump Cache...')
+
         os.makedirs(self._data_dir, exist_ok=True)
-        with open(self._eddb_cache, 'wb') as io:
+        with open(self._spanshcache, 'wb') as io:
             pickle.dump(self.systems,io)
             pickle.dump(self.factions,io)
             pickle.dump(self.stations,io)
@@ -114,11 +119,11 @@ class EDDBFrame():
         for i,hist in enumerate(self.systemhist):
             update_progress(i/len(self.systemhist),'Retreat Refresh')
             sys = next((x for x in self.systems if x['name'] == hist['name']), None)
-            if sys:
-                for f in sys['minor_faction_presences']:
-                    if self.faction(f['minor_faction_id'])['name'] not in hist['factions']:
+            if sys and 'factions' in sys.keys():
+                for f in sys['factions']:
+                    if f['name'] not in hist['factions']:
                         saves += 1
-                        hist['factions'].append(self.faction(f['minor_faction_id'])['name'])
+                        hist['factions'].append(f['name'])
         if saves:
             print(f'{saves} Expansions Detected')
             self.retreatssave()
@@ -157,10 +162,9 @@ class EDDBFrame():
         elif not 'pf' in sys.keys() or (live and 'ebgs' not in sys.keys()):
             #Denormalise for lazyness
             sys['pf'] = list()
-            for mf in sys['minor_faction_presences']:
-                f = self.faction(mf['minor_faction_id'])
+            for mf in sys['factions']:
+                f = self.faction(mf['name'])
                 if f:
-                    mf['name'] = f['name']
                     mf['detail'] = f
                     if f['is_player_faction']:
                         sys['pf'].append(f['name'])
@@ -169,7 +173,7 @@ class EDDBFrame():
             if live and 'ebgs' not in sys.keys():
                 if ebgs := api.getsystem(sys['name']): # Some systems are missing or named differently
                     sys['ebgs'] = ebgs
-                    for f in sys['minor_faction_presences']:
+                    for f in sys['factions']:
                         newinf = next((x for x in ebgs['factions'] if x['name']==f['name']),{'influence':0})
                         if newinf: # Faction may have retreated
                             newinf = newinf['influence']
@@ -177,11 +181,11 @@ class EDDBFrame():
                         else:
                             print('Bug')
 
-            sys['numberoffactions'] = len(sys['minor_faction_presences'])
+            sys['numberoffactions'] = len(sys['factions'])
 
             # NB Edgecase systems like Detention Centers count as populated, but have no minor factions
-            sys['minor_faction_presences'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
-            sys['influence'] = sys['minor_faction_presences'][0]['influence'] if sys['minor_faction_presences'] else 0
+            sys['factions'].sort(key = lambda x: x['influence'] if x['influence'] else 0, reverse=True)
+            sys['influence'] = sys['factions'][0]['influence'] if sys['factions'] else 0
 
             # Additional data from other sources
             sys['historic'] = self.retreats(sys['name'])
@@ -217,7 +221,7 @@ class EDDBFrame():
         #print(f'.Faction Controlled {factionname}')
         ans = list()
         for s in self.systems:
-            if s['controlling_minor_faction'] == factionname:
+            if 'controllingFaction' in s.keys() and s['controllingFaction']['name'] == factionname:
                 ans.append(self.system(s['name'],live=live)) # Denormalised
         return ans
 
@@ -230,9 +234,10 @@ class EDDBFrame():
             ## not yet cached
             ans = list()
             for sys in self.systems:
-                for f in sys['minor_faction_presences']:
-                    if f['minor_faction_id'] == faction['id']:
-                        ans.append(self.system(sys['name'],live=live)) # Denormalised
+                if 'factions' in sys.keys():
+                    for f in sys['factions']:
+                        if f['name'] == faction['name']:
+                            ans.append(self.system(sys['name'],live=live)) # Denormalised
             faction['faction_presence'] = ans # cache the result
         return faction['faction_presence']
 
@@ -271,27 +276,25 @@ class EDDBFrame():
 
     def natives(self,system):
         '''
-        Returns a list of faction names with the system (name or id) as their home system
+        Returns a list of faction names with the system name as their home system
         '''
         ans = list()
         sys = self.system(system)
-        for f in self.factions:
-            if f['home_system_id'] == sys['id']:
-                ans.append(f['name'])
+        for faction in self.factions:
+            if faction['home_system'] == sys['name']:
+                ans.append(faction['name'])
         return ans
 
-    def getstations(self,sysname,live=False):
+    def getstations(self,sysname,live=False): ## !! Pads etc
         sys = self.system(sysname,live=live)
         ans = list()
         if sys:
-            if 'stations' not in sys.keys():
-                for station in filter(lambda x: x['system_id'] == sys['id'],self.stations):
-                    ans.append(station)
-                sys['stations'] = ans
-                sys['beststation'] = 'Orbital' if next((x for x in ans if x['max_landing_pad_size']=='L' and not x['is_planetary'] and x['type_id'] != 24), False) else 'Outpost' if next((x for x in ans if x['max_landing_pad_size']=='M' and not x['is_planetary']), False) else 'Planetary'
-                # max_landing_pad_size, is_planetary
+            if 'stations' not in sys.keys() or not sys['stations']:
+                sys['stations'] = list()
+                sys['beststation'] = 'None'
             else:
-                ans = sys['stations']
+                ans = sys['stations']                
+                sys['beststation'] = 'Orbital' if next((x for x in ans if ('Starport' in x['type'] or 'Asteroid' in x['type'] )), False) else 'Outpost' if next((x for x in ans if x['type']=='Outpost'), False) else 'Planetary'
         return ans
 
     def retreatafaction(self,sysname):
@@ -304,7 +307,31 @@ class EDDBFrame():
 
 if __name__ == '__main__':
     ## Unit Test Harness
-    g = EDDBFrame()
+    g = SpanshBGS()  
+
+    """
+    e = EDDBFramework.EDDBFrame()
+    for f in g.factions:
+        sys = next((x for x in e.systems if x['id'] == f['home_system_id']),None)
+        f['home_system'] = sys['name'] if sys else '<Unknown>'
+    
+    with open(g._eddb_factions, 'wb') as io:
+        pickle.dump(g.factions,io)
+    with open(g._eddb_factions+'.json', 'w') as io:
+        io.write(json.dumps(g.factions))
+    """
+
+    """
+    types = list()
+    for sys in g.systems:
+        if 'stations' in sys.keys():
+            for station in sys['stations']:
+                if station['type'] not in types:
+                    types.append(station['type'])
+
+    print(types)
+    """
+
     khun = g.system('Khun',live=True)
     varati = g.system('Varati')
     failed = g.system('I Dont Exist')
@@ -313,9 +340,9 @@ if __name__ == '__main__':
     Sawadbhakui = g.system('Sawadbhakui')
     canonnowned = g.systemscontroled('Canonn')
     canonnspace = g.systemspresent('Canonn')
-    aboutvarati = g.cubearea('Varati',30)
-    aboutvarati = g.cubearea('Varati',30)
-    homesys = g.system(18454)
-    stations = g.getstations('Col 285 Sector TZ-O c6-27')
+    aboutvarati20 = g.cubearea('Varati',20)
+    aboutvarati30 = g.cubearea('Varati',30)
+    stationsT = g.getstations('Col 285 Sector TZ-O c6-27') ## Non - Thargoid Invaded
+    stationsV = g.getstations('Varati') 
 
     print('')
