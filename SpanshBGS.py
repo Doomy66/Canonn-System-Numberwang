@@ -15,7 +15,7 @@ def sysdist(s1, s2):
     '''
     Actual Distance between 2 systems
     '''
-    return((s1['x']-s2['x'])**2 + (s1['y']-s2['y'])**2 + (s1['z']-s2['z'])**2) ** 0.5
+    return((s1['coords']['x']-s2['coords']['x'])**2 + (s1['coords']['y']-s2['coords']['y'])**2 + (s1['coords']['z']-s2['coords']['z'])**2) ** 0.5
 
 def cubedist(s1, s2):
     '''
@@ -26,18 +26,14 @@ def cubedist(s1, s2):
 class SpanshBGS():
 
     def __init__(self):
-        EDDBFACTIONS = 'https://eddb.io/archive/v6/factions.json' ## Used For Home System
-        EDDBSTAIONS = 'https://eddb.io/archive/v6/stations.json'
         SPANSHPOPULATED = "https://downloads.spansh.co.uk/galaxy_populated.json.gz"
 
-        #self._eddb_cache = tempfile.gettempdir()+'\EDDBCache_1.pickle'
         self._data_dir = 'data'
         self._spanshcache = os.path.join(self._data_dir, 'SpanshCache_1.pickle')
         self._ebgs_systemhist_cache = os.path.join(self._data_dir, 'EBGS_SysHist.pickle')
-        self._eddb_factions = os.path.join(self._data_dir, 'EDDBFactions.pickle') ## Archive from end of EDDB
+        self._eddb_factions = 'EDDBFactions.pickle' ## Archive from end of EDDB - In ROOT not in Data
         self.systemhist = list()
-        self.factions = list()  ## Home System
-        self.stations = list()  ## Max Pad Size
+        self.factions = list()  ## Saved from EDDB
 
         # Get Modified Dates to check if it needs downloading again
         if os.path.exists(self._spanshcache):
@@ -56,6 +52,10 @@ class SpanshBGS():
             print('Cleaning Dump for Cache...')
             for sys in self.systems: ## Strip Useless Data
                 x = sys.pop('bodies',None)
+                if(sys['name']) == 'Col 285 Sector UZ-O c6-23':
+                    print('Missing Ground Stations Bug '+('FIXED' if sys['stations'] else 'still there'))
+                if 'factions' not in sys.keys():            ## Thargoid Controled
+                    sys['factions'] = list()
                 for station in sys['stations']:
                     if station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
                         sys['stations'].remove(station)     ## Kill non-staions
@@ -68,6 +68,7 @@ class SpanshBGS():
             with open(self._eddb_factions, 'rb') as io:
                 self.factions = pickle.load(io)
 
+            # gc.collect() ## Doesnt Help
             self.savecache()
             self.retreatsload()
         else:
@@ -75,7 +76,6 @@ class SpanshBGS():
             with open(self._spanshcache, 'rb') as io:
                 self.systems = pickle.load(io)
                 self.factions = pickle.load(io)
-                self.stations = pickle.load(io)
             self.retreatsload(False) 
         return
 
@@ -86,7 +86,6 @@ class SpanshBGS():
         with open(self._spanshcache, 'wb') as io:
             pickle.dump(self.systems,io)
             pickle.dump(self.factions,io)
-            pickle.dump(self.stations,io)
         
         # Apply all known factions to the known cache
         for s in self.systemhist:
@@ -267,11 +266,9 @@ class SpanshBGS():
         '''
         ans = list()
         sys = self.system(sysname,live=live)
-        for f in sys['minor_faction_presences']:
-            for state in f['active_states']:
-                state['faction'] = f['name']
-                if state['name'] in ['Election','War','Civil War'] or not conflicts:
-                    ans.append(state)
+        for f in sys['factions']:               ## Only 1 State in Spansh
+            if (f['state'] in ['Election','War','Civil War'] or not conflicts) and(f['state'] not in ans) and (f['state'] != 'None'):
+                ans.append(f['state'])
         return ans
 
     def natives(self,system):
@@ -343,6 +340,7 @@ if __name__ == '__main__':
     aboutvarati20 = g.cubearea('Varati',20)
     aboutvarati30 = g.cubearea('Varati',30)
     stationsT = g.getstations('Col 285 Sector TZ-O c6-27') ## Non - Thargoid Invaded
-    stationsV = g.getstations('Varati') 
+    stationsV = g.getstations('Col 285 Sector UZ-O c6-23')  ## Planet
+    states = g.activestates('Chacobog')
 
     print('')

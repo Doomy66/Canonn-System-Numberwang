@@ -332,7 +332,8 @@ if __name__ == '__main__':
     ## These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     #ExpansionCandidates("Canonn",show=True)
     #ExpansionFromSystem("Pachanu",True)   
-    #ExpansionToSystem("11 Cephei",easyinvade=True)            
+    #ExpansionToSystem("11 Cephei",easyinvade=True)   
+    #ExpansionFromSystem("Yi Trica",True)           
     #ExpansionToSystem("Col 285 Sector KZ-C b14-1",simpleonly=True)      
     #InvasionRoute('Kongi','HR 8133',faction='Canonn')
     #InvasionAlert("Canonn",mininf = 60,lookahead = 4)

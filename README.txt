@@ -27,9 +27,15 @@ Keys_Canonn.py - Not in GIT - It has keys to Canonn Sheets and Webhooks, use Key
 Have a "data" subfolder to read/write json/csv/txt
 
 # Release Notes
+11/04/23 SpanchBGS replaces EDDBFramework which closed down. 
+            Created archive of EDDBFactions.pickle as it is the only source of Native and home_system. Its in the root to avoid gitignore
+            Happiness no longer available
+            Thargoid Invaded systems now excluded from explansions
+            For some unknown reason its a lot faster
 23/04/21 EDDBFramework gathers historic faction data from EBGS and caches it - Very API heavy until cache is estabilished.
             ExpansionTarget uses historic fation data to identify previous retreats.
-            Spansh is currently a bit of a mess. Created basic map data to use for local puzzles, but the puzzle was solved before the code/01/03/21 ExpansionTarget now has InvasionRoute to calculate managed expansion between 2 systems
+            Spansh is currently a bit of a mess. Created basic map data to use for local puzzles, but the puzzle was solved before the code
+01/03/21 ExpansionTarget now has InvasionRoute to calculate managed expansion between 2 systems
 26/02/21 ExpansionTarget now also has EDDBFramework Options. Quicker, but not live data
 26/02/21 ExpansionTarget : New Tool InvasionAlert will alert you to systems that are predicted to invade your territory
 26/02/21 EDDBFramework Added
