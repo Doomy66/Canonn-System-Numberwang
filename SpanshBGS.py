@@ -52,8 +52,6 @@ class SpanshBGS():
             print('Cleaning Dump for Cache...')
             for sys in self.systems: ## Strip Useless Data
                 x = sys.pop('bodies',None)
-                if(sys['name']) == 'Col 285 Sector UZ-O c6-23':
-                    print('Missing Ground Stations Bug '+('FIXED' if sys['stations'] else 'still there'))
                 if 'factions' not in sys.keys():            ## Thargoid Controled
                     sys['factions'] = list()
                 for station in sys['stations']:
@@ -288,7 +286,7 @@ class SpanshBGS():
         if sys:
             if 'stations' not in sys.keys() or not sys['stations']:
                 sys['stations'] = list()
-                sys['beststation'] = 'None'
+                sys['beststation'] = 'Planetary'
             else:
                 ans = sys['stations']                
                 sys['beststation'] = 'Orbital' if next((x for x in ans if ('Starport' in x['type'] or 'Asteroid' in x['type'] )), False) else 'Outpost' if next((x for x in ans if x['type']=='Outpost'), False) else 'Planetary'
@@ -318,16 +316,6 @@ if __name__ == '__main__':
         io.write(json.dumps(g.factions))
     """
 
-    """
-    types = list()
-    for sys in g.systems:
-        if 'stations' in sys.keys():
-            for station in sys['stations']:
-                if station['type'] not in types:
-                    types.append(station['type'])
-
-    print(types)
-    """
 
     khun = g.system('Khun',live=True)
     varati = g.system('Varati')

@@ -6,6 +6,7 @@ api - All API Calls made from here
 Bubble - Class for gathering your factions LIVE data
 Overrides - Contains all the read/writes to Canonn Sheets
 EDDBFramework - Class to access data from EDDB - Its NOT live data, upto 24 hours old, but can do heavy work without API traffic
+SpanshBGS - Class to access data from Spansh - Its NOT live data, upto 24 hours old, but can do heavy work without API traffic. Replaces the now dead EDDB
 
 # CSN 
 CSNSetting - Settings for CSNAnalysis

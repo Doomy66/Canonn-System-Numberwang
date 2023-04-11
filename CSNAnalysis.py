@@ -6,8 +6,8 @@ import os
 import sys
 import csv
 import CSNSettings
-from ExpansionTarget import EDDBReset, ExpansionCandidates, InvasionAlert
-from discord import Webhook, RequestsWebhookAdapter
+from ExpansionTarget import FrameReset, ExpansionCandidates, InvasionAlert
+from discord import SyncWebhook
 from datetime import datetime
 from Overrides import CSNAttractions, CSNOverRideRead, CSNSchedule
 from Overrides import CSNOverRideReadSafe
@@ -82,7 +82,7 @@ def Misson_Gen(argv=''):
     # Expansion Targets
     if '/new' in argv or '/expansion' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
         ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1],extenedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
-        EDDBReset() # EDDB Frame may be mangled, reset so Invasion Alert still works
+        FrameReset() # EDDB Frame may be mangled, reset so Invasion Alert still works
     try:
         with open(f'data\\{factionnames[0]}ExpansionTargets.json', 'r') as io:
             expansiontargets = json.load(io)
@@ -334,13 +334,23 @@ def Misson_Gen(argv=''):
                 print(f'!Override Ignored : {newmessage[0]} {newmessage[2]}')
 
     # Invasion Alert
-    if '/new' in argv or '/invade' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
+    if '/new' in argv or '/invade' in argv: # Only worth processing once per day after the Data Dump 
         invaders = InvasionAlert(factionnames[0],live=True,lookahead=2)
+
     for sys in invaders:
         sys["system_name"] = sys["name"]
+        if not 'controlling_minor_faction' in sys.keys():
+            sys['controlling_minor_faction'] = sys['controllingFaction']['name']
         # trim spurious data that was giving circular reference errors when trying to save
-        sys['minor_faction_presences'] = list() 
-        sys['xcube'] = list()
+        x = sys.pop('minor_faction_presences','')
+        x = sys.pop('xcube','')
+        x = sys.pop('factions','')
+        x = sys.pop('stations','')
+        x = sys.pop('ebgs','')
+        x = sys.pop('controllingFaction','')
+
+
+        
         if sys['controlling_minor_faction'] in sys['pf']: # Policy is we allow NPC to arrive so they fill the system and block PC factions
             messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} ({round(sys['influence'],1)}%) will {sys['invademessage']} {'to' if sys['invadetype'][0]=='E' else 'in'} {sys['invading']} within {sys['cycles']} cycles : {('Support Non-Native Factions in '+sys['invading']) if sys['invadetype'][0]=='I' else ''}",dIcons['data']))
             #print('')
@@ -354,9 +364,9 @@ def Misson_Gen(argv=''):
 
     for x in l[:3]:
         sys = faction_systems[x]
-        if sys["factions"][0]["influence"]-sys["factions"][1]["influence"] < 35: # At a 35% Gap, it becomes spam
+        if (sys["factions"][0]["influence"]-sys["factions"][1]["influence"]) < 35: # At a 35% Gap, it becomes spam
             messages.append(
-                amessage(sys, 5, f'Suggestion: {sys["empire"]["name"]} {availableactions(sys,factionnames)} (gap to {sys["factions"][1]["name"]} is {sys["factions"][0]["influence"]-sys["factions"][1]["influence"]:4.3}%)', dIcons['mininf']))
+                amessage(sys, 5, f'Suggestion: {sys["empire"]["name"]} {availableactions(sys,factionnames)} (gap to {sys["factions"][1]["name"]} is {(sys["factions"][0]["influence"]-sys["factions"][1]["influence"]):4.3}%)', dIcons['mininf']))
 
 
     messages.sort()
@@ -417,8 +427,7 @@ def Misson_Gen(argv=''):
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
         wh_text_continued = ''
-        wh = Webhook.partial(CSNSettings.wh_id, CSNSettings.wh_token,
-                             adapter=RequestsWebhookAdapter())
+        wh = SyncWebhook(CSNSettings.wh_id, CSNSettings.wh_token)
         for x in filter(lambda x: x[0] < 11 or (x[0] > 20 and x[0]<=30), messagechanges):
             if len(wh_text) < 1850: # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
                 wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
@@ -463,7 +472,10 @@ def amessage(sys, p, message, icon='', empire=''):
     if isinstance(sys,str):
         return([p, sys, 0, 0, 0, 0, '', message, icon, True])
     else:
-        return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon, True])
+        if 'x' in sys.keys():
+            return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon, True])
+        else:
+            return([p, sys["system_name"], sys["coords"]["x"], sys["coords"]["y"], sys["coords"]["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon, True])
 
 
 
@@ -485,4 +497,4 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new"])
+    Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new", "/!invade"])
