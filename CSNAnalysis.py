@@ -427,7 +427,7 @@ def Misson_Gen(argv=''):
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
         wh_text_continued = ''
-        wh = SyncWebhook(CSNSettings.wh_id, CSNSettings.wh_token)
+        wh = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
         for x in filter(lambda x: x[0] < 11 or (x[0] > 20 and x[0]<=30), messagechanges):
             if len(wh_text) < 1850: # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
                 wh_text += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
@@ -497,4 +497,4 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new", "/!invade"])
+    Misson_Gen(sys.argv[1:] + ["/!expansion", "/new", "/!invade"])

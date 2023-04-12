@@ -187,8 +187,10 @@ class SpanshBGS():
             # Additional data from other sources
             sys['historic'] = self.retreats(sys['name'])
 
-
-
+        if sys and 'coords' in sys.keys() and 'x' not in sys.keys():
+            sys['x'] = sys['coords']['x']
+            sys['y'] = sys['coords']['y']
+            sys['z'] = sys['coords']['z']
 
         return sys
 
