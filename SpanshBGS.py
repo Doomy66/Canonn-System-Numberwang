@@ -253,7 +253,7 @@ class SpanshBGS():
         
         if not ans:
             for s in filter(lambda x: cubedist(x,sys)<=range,self.systems):
-                ans.append(self.system(s['name'],live=live)) # Denormalised
+                ans.append(self.system(s['name'],live=False)) # Denormalised
 
         if range==30 and 'xcube' not in sys.keys(): # save cache
             sys['xcube'] = ans

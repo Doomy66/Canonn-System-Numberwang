@@ -497,4 +497,4 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/!expansion", "/new", "/!invade"])
+    Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new", "/!invade"])
