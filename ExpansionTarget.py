@@ -221,7 +221,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3, live=False):
         invaders = filter(lambda x: x['name'] not in homesystems 
                         and x['name'] not in donesystems 
                         and x['population'] > 0
-                        and x['influence'] > mininf
+                        and x['influence'] > mininf/100
                         , spansh.cubearea(home, rangeSimple,live=live)) # 03/12/22 Only bother with Simple Range
         for invader in invaders:
             targets = list(filter(lambda x: x['name'] in homesystems,ExpansionFromSystem(invader['name'],live=live,simpleonly=True)[:lookahead])) # Check if next lookahead expansions will target the home faction
@@ -240,7 +240,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3, live=False):
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['influence'], reverse=True)
             for alert in alertsystems:
-                print(f" {alert['controllingFaction']['name']} ({round(alert['influence'],1)}%) from {alert['name']} will {alert['invademessage']} to {alert['invading']} in {alert['cycles']} cycles  ")
+                print(f" {alert['controllingFaction']['name']} ({round(100*alert['influence'],1)}%) from {alert['name']} will {alert['invademessage']} to {alert['invading']} in {alert['cycles']} cycles  ")
 
     return alertsystems
 
