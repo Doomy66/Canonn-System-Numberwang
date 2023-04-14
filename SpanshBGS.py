@@ -47,8 +47,8 @@ class SpanshBGS():
             print('Downloading Dump for Cache...')
             ## Download Nightly Dump if older local cache
             resp = requests.get(SPANSHPOPULATED)
-            content = resp.content
-            self.systems = json.loads(gzip.decompress(content).decode('utf-8'))
+            #content = resp.content
+            self.systems = json.loads(gzip.decompress(resp.content).decode('utf-8'))
             print('Cleaning Dump for Cache...')
             for sys in self.systems: ## Strip Useless Data
                 x = sys.pop('bodies',None)
@@ -66,15 +66,19 @@ class SpanshBGS():
             with open(self._eddb_factions, 'rb') as io:
                 self.factions = pickle.load(io)
 
-            # gc.collect() ## Doesnt Help
             self.savecache()
             self.retreatsload()
-        else:
-            print('Using Local Cached Dump...')
-            with open(self._spanshcache, 'rb') as io:
-                self.systems = pickle.load(io)
-                self.factions = pickle.load(io)
-            self.retreatsload(False) 
+            # Clear Memory
+            #content = None
+            resp = None
+            self.systems = None
+           
+        
+        print('Using Local Cached Dump...')
+        with open(self._spanshcache, 'rb') as io:
+            self.systems = pickle.load(io)
+            self.factions = pickle.load(io)
+        self.retreatsload(False) 
         return
 
     def savecache(self):
@@ -128,7 +132,6 @@ class SpanshBGS():
         
         return
 
-
     def retreats(self,system_name):
         ''' 
         Not actualy retreats, but a list of factions that have EVER been in system
@@ -142,7 +145,6 @@ class SpanshBGS():
         else:
             answer = cached['factions']
         return answer
-
 
     def system(self,idorname,live=False):
         ''' 
@@ -212,7 +214,6 @@ class SpanshBGS():
 
         return f
         
-
     def systemscontroled(self,factionname, live=False):
         '''
         Returns all Systems controled by the faction
@@ -258,7 +259,6 @@ class SpanshBGS():
         if range==30 and 'xcube' not in sys.keys(): # save cache
             sys['xcube'] = ans
         return ans
-
 
     def activestates(self,sysname,conflicts=False,live=False):
         '''
