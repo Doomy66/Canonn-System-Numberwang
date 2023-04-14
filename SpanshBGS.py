@@ -317,6 +317,7 @@ if __name__ == '__main__':
     with open(g._eddb_factions+'.json', 'w') as io:
         io.write(json.dumps(g.factions))
     """
+    
 
 
     khun = g.system('Khun',live=True)
