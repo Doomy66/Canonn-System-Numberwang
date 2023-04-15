@@ -57,20 +57,24 @@ class SpanshBGS():
             with open(self._spanshfileraw) as infile:
                 for line in infile:
                     if len(line)>10:
-                        fixedline = line[1:-2]
+                        if line[-2:]==',\n':
+                            fixedline = line[1:-2] 
+                        else: 
+                            fixedline = line[1:-1]
                         try:
                             sys = json.loads(fixedline)
                             x = sys.pop('bodies',None)
                             if 'factions' not in sys.keys():            ## Thargoid Controled
                                 sys['factions'] = list()
-                            for station in sys['stations']:
+                            for station in sys['stations'].copy():      ## Remove buggers the index and it skips one without it being a copy
                                 if station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
                                     sys['stations'].remove(station)     ## Kill non-staions
-                                else:
-                                    x = station.pop('market','')        ## Kill data
-                                    x = station.pop('outfitting','')    ## Kill data
-                                    x = station.pop('shipyard','')      ## Kill data
-                                    x = station.pop('services','')      ## Kill data
+                            for station in sys['stations']:             ## Iterate the real (not a copy) list
+                                    x = station.pop('market','')        
+                                    x = station.pop('outfitting','')    
+                                    x = station.pop('shipyard','')      
+                                    x = station.pop('services','')      
+                            
                             self.systems.append(sys)
                         except:
                             print('Failed: '+fixedline[:80])
