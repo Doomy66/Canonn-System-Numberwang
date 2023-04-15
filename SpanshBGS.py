@@ -10,6 +10,8 @@ from CSNSettings import ignorepf
 import requests
 import gzip
 import json
+import subprocess
+import sys as winsys
 
 def sysdist(s1, s2):
     '''
@@ -33,7 +35,10 @@ class SpanshBGS():
         self._ebgs_systemhist_cache = os.path.join(self._data_dir, 'EBGS_SysHist.pickle')
         self._eddb_factions = 'EDDBFactions.pickle' ## Archive from end of EDDB - In ROOT not in Data
         self.systemhist = list()
+        self.systems = list()
         self.factions = list()  ## Saved from EDDB
+        self._spanshfileraw = os.environ.get('APPDATA')+"\BGS\galaxy_populated.json"
+
 
         # Get Modified Dates to check if it needs downloading again
         if os.path.exists(self._spanshcache):
@@ -44,41 +49,43 @@ class SpanshBGS():
 
         ## Get Cache Data either from local cache or download a dump
         if (not os.path.exists(self._spanshcache)) or lastmoddt > cachedate:
-            print('Downloading Dump for Cache...')
-            ## Download Nightly Dump if older local cache
-            resp = requests.get(SPANSHPOPULATED)
-            #content = resp.content
-            self.systems = json.loads(gzip.decompress(resp.content).decode('utf-8'))
-            print('Cleaning Dump for Cache...')
-            for sys in self.systems: ## Strip Useless Data
-                x = sys.pop('bodies',None)
-                if 'factions' not in sys.keys():            ## Thargoid Controled
-                    sys['factions'] = list()
-                for station in sys['stations']:
-                    if station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
-                        sys['stations'].remove(station)     ## Kill non-staions
-                    else:
-                        x = station.pop('market','')        ## Kill data
-                        x = station.pop('outfitting','')    ## Kill data
-                        x = station.pop('shipyard','')      ## Kill data
-                        x = station.pop('services','')      ## Kill data
+
+            p = subprocess.Popen('powershell.exe -ExecutionPolicy RemoteSigned -file "Spansh.ps1"', stdout=winsys.stdout)
+            p.communicate()
+
+            print('Tidy Dump for Cache...')
+            with open(self._spanshfileraw) as infile:
+                for line in infile:
+                    if len(line)>10:
+                        fixedline = line[1:-2]
+                        try:
+                            sys = json.loads(fixedline)
+                            x = sys.pop('bodies',None)
+                            if 'factions' not in sys.keys():            ## Thargoid Controled
+                                sys['factions'] = list()
+                            for station in sys['stations']:
+                                if station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
+                                    sys['stations'].remove(station)     ## Kill non-staions
+                                else:
+                                    x = station.pop('market','')        ## Kill data
+                                    x = station.pop('outfitting','')    ## Kill data
+                                    x = station.pop('shipyard','')      ## Kill data
+                                    x = station.pop('services','')      ## Kill data
+                            self.systems.append(sys)
+                        except:
+                            print('Failed: '+fixedline[:80])
 
             with open(self._eddb_factions, 'rb') as io:
                 self.factions = pickle.load(io)
 
             self.savecache()
             self.retreatsload()
-            # Clear Memory
-            #content = None
-            resp = None
-            self.systems = None
-           
-        
-        print('Using Local Cached Dump...')
-        with open(self._spanshcache, 'rb') as io:
-            self.systems = pickle.load(io)
-            self.factions = pickle.load(io)
-        self.retreatsload(False) 
+        else:
+            print('Using Local Cached Dump...')
+            with open(self._spanshcache, 'rb') as io:
+                self.systems = pickle.load(io)
+                self.factions = pickle.load(io)
+            self.retreatsload(False) 
         return
 
     def savecache(self):
@@ -322,6 +329,7 @@ if __name__ == '__main__':
 
     khun = g.system('Khun',live=True)
     varati = g.system('Varati')
+    achenar = g.system('Achenar')
     failed = g.system('I Dont Exist')
     canonn = g.faction('Canonn')
     failed = g.faction('I Dont Exist')
@@ -331,7 +339,11 @@ if __name__ == '__main__':
     aboutvarati20 = g.cubearea('Varati',20)
     aboutvarati30 = g.cubearea('Varati',30)
     stationsT = g.getstations('Col 285 Sector TZ-O c6-27') ## Non - Thargoid Invaded
-    stationsV = g.getstations('Col 285 Sector UZ-O c6-23')  ## Planet
+    stationsU = g.getstations('Col 285 Sector UZ-O c6-23')  ## Planet
+
+    stationsV = g.getstations('Varati') 
+    stationsA = g.getstations('Achenar')
+
     states = g.activestates('Chacobog')
 
     print('')
