@@ -84,7 +84,7 @@ def Misson_Gen(argv=''):
     # Expansion Targets
     if '/new' in argv or '/expansion' in argv: # Only worth processing once per day 
         ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1],extenedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
-        FrameReset() # EDDB Frame may be mangled, reset so Invasion Alert still works
+        FrameReset() # Frame may be mangled, reset so Invasion Alert still works
     try:
         CSNLog.info('Load Saved Expansion Targets')   
         with open(f'data\\{factionnames[0]}ExpansionTargets.json', 'r') as io:
@@ -126,7 +126,6 @@ def Misson_Gen(argv=''):
     for i, key in enumerate(faction_systems):
         update_progress(i/len(faction_systems),key)
         sys = faction_systems[key]
-        CSNLog.info('Missions : '+sys['name'])   
         if sys:
             sys['factions'].sort(key = lambda x: x['influence'],reverse=True)
             factions =sys['factions']
@@ -292,9 +291,6 @@ def Misson_Gen(argv=''):
                                 detected_retreats.append(sys['name'])
                             messages.append(amessage(sys, 7, f"Support {faction['name']} to be above 5% to prevent Retreat ({round(faction['influence'],1)}%)", dIcons['override']))
 
-                # Look for Non-Native Conflicts ##TODO But dont have Native Faction Info in Bubble. Hidden in the heavy load of EDDBFrame
-
-
     update_progress(1)
 
     # Add Detected Retreats
@@ -361,7 +357,7 @@ def Misson_Gen(argv=''):
             #print('')
 
     # Lowest Gaps for PUSH message
-    CSNLog.info('Missions: PUSH Suggestions')   
+    CSNLog.info('Missions : PUSH Suggestions')   
 
     l = list(filter(lambda x: x not in CSNSettings.surrendered_systems and (faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
         messages, faction_systems[x]['system_name'])), faction_systems))
@@ -386,11 +382,12 @@ def Misson_Gen(argv=''):
         if carrier['id'][0] != '!':
             try:
                 thiscarrier = api.getfleetcarrier(carrier['id'])
-                currentsystem = api.eddbSystem(thiscarrier['current_system'])
+                currentsystem = thiscarrier['current_system']
                 messages.append(amessage(currentsystem, 9, f'{carrier["name"]} ({carrier["role"]})', dIcons['FC'],'Canonn'))
             except:
                 pass
             if not currentsystem:
+                CSNLog.info(f'Fleet Carrier {carrier["id"]} Failed')
                 print(f'!!! Fleet Carrier {carrier["id"]} Failed !!!')
 
     # Looks for changes in Discord suitable Messages since last run for WebHook
@@ -479,8 +476,10 @@ def hasmessage(messages, sysname):
 def amessage(sys, p, message, icon='', empire=''):
     # 0 Priority, 1 System Name, 2 x, 3 y, 4 z, 5 ?, 6 Faction, 7 Message, 8 Icon, 9 Fresh
     if isinstance(sys,str):
+        CSNLog.info('Missions : '+sys)   
         return([p, sys, 0, 0, 0, 0, '', message, icon, True])
     else:
+        CSNLog.info('Missions : '+sys['name'])   
         if 'x' in sys.keys():
             return([p, sys["system_name"], sys["x"], sys["y"], sys["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon, True])
         else:

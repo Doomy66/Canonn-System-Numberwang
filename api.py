@@ -9,6 +9,7 @@ import json
 from datetime import datetime, timedelta, timezone
 import time
 import sys
+from CSNSettings import CSNLog
 
 from requests.models import Response
 
@@ -16,31 +17,8 @@ from requests.models import Response
 NREQ = 0  # Count of all api calls made to monitor your own usage. Its nice when you care.
 _SYSTEMCACHE = dict()
 _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
-_EDDBURL = 'https://eddbapi.elitebgs.app/api/v4/'
-_EDSMURL = 'https://www.edsm.net/api-v1/' 
 _CANONN = 'https://us-central1-canonn-api-236217.cloudfunctions.net/'
 _RAWLASTTICK = None
-
-def loadcache():
-    """
-    Loads previously saved cache. Only use for static data such as coords
-    """
-    from os import path
-    global _SYSTEMCACHE
-    myfile = 'data\\system_cache.json'
-    if not(path.isfile(myfile)):
-        _SYSTEMCACHE = dict()
-    else:
-        with open(myfile, 'r') as io:
-            _SYSTEMCACHE = json.load(io)
-
-def savecache():
-    '''
-    Saves system cache for future use. Only save if load is also used.
-    '''
-    myfile = 'data\\system_cache.json'
-    with open(myfile, 'w') as io:
-        json.dump(_SYSTEMCACHE, io)
 
 def _ebgsDateTime(dateTimeString):
     '''
@@ -68,6 +46,7 @@ def getfleetcarrier(fc_id):
         resp = requests.get(url, params=payload)
         myload = json.loads(resp._content)[0]
     except:
+        CSNLog.info(f'Failed to find FC "{fc_id}"')
         print(f'!Failed to find FC "{fc_id}"')
         myload = None
     NREQ +=1
@@ -88,6 +67,7 @@ def getfaction(faction_name): # elitebgs
             sys['empire'] = faction_name
             sys['happytext'] = 'Elated' if sys['happiness'] == '$faction_happinessband1;' else 'Happy' if sys['happiness'] == '$faction_happinessband2;' else 'Peeved'
     except:
+        CSNLog.info(f'Failed to find faction "{faction_name}"')
         print(f'!Failed to find faction "{faction_name}"')
         myload = None
     NREQ += 1
@@ -110,6 +90,7 @@ def getfactionsystems(faction_name,page=1): # elitebgs
             sys['empire'] = faction_name
             answer.append(sys)
     except:
+        CSNLog.info(f'Failed to find systems for faction "{faction_name}"')
         print(f'!Failed to find systems for faction "{faction_name}"')
         myload = None
         content = None
@@ -151,6 +132,7 @@ def getsystem(system_name, refresh=False): # elitebgs
 
             myload['factions'].sort(key = lambda x: x['influence'], reverse=True)
         except:
+            CSNLog.info(f'Failed to find system "{system_name}"')
             print(f'!Failed to find system "{system_name}"')
             myload = None
         NREQ += 1
@@ -224,30 +206,6 @@ def getlasttick(raw=False): # elitebgs
     else:
         return _ebgsDateTime(myload["updated_at"])
 
-def eddbSystem(sysnameid):
-    '''
-    Given a system name (string) or system id (int)
-    Fetches system daya from eddb 24 hour cache
-    Documentation https://elitebgs.app/api/eddb
-    Only required when source data is also eddb (e.g. Fleet Carriers)
-    '''
-    global NREQ
-    #url = 'https://eddbapi.kodeblox.com/api/v4/systems'    ## endpoint changed
-    url = 'https://eddbapi.elitebgs.app/api/v4/systems'
-    payload = {'eddbid': sysnameid} if type(sysnameid) == int else {'name': sysnameid}
-
-    r = requests.get(url, params=payload)
-    try:
-        myload = json.loads(r._content)["docs"][0]
-    except:
-        print(f'!System Not found : {sysnameid}')
-        return(None)
-
-    # consistent nameing between objects
-    myload["system_name"] = myload["name"]
-    NREQ += 1
-    return(myload)
-
 def eddbNatives(system_name):
     '''
     Given a system_name (string)
@@ -255,6 +213,7 @@ def eddbNatives(system_name):
     Documentation https://elitebgs.app/api/eddb
     '''
     global NREQ
+    CSNLog.info('EDDB NativesRequested !')
     url = 'https://eddbapi.elitebgs.app/api/v4/factions'
     payload = {'homesystemname': system_name}
     r = requests.get(url, params=payload)
@@ -274,6 +233,7 @@ def eddbAllStations(sysnameid):
     NB Body Information is only an ID which does not seem to match any available body id source
     '''
     global NREQ
+    CSNLog.info('EDDB AllStations Requested !')
     url = 'https://eddbapi.elitebgs.app/api/v4/stations'
     payload = {'eddbid': sysnameid} if type(sysnameid) == int else {'systemname': sysnameid}
 

@@ -240,7 +240,7 @@ def InvasionAlert(faction,mininf=70, show=True, lookahead=3, live=False):
             print(f"Possible Invasions of {faction} space:")
             alertsystems.sort(key=lambda x: x['influence'], reverse=True)
             for alert in alertsystems:
-                print(f" {alert['controllingFaction']['name']} ({round(100*alert['influence'],1)}%) from {alert['name']} will {alert['invademessage']} to {alert['invading']} in {alert['cycles']} cycles  ")
+                print(f" {alert['controllingFaction']['name']} ({round(alert['influence'],1)}%) from {alert['name']} will {alert['invademessage']} to {alert['invading']} in {alert['cycles']} cycles  ")
 
     return alertsystems
 

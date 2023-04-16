@@ -8,7 +8,6 @@ import api
 import requests
 from CSNSettings import ignorepf, CSNLog
 import requests
-import gzip
 import json
 import subprocess
 import sys as winsys
@@ -187,7 +186,7 @@ class SpanshBGS():
 
             ## Get live ebgs data when the dump is just not good enough
             if live and 'ebgs' not in sys.keys():
-                if ebgs := api.getsystem(sys['name']): # Some systems are missing or named differently
+                if ebgs := api.getsystem(sys['name']):
                     sys['ebgs'] = ebgs
                     for f in sys['factions']:
                         newinf = next((x for x in ebgs['factions'] if x['name']==f['name']),{'influence':0})
@@ -322,20 +321,6 @@ class SpanshBGS():
 if __name__ == '__main__':
     ## Unit Test Harness
     g = SpanshBGS()  
-
-    """
-    e = EDDBFramework.EDDBFrame()
-    for f in g.factions:
-        sys = next((x for x in e.systems if x['id'] == f['home_system_id']),None)
-        f['home_system'] = sys['name'] if sys else '<Unknown>'
-    
-    with open(g._eddb_factions, 'wb') as io:
-        pickle.dump(g.factions,io)
-    with open(g._eddb_factions+'.json', 'w') as io:
-        io.write(json.dumps(g.factions))
-    """
-    
-
 
     khun = g.system('Khun',live=True)
     varati = g.system('Varati')

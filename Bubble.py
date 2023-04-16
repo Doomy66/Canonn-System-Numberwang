@@ -63,108 +63,13 @@ def update_progress(progress,status=''):
 class Bubble():
     factionnames = CSNSettings.factionnames
 
-    localdrive = 'data\\'
-    SPANSHFULL = f'{harddrive}galaxy.json.gz'
-    SPANSH7DAY = f'{harddrive}galaxy_7days.json.gz'
-    SPANSH1MON = f'{harddrive}galaxy_1month.json.gz'
-    DTFILE = f'{localdrive}deep_thought.json'
-   
     def __init__(self):
         # systems with faction presence, full uptodate detail
         self.lastick = api.getlasttick()
-
         self.localspace = self.refreshcache()
 
+        ## self.systems is currently EMPTY !! Can all be trashed or moved to look at Spansh
         # all nearby systems, has only stale or structural data
-        if os.path.exists(self.DTFILE):
-            with open(self.DTFILE,'r') as istream:
-                self.systems = json.load(istream)
-                lastUpdated = filetimestamp(self.DTFILE)
-        else:
-            self.systems = list()
-            self.saveDeepThought()
-            lastUpdated = None
-        
-        if filetimestamp(self.SPANSHFULL) != None and (lastUpdated == None or lastUpdated < filetimestamp(self.SPANSHFULL)):
-            self.ReadSpanch(self.SPANSHFULL)
-            self.saveDeepThought()
-        elif filetimestamp(self.SPANSH7DAY) != None and (lastUpdated == None or lastUpdated < filetimestamp(self.SPANSH7DAY)):
-            self.ReadSpanch(self.SPANSH7DAY)
-            self.saveDeepThought()
-        elif filetimestamp(self.SPANSH1MON) != None and (lastUpdated == None or lastUpdated < filetimestamp(self.SPANSH1MON)):
-            self.ReadSpanch(self.SPANSH1MON)
-            self.saveDeepThought()
-
-    def saveDeepThought(self):
-        print('Saving...')
-        with open(self.DTFILE, 'w') as outfile:
-            json.dump(self.systems, outfile)
-
-    def ReadSpanch(self,ifile):
-        # Reads a full Spansh dump, extracts all systems close to Canonn Space
-        radius = 30
-        rebuild = True
-        
-        print('Deep Thought...')
-        nyes = nno = nnew = 0
-        
-        with gzip.open(ifile,"r") as bstream:
-            while True:
-                l = bstream.readline().decode()
-                t = l.rstrip('\n').rstrip(',')
-                if len(t) > 6 != '':
-                    t = json.loads(t)
-                    d = self.canonndistcube(t) 
-                    if d <= radius:
-                        t['CanonnDist'] = self.canonndist(t) 
-                        t['CanonnDistCube'] = d
-                        nyes += 1
-                        try:
-                            id = next(i for i, x in enumerate(self.systems) if x['name'] == t['name'])
-                            if t['date'] != self.systems[id]['date'] or rebuild:
-                                #print(f"Update {t['date']} {t['name']}  {nyes:,}")
-                                self.systems[id] = t 
-                                if self.systems[id].get('population',0) > 0 and (rebuild or not 'natives' in self.systems[id]):
-                                    self.systems[id]['natives'] = api.eddbNatives(t['name'])
-                        except StopIteration:
-                            nnew += 1
-                            print(f"New {t['date']} {t['name']}  {nnew:,}")
-                            self.systems.append(t)
-                            id = len(self.systems)-1
-                            if self.systems[id].get('population',0) > 0 and (rebuild or not 'natives' in self.systems[id]):
-                                self.systems[id]['natives'] = api.eddbNatives(t['name'])
-                    else:
-                        nno += 1
-                        if nno % 500000 == 0:
-                            print(f'... {nno:,}')
-                if not l :
-                    break
-        return None
-
-    def SpamSpanch(self,ifile):
-        # Reads a full Spansh dump, extracts all systems close to Canonn Space
-      
-        print('Deep Thought...')
-        nyes = nno = nnew = 0
-        lookingfor = ['Kyli Flyuae AA-A h4']
-        with gzip.open(ifile,"r") as bstream:
-            while True:
-                l = bstream.readline().decode()
-                t = l.rstrip('\n').rstrip(',')
-                if len(t) > 6 != '':
-                    t = json.loads(t)
-
-                    if t['name'] in lookingfor:
-                        nyes += 1
-                        for b in t['bodies']:
-                            pass
-                    else:
-                        nno += 1
-                        if nno % 500000 == 0:
-                            print(f'... {nno:,}')
-                if not l :
-                    break
-        return None
 
     def refreshcache(self):
         print(f'Refreshing BGS Data for {self.factionnames}:',end='')
@@ -317,4 +222,3 @@ class Bubble():
 if __name__ == '__main__':
     bubble = Bubble()
     print(F'Done in {api.NREQ}')
-    #bubble.SpamSpanch(bubble.SPANSH1MON)
