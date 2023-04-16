@@ -6,7 +6,7 @@ from typing import AnyStr
 import pickle
 import api
 import requests
-from CSNSettings import ignorepf
+from CSNSettings import ignorepf, CSNLog
 import requests
 import gzip
 import json
@@ -45,15 +45,18 @@ class SpanshBGS():
             cachedate = datetime.datetime.fromtimestamp(os.path.getmtime(self._spanshcache))
         resp = requests.head(SPANSHPOPULATED)
         lastmoddt = datetime.datetime.strptime(resp.headers._store['last-modified'][1],'%a, %d %b %Y %H:%M:%S %Z')
-        ## print(cachedate,lastmoddt,lastmoddt > cachedate)
+        CSNLog.info('Spansh')   
+
+        #print('Dates:',cachedate,lastmoddt,lastmoddt > cachedate)
 
         ## Get Cache Data either from local cache or download a dump
         if (not os.path.exists(self._spanshcache)) or lastmoddt > cachedate:
-
+            CSNLog.info('Spansh Powershell')   
             p = subprocess.Popen('powershell.exe -ExecutionPolicy RemoteSigned -file "Spansh.ps1"', stdout=winsys.stdout)
             p.communicate()
 
             print('Tidy Dump for Cache...')
+            CSNLog.info('Spansh Tidy Dump')   
             with open(self._spanshfileraw) as infile:
                 for line in infile:
                     if len(line)>10:
@@ -86,11 +89,14 @@ class SpanshBGS():
             self.retreatsload()
         else:
             print('Using Local Cached Dump...')
+            CSNLog.info('Spansh Load Dump')   
             with open(self._spanshcache, 'rb') as io:
                 self.systems = pickle.load(io)
                 self.factions = pickle.load(io)
             self.retreatsload(False) 
+        CSNLog.info('Spansh Data Loaded')   
         return
+    
 
     def savecache(self):
         print('Saving Dump Cache...')

@@ -21,3 +21,13 @@ ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar I
 
 # No orders to boost inf for system control etc. Leave it to the system owner.
 surrendered_systems = ['A List of System Names'] 
+
+import logging
+logging.basicConfig(filename='data\CSNLog.log',
+                    filemode='a',
+                    format='%(asctime)s %(name)s %(levelname)s %(message)s',
+                    level=logging.INFO)
+
+
+CSNLog = logging.getLogger('CSN')
+CSNLog.info('Logging Configured')

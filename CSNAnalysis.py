@@ -1,15 +1,14 @@
-from os.path import join
-from re import T
 from Bubble import Bubble, update_progress
 import simplejson as json
 import os
 import sys
 import csv
 import CSNSettings
+from CSNSettings import CSNLog
 from ExpansionTarget import FrameReset, ExpansionCandidates, InvasionAlert
 from discord import SyncWebhook
 from datetime import datetime
-from Overrides import CSNAttractions, CSNOverRideRead, CSNSchedule
+from Overrides import CSNOverRideRead, CSNSchedule
 from Overrides import CSNOverRideReadSafe
 from Overrides import CSNPatrolWrite
 from Overrides import CSNFleetCarrierRead
@@ -23,7 +22,7 @@ M_MININF = 40  # Minimum Inf before issueing a mission
 LOCAL_OVERRIDE = not CSNSettings.override_sheet
 
 def Misson_Gen(argv=''):
-
+    CSNLog.info('>>> Main Start '+','.join(argv))
     # print(argv)
     if "/?" in argv:
         print("Canonn System Numberwang:")
@@ -51,6 +50,7 @@ def Misson_Gen(argv=''):
     all_overrides = list
 
     if LOCAL_OVERRIDE:
+        CSNLog.info('Local Override')   
         # Local Overrides
         oridefile = f'data\\{factionnames[0]}Overrides.csv'
         if os.path.isfile(oridefile):
@@ -67,12 +67,14 @@ def Misson_Gen(argv=''):
         all_overrides = CSNOverRideRead()
 
     try:
+        CSNLog.info('Load Saved Message')   
         with open(f'data\\{factionnames[0]}Message.json', 'r') as io:
             oldmessage = json.load(io)
     except:
         oldmessage = []
         
     try:
+        CSNLog.info('Load Saved Invaders')   
         with open(f'data\\{factionnames[0]}Invaders.json', 'r') as io:
             invaders = json.load(io)
     except:
@@ -80,10 +82,11 @@ def Misson_Gen(argv=''):
 
     
     # Expansion Targets
-    if '/new' in argv or '/expansion' in argv: # Only worth processing once per day after the EDDB Data Dump at about 06:00
+    if '/new' in argv or '/expansion' in argv: # Only worth processing once per day 
         ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1],extenedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
         FrameReset() # EDDB Frame may be mangled, reset so Invasion Alert still works
     try:
+        CSNLog.info('Load Saved Expansion Targets')   
         with open(f'data\\{factionnames[0]}ExpansionTargets.json', 'r') as io:
             expansiontargets = json.load(io)
     except:
@@ -116,19 +119,20 @@ def Misson_Gen(argv=''):
     
 
     print(f'CSN Missions:')
+    CSNLog.info('Missions')   
 
     # Create a single Message for each faction system
     faction_systems = dict(filter(lambda x: x[1],faction_systems.items()))
     for i, key in enumerate(faction_systems):
         update_progress(i/len(faction_systems),key)
         sys = faction_systems[key]
+        CSNLog.info('Missions : '+sys['name'])   
         if sys:
             sys['factions'].sort(key = lambda x: x['influence'],reverse=True)
             factions =sys['factions']
             empire = sys['empire']
             happytext = empire['faction_details']['faction_presence']['happiness']
             happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' if happytext=='$faction_happinessband2;' else 'Discontent' if happytext=='$faction_happinessband3;' else '<SNAFU '+ happytext+'>'
-            #happy = 'Elated' if happytext=='$faction_happinessband1;' else 'Happy' # Forget about the "none" bug. SEP
             expandto = 'None Detected'
             for e in expansiontargets:
                 if e['name'] == sys['name']:
@@ -137,7 +141,6 @@ def Misson_Gen(argv=''):
                         expandto += ' (Extended)'
                     elif e['expansionType'][0] == 'I':
                         expandto += ' ('+e['expansionType']+')'
-            #print(f"{sys['name']} expanding to {expandto}")
 
             conflict = None
 
@@ -301,11 +304,12 @@ def Misson_Gen(argv=''):
 
     # All Canonn Systems Processed
     # Messages for External Systems
+    CSNLog.info('Missions : External')   
     for newmessage in all_overrides[1:]:
         if sum(faction_systems[x]["system_name"] == newmessage[0] for x in faction_systems) == 0:
-            #exsys = bubble.findsystem(ex[0])
             exsys = api.getsystem(newmessage[0])
             if exsys:
+                CSNLog.info('Missions : External : '+exsys['name'])   
                 message_inf = round(exsys['factions'][0]['influence'],1)
                 message_gap = round(exsys['factions'][0]['influence']-message_inf,1) 
                 message_conflict = ''
@@ -335,6 +339,7 @@ def Misson_Gen(argv=''):
 
     # Invasion Alert
     if '/new' in argv or '/invade' in argv: # Only worth processing once per day after the Data Dump 
+        CSNLog.info('Invasion Alert')   
         invaders = InvasionAlert(factionnames[0],live=True,lookahead=2)
 
     for sys in invaders:
@@ -356,6 +361,8 @@ def Misson_Gen(argv=''):
             #print('')
 
     # Lowest Gaps for PUSH message
+    CSNLog.info('Missions: PUSH Suggestions')   
+
     l = list(filter(lambda x: x not in CSNSettings.surrendered_systems and (faction_systems[x]['override'] in {'Addition','Natural'} or not hasmessage(
         messages, faction_systems[x]['system_name'])), faction_systems))
 
@@ -372,6 +379,7 @@ def Misson_Gen(argv=''):
     messages.sort()
 
     # Fleet Carrier Locations
+    CSNLog.info('Fleet Carriers')   
     carriers = CSNFleetCarrierRead()
     for carrier in carriers:
         currentsystem = None
@@ -405,6 +413,7 @@ def Misson_Gen(argv=''):
 
     # Write Orders various formats
     print('Saving Local Text...')
+    CSNLog.info('Save Messages and json')   
     with open(f'data\\{factionnames[0]}Patrol.Csv', 'w') as io:  # CSV for Humans
         io.writelines(f'System,X,Y,Z,Priority,Message\n')
         io.writelines(
@@ -423,7 +432,7 @@ def Misson_Gen(argv=''):
 
     # Discord Webhook
     print('Webhook...')
-
+    CSNLog.info('Webhook')   
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
         wh_text = ''
         wh_text_continued = ''
@@ -435,7 +444,7 @@ def Misson_Gen(argv=''):
                 wh_text_continued += f"{x[8]}{x[1]} : {x[7]}{'' if x[9] else dIcons['notfresh'] }\n"
 
         print(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)} + {len(wh_text_continued)}")
-        ## csnicon = '<:canonn:231835416548999168>'
+        CSNLog.info(f"Web Hook Text length is limited to 2000 chars : {len(wh_text)} + {len(wh_text_continued)}")   
         csnicon = '<:canonn:1020771055532511312>'
         if wh_text != '':
             wh.send(
@@ -450,7 +459,7 @@ def Misson_Gen(argv=''):
         patrol.append(x[1:9])
     if not('/safe' in argv):
         print('Google Patrol...')
-
+        CSNLog.info('Patrol to GoogleSheet')   
         CSNPatrolWrite(patrol)
 
     if '/new' in argv:
@@ -498,3 +507,4 @@ def availableactions(system,factionnames):
 
 if __name__ == '__main__':
     Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new", "/!invade"])
+    CSNLog.info('<<< End')   
