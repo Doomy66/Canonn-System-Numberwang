@@ -51,7 +51,7 @@ class SpanshBGS():
         ## Get Cache Data either from local cache or download a dump
         if (not os.path.exists(self._spanshcache)) or lastmoddt > cachedate:
             CSNLog.info('Spansh Powershell')   
-            p = subprocess.Popen('powershell.exe -ExecutionPolicy RemoteSigned -file "Spansh.ps1"', stdout=winsys.stdout)
+            p = subprocess.Popen('powershell.exe -ExecutionPolicy RemoteSigned -file "SpanshPopulated.ps1"', stdout=winsys.stdout)
             p.communicate()
 
             print('Tidy Dump for Cache...')
