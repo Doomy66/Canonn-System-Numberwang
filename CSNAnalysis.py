@@ -431,6 +431,7 @@ def Misson_Gen(argv=''):
     print('Webhook...')
     CSNLog.info('Webhook')   
     if CSNSettings.wh_id and len(list(filter(lambda x: x[0] < 11 or x[0] > 20, messagechanges))) > 0 :
+        CSNLog.info('Webhook')  
         wh_text = ''
         wh_text_continued = ''
         wh = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
@@ -449,6 +450,9 @@ def Misson_Gen(argv=''):
         if wh_text_continued != '':
             wh.send(
                 f'"...continued {csnicon} \n{wh_text_continued}')
+    else:
+        CSNLog.info('Webhook Not Required')  
+        
 
     # Patrol to send to Google
     patrol = []
@@ -460,7 +464,7 @@ def Misson_Gen(argv=''):
         CSNPatrolWrite(patrol)
 
     if '/new' in argv:
-        print('Google Attractions...')
+        print('Google Attractions <Not Implemented>...')
         #CSNAttractions(faction_systems)    ## TODO Check - It looked like it was causing a hang but could just be too long
     print('*** Missions Generated : Consuming {0} requests ***'.format(api.NREQ))
     if ('/wait') in argv:
