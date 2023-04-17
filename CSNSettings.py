@@ -23,6 +23,8 @@ ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar I
 surrendered_systems = ['A List of System Names'] 
 
 import logging
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR) # Else get spurious warnings
+
 logging.basicConfig(filename='data\CSNLog.log',
                     filemode='a',
                     format='%(asctime)s %(name)s %(levelname)s %(message)s',

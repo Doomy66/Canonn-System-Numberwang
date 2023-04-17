@@ -1,3 +1,5 @@
+## in Admin powershell do .. set-executionpolicy remotesigned 
+
 $folder = $Env:APPDATA+"\BGS"
 $gzfile   = $folder+"\galaxy_populated.json.gz"
 $spanshpopulated = "https://downloads.spansh.co.uk/galaxy_populated.json.gz"
