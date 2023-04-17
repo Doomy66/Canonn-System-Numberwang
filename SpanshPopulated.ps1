@@ -3,7 +3,7 @@
 $folder = $Env:APPDATA+"\BGS"
 $gzfile   = $folder+"\galaxy_populated.json.gz"
 $spanshpopulated = "https://downloads.spansh.co.uk/galaxy_populated.json.gz"
-
+# 1GB gzip = 7GB json
 Function DeGzip{
     Param(
         $infile,

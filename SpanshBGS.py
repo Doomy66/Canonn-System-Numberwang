@@ -80,7 +80,7 @@ class SpanshBGS():
                             self.systems.append(sys)
                         except:
                             print('Failed: '+fixedline[:80])
-
+            os.remove(self._spanshfileraw)                              ## Save 7GB of disk space
             with open(self._eddb_factions, 'rb') as io:
                 self.factions = pickle.load(io)
 
