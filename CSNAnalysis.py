@@ -22,6 +22,7 @@ M_MININF = 40  # Minimum Inf before issueing a mission
 LOCAL_OVERRIDE = not CSNSettings.override_sheet
 
 def Misson_Gen(argv=''):
+    CSNLog.info('')
     CSNLog.info('>>> Main Start '+','.join(argv))
     # print(argv)
     if "/?" in argv:
@@ -41,6 +42,7 @@ def Misson_Gen(argv=''):
         if schedule:
             argv += [f"/{schedule}"]
         else:
+            CSNLog.info('Nothing Scheduled')
             print('No Schedule')
             return None
 
@@ -349,8 +351,6 @@ def Misson_Gen(argv=''):
         x = sys.pop('stations','')
         x = sys.pop('ebgs','')
         x = sys.pop('controllingFaction','')
-
-
         
         if sys['controlling_minor_faction'] in sys['pf']: # Policy is we allow NPC to arrive so they fill the system and block PC factions
             messages.append(amessage(sys,10,f"{sys['controlling_minor_faction']} ({round(sys['influence'],1)}%) will {sys['invademessage']} {'to' if sys['invadetype'][0]=='E' else 'in'} {sys['invading']} within {sys['cycles']} cycles : {('Support Non-Native Factions in '+sys['invading']) if sys['invadetype'][0]=='I' else ''}",dIcons['data']))
@@ -505,5 +505,5 @@ def availableactions(system,factionnames):
     return " and ".join([", ".join(actions[:-1]),actions[-1]] if len(actions) > 2 else actions)
 
 if __name__ == '__main__':
-    Misson_Gen(sys.argv[1:] + ["/!expansion", "/!new", "/!invade"])
+    Misson_Gen(sys.argv[1:] + ["/!schedule", "/!expansion", "/!new", "/!invade"])
     CSNLog.info('<<< End')   
