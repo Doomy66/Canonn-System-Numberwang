@@ -40,6 +40,7 @@ def Misson_Gen(argv=''):
     if "/schedule" in argv:
         schedule = CSNSchedule()
         if schedule:
+            CSNLog.info('Scheduled :'+schedule)
             argv += [f"/{schedule}"]
         else:
             CSNLog.info('Nothing Scheduled')
