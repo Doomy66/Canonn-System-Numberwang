@@ -94,7 +94,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
     if len(sysInRange):
         bestpriority = 1000
         for target in sysInRange:
-            if target['name'] == 'DEBUG': ## DEBUG
+            if target['name'] == '!Waluk': ## DEBUG
                 print(f"{target['name']=}")
             # Default in case nothing is found
             target['sys_priority'] = 1000
@@ -167,7 +167,7 @@ def ExpansionFromSystem(system_name, show = False, avoided_systems = None, avoid
 
     return sysInRange
 
-def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=False,extenedphase=False):
+def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=False,extendedphase=False):
     global spansh
     print(f"Expansion Candidates for {faction}:")
     if not spansh:
@@ -177,10 +177,10 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70,live=Fa
     # candidates.sort(key=lambda x: -100*(x['factions'][0]['happiness_id'])+100*x['influence'], reverse=True) ## Happiness GONE
     candidates.sort(key=lambda x: 100*x['influence'], reverse=True)
     for counter, c in enumerate(candidates):
-        if c['name'] == 'DEBUG':
+        if c['name'] == 'Khun':
             print('debug')
         update_progress(counter/len(candidates),c['name'])
-        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked,live=live,extendedphase=extenedphase)
+        alltargets = ExpansionFromSystem(c['name'],avoid_additional=prebooked,live=live,extendedphase=extendedphase)
         if alltargets:
             c['expansion'] = alltargets[0].copy()
             ## TODO ## Conflict check for source system - Not really worth it while Happiness is so broken
