@@ -98,7 +98,8 @@ class SpanshBGS():
     
 
     def savecache(self):
-        print('Saving Dump Cache...')
+        print('Saving Spanch Cache...')
+        CSNLog.info('Saving Spanch  Cache...')
 
         os.makedirs(self._data_dir, exist_ok=True)
         with open(self._spanshcache, 'wb') as io:

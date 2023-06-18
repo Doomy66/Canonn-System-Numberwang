@@ -40,7 +40,7 @@ def Misson_Gen(argv=''):
     if "/schedule" in argv:
         schedule = CSNSchedule()
         if schedule:
-            CSNLog.info('Scheduled :'+schedule)
+            CSNLog.info(f"Scheduled : /{schedule}")
             argv += [f"/{schedule}"]
         else:
             CSNLog.info('Nothing Scheduled')
@@ -86,7 +86,7 @@ def Misson_Gen(argv=''):
     
     # Expansion Targets
     if '/new' in argv or '/expansion' in argv: # Only worth processing once per day 
-        ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1],extenedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
+        ExpansionCandidates(factionnames[0],inflevel=60,live=True,prebooked=list(faction_systems)[-1],extendedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
         FrameReset() # Frame may be mangled, reset so Invasion Alert still works
     try:
         CSNLog.info('Load Saved Expansion Targets')   
@@ -140,7 +140,10 @@ def Misson_Gen(argv=''):
                 if e['name'] == sys['name']:
                     expandto = e['target']
                     if e['expansionType'] == 'Expansion (Extended)':
-                        expandto += ' (Extended)'
+                        if CSNSettings.extendedphase:
+                            expandto += ' (Extended)'
+                        else:
+                            expandto = 'None without Extended Expansion'
                     elif e['expansionType'][0] == 'I':
                         expandto += ' ('+e['expansionType']+')'
 
@@ -158,7 +161,7 @@ def Misson_Gen(argv=''):
             system_overrides = list(filter(lambda x: x[0] == sys["system_name"], all_overrides))
             faction_systems[key]['override'] = system_overrides[0][4] if system_overrides else 'Natural'
 
-            if sys['name'] == 'debug':
+            if sys['name'] == '11 Cephei':
                 print(f'Debug')
 
             # Single Message per sysme for Patrol
@@ -310,13 +313,15 @@ def Misson_Gen(argv=''):
             if exsys:
                 CSNLog.info('Missions : External : '+exsys['name'])   
                 message_inf = round(exsys['factions'][0]['influence'],1)
-                message_gap = round(exsys['factions'][0]['influence']-message_inf,1) 
+                message_gap = round(message_inf - exsys['factions'][1]['influence'],1) if len(exsys['factions']) > 1 else 0
                 message_conflict = ''
 
                 # Look for another faction mentioned in the override
                 for f in exsys['factions']:
-                    if f['name'] in newmessage[2]: #and f['name'] != exsys['controlling_minor_faction_cased']: ## Not sure what that limitation was for, but was preventing reporting of Conflict of Controlling Faction
-                        message_faction = f['name']
+                    if f['name'] in newmessage[2]: 
+                        if exsys['name'] == '11 Cephei':
+                            print(f'Debug')
+
                         message_inf = round(f['influence'],1)
                         message_gap = round(exsys['factions'][0]['influence']-message_inf,1) 
 
