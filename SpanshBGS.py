@@ -69,7 +69,7 @@ class SpanshBGS():
                             if 'factions' not in sys.keys():            ## Thargoid Controled
                                 sys['factions'] = list()
                             for station in sys['stations'].copy():      ## Remove buggers the index and it skips one without it being a copy
-                                if station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
+                                if 'controllingFaction' not in station.keys() or station['controllingFaction'] == 'FleetCarrier' or station['type']=='Mega ship':
                                     sys['stations'].remove(station)     ## Kill non-staions
                             for station in sys['stations']:             ## Iterate the real (not a copy) list
                                     x = station.pop('market','')        
