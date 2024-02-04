@@ -15,6 +15,7 @@ from Overrides import CSNFleetCarrierRead
 import Bubble
 import api
 
+
 # Settings
 
 M_INFGAP = 15  # Minimum difference in Inf before issueing a mission
