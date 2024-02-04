@@ -66,7 +66,7 @@ def GetSystemsFromEDDB(Faction: str) -> list[System]:
 
 
 if __name__ == '__main__':
-    # get Native status from EDDB Archived JSON !!
+    # get Active and Pending States into Faction Presemce !!
     FullBubble = Bubble(GetSystemsFromEDDB('Canonn'))
     myFactionName = 'Canonn'
     mySystemName = 'Khun'
