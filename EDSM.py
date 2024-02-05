@@ -6,7 +6,10 @@ import gzip
 from DataClasses import Presence, System, Bubble
 
 
-def GetSystemsFromEDDB(Faction: str) -> list[System]:
+def GetSystemsFromEDSM(Faction: str) -> list[System]:
+    """ Reads latest daily download of populated systems from EDSM and creates a list of System Objects \n
+        If a Faction is supplied, the list is cut down to that Faction and others withing 30ly Cube    
+    """
     EDSMPOPULATED = "https://www.edsm.net/dump/systemsPopulated.json.gz"
     edsmcache = os.environ.get('APPDATA')+"\BGS\EDSMPopulated.json"
     cachedate: datetime.datetime = datetime.datetime.strptime(
@@ -49,7 +52,7 @@ def GetSystemsFromEDDB(Faction: str) -> list[System]:
             for rf in rs['factions']:
                 if rf['influence'] > 0:
                     f = Presence(rf['id'], rf['name'], allegiance=rf['allegiance'], government=rf['government'],
-                                 influence=round(100*rf['influence'], 2), state=rf['state'], happiness=rf['happiness'], isPlayer=rf['isPlayer'], isNative=s.name in rf['name'])
+                                 influence=round(100*rf['influence'], 2), state=rf['state'], happiness=rf['happiness'], isPlayer=rf['isPlayer'])
                     s.addfaction(f)
 
         systemlist.append(s)
@@ -67,7 +70,7 @@ def GetSystemsFromEDDB(Faction: str) -> list[System]:
 
 if __name__ == '__main__':
     # get Active and Pending States into Faction Presemce !!
-    FullBubble = Bubble(GetSystemsFromEDDB('Canonn'))
+    FullBubble = Bubble(GetSystemsFromEDSM('Canonn'))
     myFactionName = 'Canonn'
     mySystemName = 'Khun'
     mySystem: System = FullBubble.getsystem(mySystemName)
