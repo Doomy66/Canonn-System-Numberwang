@@ -5,6 +5,12 @@ from EDDBFactions import HomeSystem
 
 
 @dataclass
+class State:
+    state: str
+    active: bool
+
+
+@dataclass
 class Presence:
     """ Contains A Factions Influence and States in a System"""
     id: int
@@ -16,15 +22,14 @@ class Presence:
     happiness: str = ''
     isPlayer: bool = False
     isNative: bool = False  # Calculated by System.addsystem
-    # activestates:list =[]
-    # recoveringStates:list = []
-    # pendingStates:list = []
+    states: list = field(default_factory=list[State])
 
 
 @dataclass
 class System:
     """ Contains information about a System and its Factions"""
-    """ Has some duplicated static methods for calculating before it is added to a Bubble"""
+    """ Has some duplicated static methods from Bubble for work before it is added to a Bubble"""
+    source: str  # Source of Data
     id: int
     id64: int
     name: str
@@ -75,30 +80,9 @@ class System:
 
 @dataclass
 class Bubble:
-    """ Contains a list of the Sytems. Also loads the EDDB Faction Archive and applies to the systems on creation
-        Create your list of sysems from a Factory of your choice """
+    """ Contains a list of the Sytems. 
+        Create your list of Sysems from a Factory of your choice """
     systems: list = field(default_factory=list[System])
-
-    # def __post_init__(self):
-    #     print('Loading EDDB Factions Archive...')
-    #     # Use archived EDDF Factions Data as its the best reliable source for Faction Presence's Native Status
-    #     try:
-    #         eddbf = self.LoadEDDBFactions()
-    #         # Factions with the System name in them are already defaulted to be native
-    #         for f in filter(lambda x: x['home_system_id'] and (x['home_system'] not in x['name']), eddbf):
-    #             s = self.getsystem(f['home_system'])
-    #             if s:  # System may not be in the list of systems for many valid reasons
-    #                 for fp in s.factions:
-    #                     if fp.name == f['name']:
-    #                         fp.isNative = True
-    #     except:
-    #         print(f"EDDB Factions Archive not Loaded !")
-
-    # @staticmethod
-    # def LoadEDDBFactions(location: str = 'EDDBFactions.pickle') -> dict:
-    #     with open(location, 'rb') as io:
-    #         eddbf = pickle.load(io)
-    #     return eddbf
 
     def getsystem(self, name: str) -> System:
         """ Returns a System object from it's name """
