@@ -4,8 +4,8 @@ _EDDBFACTIONS = {}
 
 
 def HomeSystem(factionname: str) -> str:
-    global _EDDBFACTIONS
     """ Returns the Home System (lower) on factionname"""
+    global _EDDBFACTIONS
 
     def LoadEDDBFactions(location: str = 'EDDBFactions.pickle') -> None:
         """ Loads Pickle, default to same folder loaction"""

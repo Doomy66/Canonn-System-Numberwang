@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from math import sqrt
-import pickle
 from EDDBFactions import HomeSystem
 
 
@@ -26,6 +25,22 @@ class Presence:
 
 
 @dataclass
+class ExpansionTarget():
+    """ Details of an Expansion Target """
+    systemname: str
+    score: float = 0
+    extended: bool = False
+    description: str = ''
+    faction: Presence = None
+
+    def __str__(self) -> str:
+        ans = f"{self.systemname} : {'Extended ' if self.extended else ''}{self.description}"
+        if self.description == 'Invasion':
+            ans = f"{ans} of {self.faction.name} ({self.faction.influence:.2f})"
+        return ans
+
+
+@dataclass
 class System:
     """ Contains information about a System and its Factions"""
     """ Has some duplicated static methods from Bubble for work before it is added to a Bubble"""
@@ -44,6 +59,8 @@ class System:
     population: int = 0
     controllingFaction: str = ''
     factions: list = field(default_factory=list[Presence])
+    # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class
+    expansion_targets: list = field(default_factory=list[ExpansionTarget])
 
     @staticmethod
     def distance(a: "System", b: "System") -> float:

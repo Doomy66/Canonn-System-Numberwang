@@ -3,12 +3,12 @@ import datetime
 import json
 import requests
 import gzip
-from DataClasses import Presence, System, Bubble, State
+from DataClassesBase import Presence, System, Bubble, State
 
 
-def GetSystemsFromEDSM(Faction: str) -> list[System]:
+def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
     """ Reads latest daily download of populated systems from EDSM and creates a list of System Objects \n
-        If a Faction is supplied, the list is cut down to that Faction and others withing 30ly Cube    
+        If a Faction is supplied, the list is cut down to that Faction and others withing range ly Cube
     """
     edsmcache = os.environ.get('APPDATA')+"\CSN_EDSMPopulated.json"
 
@@ -73,12 +73,12 @@ def GetSystemsFromEDSM(Faction: str) -> list[System]:
 
         systemlist.append(s)
 
-    # Reduce List to Empire and Systems within 30ly
+    # Reduce List to Empire and Systems within 60ly
     if Faction:
         empire = list(
             filter(lambda x: x.isfactionpresent(Faction), systemlist))
         systemlist = list(filter(lambda x: min(
-            map(lambda e: e.cube_distance(x, e), empire)) < 30, systemlist))
+            map(lambda e: e.cube_distance(x, e), empire)) < 60, systemlist))
     print(f'EDSM Converted to include {len(systemlist)} systems')
 
     return systemlist
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     mySystem: System = FullBubble.getsystem(mySystemName)
 
     print('System :', mySystem.name)
-    mylist = FullBubble.cube_systems(mySystem, range=30,
+    mylist = FullBubble.cube_systems(mySystem, range=range,
                                      exclude_presense=myFactionName)
     print(
         f"Targets Via Bubble [{len(mylist)}] {', '.join(x.name for x in mylist)}")
