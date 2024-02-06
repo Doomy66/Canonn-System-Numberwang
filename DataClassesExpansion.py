@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from DataClassesBase import Bubble, System, ExpansionTarget
+from DataClassesBase import Bubble, System, ExpansionTarget, Presence
 
 
 # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class
@@ -14,6 +14,7 @@ class BubbleExpansion(Bubble):
     def __post_init__(self):
         # Calculate Simple Expansion for all Systems
         print('Calculating Expansion Targets...')
+        system: System
         for system in self.systems:
             system.expansion_targets = self.ExpandFromSystem(system)
 
@@ -37,6 +38,7 @@ class BubbleExpansion(Bubble):
 
             else:
                 # Possible Invasion
+                current_faction: Presence
                 for current_faction in target_system.factions:
                     # Must NOT be a Native or Controlling Faction
                     if not (current_faction.isNative or current_faction.name == target_system.controllingFaction):

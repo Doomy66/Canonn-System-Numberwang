@@ -16,7 +16,8 @@ if __name__ == '__main__':
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
     mySystem: System = myBubble.getsystem(mySystemName)
-    targets: list[ExpansionTarget] = []
+    targets: list[ExpansionTarget]
+    source_system: System
 
     # List Faction's all likely Expansions
     print(f"List {myFactionName}'s all likely Expansions")

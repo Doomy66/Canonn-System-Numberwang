@@ -72,20 +72,21 @@ class System:
         """ Maximum Axis Difference between 2 systems """
         return (max(abs(a.x-b.x), abs(a.y-b.y), abs(a.z-b.z)))
 
-    def addfaction(self, f: Presence) -> None:
+    def addfaction(self, faction: Presence) -> None:
         """ Add or Upate Faction Presense to a System"""
 
         # Calculate Native Status
-        if self.name in f.name:
-            f.isNative = True
+        if self.name in faction.name:
+            faction.isNative = True
         else:
-            f.isNative = self.name.lower() == HomeSystem(f.name)
+            faction.isNative = self.name.lower() == HomeSystem(faction.name)
 
-        for i, x in enumerate(self.factions):
-            if x.name == f.name:
-                self.factions[i] = f
+        f: Presence
+        for i, f in enumerate(self.factions):
+            if f.name == faction.name:
+                self.factions[i] = faction
                 return
-        self.factions.append(f)
+        self.factions.append(faction)
         self.factions = sorted(
             self.factions, key=lambda x: x.influence, reverse=True)
 
