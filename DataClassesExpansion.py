@@ -13,6 +13,7 @@ class BubbleExpansion(Bubble):
 
     def __post_init__(self):
         # Calculate Simple Expansion for all Systems
+        print('Calculating Expansion Targets...')
         for system in self.systems:
             system.expansion_targets = self.ExpandFromSystem(system)
 

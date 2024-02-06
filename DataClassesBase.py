@@ -86,6 +86,8 @@ class System:
                 self.factions[i] = f
                 return
         self.factions.append(f)
+        self.factions = sorted(
+            self.factions, key=lambda x: x.influence, reverse=True)
 
     def isfactionpresent(self, name: str) -> bool:
         """ Is a faction present in System """
