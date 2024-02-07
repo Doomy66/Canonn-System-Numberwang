@@ -88,20 +88,20 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
 if __name__ == '__main__':
     # Some Tests and Examples
     myFactionName = os.environ.get('myfaction')
-    FullBubble = Bubble(GetSystemsFromEDSM(myFactionName))
+    myBubble = Bubble(GetSystemsFromEDSM(myFactionName))
 
     mySystemName = 'Khun'
-    mySystem: System = FullBubble.getsystem(mySystemName)
+    mySystem: System = myBubble.getsystem(mySystemName)
     print('System :', mySystem.name)
 
-    mylist = FullBubble.cube_systems(mySystem, exclude_presense=myFactionName)
+    systems = myBubble.cube_systems(mySystem, exclude_presense=myFactionName)
     print(
-        f"Targets for {mySystemName} Via Bubble [{len(mylist)}] {', '.join(x.name for x in mylist)}")
+        f"Targets for {mySystemName} Via Bubble [{len(systems)}] {', '.join(x.name for x in systems)}")
 
-    mylist = FullBubble.faction_presence(myFactionName)
+    systems = myBubble.faction_presence(myFactionName)
     print(
-        f"Faction Presence via Bubble for {myFactionName} [{len(mylist)}] : {', '.join(x.name for x in mylist)}")
+        f"Faction Presence via Bubble for {myFactionName} [{len(systems)}] : {', '.join(x.name for x in systems)}")
 
     print(f"Faction Native Status in Varati")
-    for f in FullBubble.getsystem('Varati').factions:
+    for f in myBubble.getsystem('Varati').factions:
         print(f" {f.name} - {f.isNative}")

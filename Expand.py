@@ -8,12 +8,12 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
     """ Debugging Print of Targets"""
     print(f"{system_name}")
     for t in targets[:length]:
-        print(f"  {t} [{t.score:.3f}]")
+        print(f"  {t.systemname} : {t} [{t.score:.3f}]")
 
 
 if __name__ == '__main__':
     myFactionName = CSNSettings.myfaction
-    mySystemName = 'Yi Trica'
+    mySystemName = 'Parinta'
     myBubble: BubbleExpansion = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
@@ -30,9 +30,9 @@ if __name__ == '__main__':
                 xPrintTargets(source_system.name, targets)
 
     # Simple is calculated in Post Init
-    print(f"\nSimple is calculated in Post Init")
+    print(f"\nSimple is calculated in Post Init unless the .env says otherwise")
     if mySystem.expansion_targets:
-        xPrintTargets('Stored   '+mySystemName, mySystem.expansion_targets)
+        xPrintTargets('Default  '+mySystemName, mySystem.expansion_targets)
 
     # Need to recalculate to check for Extended
     print(f"Need to recalculate to check for Extended")

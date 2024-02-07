@@ -34,9 +34,9 @@ class ExpansionTarget():
     faction: Presence = None
 
     def __str__(self) -> str:
-        ans = f"{self.systemname} : {'Extended ' if self.extended else ''}{self.description}"
+        ans = f"{'Extended ' if self.extended else ''}{self.description}"
         if self.description == 'Invasion':
-            ans = f"{ans} of {self.faction.name} ({self.faction.influence:.2f})"
+            ans = f"{ans} of {self.faction.name} ({self.faction.influence:.2f}%)"
         return ans
 
 
@@ -96,6 +96,13 @@ class System:
             if f.name == name:
                 return True
         return False
+
+    @property
+    def nextexpansion(self) -> ExpansionTarget:
+        """ The next expected Expansion """
+        if self.expansion_targets:
+            return self.expansion_targets[0]
+        return None
 
 
 @dataclass

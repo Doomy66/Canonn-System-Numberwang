@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from DataClassesBase import Bubble, System, ExpansionTarget, Presence
-import os
 import CSNSettings
+import simplejson as json
 
 
 # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class
@@ -20,6 +20,7 @@ class BubbleExpansion(Bubble):
         for system in self.systems:
             system.expansion_targets = self.ExpandFromSystem(
                 system, extended=(system.controllingFaction == CSNSettings.myfaction and CSNSettings.extendedphase))
+        self.savetojson()
 
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
         targets: list[ExpansionTarget] = []
@@ -55,3 +56,10 @@ class BubbleExpansion(Bubble):
         if targets:
             targets = sorted(targets, key=lambda x: x.score)
         return targets
+
+    def savetojson(self) -> None:
+        allexpansions = list({'name': s.name, 'target': s.nextexpansion.systemname, 'expansionType': str(s.nextexpansion)}
+                             for s in self.systems if s.controllingFaction == CSNSettings.myfaction and s.nextexpansion)
+
+        with open(f'data\\{CSNSettings.myfaction}EDSMExpansionTargets.json', 'w') as io:  # Dump to file
+            json.dump(allexpansions, io, indent=4)
