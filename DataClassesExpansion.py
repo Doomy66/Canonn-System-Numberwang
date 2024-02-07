@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from DataClassesBase import Bubble, System, ExpansionTarget, Presence
+import os
+import CSNSettings
 
 
 # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class
@@ -12,11 +14,12 @@ class BubbleExpansion(Bubble):
     EXTENDEDRANGE: float = 30
 
     def __post_init__(self):
-        # Calculate Simple Expansion for all Systems
+        # Calculate Simple Expansion for all Systems, or Extended as specified in .env
         print('Calculating Expansion Targets...')
         system: System
         for system in self.systems:
-            system.expansion_targets = self.ExpandFromSystem(system)
+            system.expansion_targets = self.ExpandFromSystem(
+                system, extended=(system.controllingFaction == CSNSettings.myfaction and CSNSettings.extendedphase))
 
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
         targets: list[ExpansionTarget] = []

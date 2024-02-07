@@ -4,6 +4,7 @@ import json
 import requests
 import gzip
 from DataClassesBase import Presence, System, Bubble, State
+# from dotenv import load_dotenv
 
 
 def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
@@ -85,16 +86,17 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
 
 
 if __name__ == '__main__':
-    FullBubble = Bubble(GetSystemsFromEDSM('Canonn'))
-    myFactionName = 'Canonn'
+    # Some Tests and Examples
+    myFactionName = os.environ.get('myfaction')
+    FullBubble = Bubble(GetSystemsFromEDSM(myFactionName))
+
     mySystemName = 'Khun'
     mySystem: System = FullBubble.getsystem(mySystemName)
-
     print('System :', mySystem.name)
-    mylist = FullBubble.cube_systems(mySystem, range=range,
-                                     exclude_presense=myFactionName)
+
+    mylist = FullBubble.cube_systems(mySystem, exclude_presense=myFactionName)
     print(
-        f"Targets Via Bubble [{len(mylist)}] {', '.join(x.name for x in mylist)}")
+        f"Targets for {mySystemName} Via Bubble [{len(mylist)}] {', '.join(x.name for x in mylist)}")
 
     mylist = FullBubble.faction_presence(myFactionName)
     print(

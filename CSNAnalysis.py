@@ -51,13 +51,13 @@ def Misson_Gen(argv=''):
 
     bubble = Bubble.Bubble()
     faction_systems = bubble.localspace
-    factionnames = bubble.factionnames
+    mainfaction = bubble.mainfaction
     all_overrides = list
 
     if LOCAL_OVERRIDE:
         CSNLog.info('Local Override')
         # Local Overrides
-        oridefile = f'data\\{factionnames[0]}Overrides.csv'
+        oridefile = f'data\\{mainfaction}Overrides.csv'
         if os.path.isfile(oridefile):
             with open(oridefile, newline='') as io:
                 reader = csv.reader(io, delimiter='\t')
@@ -73,26 +73,26 @@ def Misson_Gen(argv=''):
 
     try:
         CSNLog.info('Load Saved Message')
-        with open(f'data\\{factionnames[0]}Message.json', 'r') as io:
+        with open(f'data\\{mainfaction}Message.json', 'r') as io:
             oldmessage = json.load(io)
     except:
         oldmessage = []
 
     try:
         CSNLog.info('Load Saved Invaders')
-        with open(f'data\\{factionnames[0]}Invaders.json', 'r') as io:
+        with open(f'data\\{mainfaction}Invaders.json', 'r') as io:
             invaders = json.load(io)
     except:
         invaders = []
 
     # Expansion Targets
     if '/new' in argv or '/expansion' in argv:  # Only worth processing once per day
-        ExpansionCandidates(factionnames[0], inflevel=60, live=True, prebooked=list(
+        ExpansionCandidates(mainfaction, inflevel=60, live=True, prebooked=list(
             faction_systems)[-1], extendedphase=CSNSettings.extendedphase)  # Will save results as a json for loading
         FrameReset()  # Frame may be mangled, reset so Invasion Alert still works
     try:
         CSNLog.info('Load Saved Expansion Targets')
-        with open(f'data\\{factionnames[0]}ExpansionTargets.json', 'r') as io:
+        with open(f'data\\{mainfaction}ExpansionTargets.json', 'r') as io:
             expansiontargets = json.load(io)
     except:
         expansiontargets = []
@@ -212,14 +212,14 @@ def Misson_Gen(argv=''):
 
                 if (not conflict) and faction_systems[key]['override'] in {'Addition', 'Natural'} and sys['name'] not in CSNSettings.surrendered_systems:
                     # Not yet in control
-                    if factions[0]['name'] not in factionnames:
+                    if factions[0]['name'] != mainfaction:
                         messages.append(
-                            amessage(sys, 3, f'Urgent: {sys["empire"]["name"]} {availableactions(faction_systems[key],factionnames)} to gain system control (gap {gapfromtop:4.3}%)', dIcons['push']))
+                            amessage(sys, 3, f'Urgent: {sys["empire"]["name"]} {availableactions(faction_systems[key],mainfaction)} to gain system control (gap {gapfromtop:4.3}%)', dIcons['push']))
                         faction_systems[key]['override'] = 'Done'
                     # Gap to 2nd place is low
                     elif gap < M_INFGAP:
                         messages.append(
-                            amessage(sys, 4, f'Required: {sys["empire"]["name"]} {availableactions(faction_systems[key],factionnames)} ({factions[1]["name"]} is threatening, gap is only {gap:4.3}%)', dIcons['infgap']))
+                            amessage(sys, 4, f'Required: {sys["empire"]["name"]} {availableactions(faction_systems[key],mainfaction)} ({factions[1]["name"]} is threatening, gap is only {gap:4.3}%)', dIcons['infgap']))
                         faction_systems[key]['override'] = 'Done'
 
                 # DCOH Threat
@@ -345,7 +345,7 @@ def Misson_Gen(argv=''):
     # Invasion Alert
     if '/new' in argv or '/invade' in argv:  # Only worth processing once per day after the Data Dump
         CSNLog.info('Invasion Alert')
-        invaders = InvasionAlert(factionnames[0], live=True, lookahead=2)
+        invaders = InvasionAlert(mainfaction, live=True, lookahead=2)
 
     for sys in invaders:
         sys["system_name"] = sys["name"]
@@ -379,7 +379,7 @@ def Misson_Gen(argv=''):
         # At a 35% Gap, it becomes spam
         if (sys["factions"][0]["influence"]-sys["factions"][1]["influence"]) < 35:
             messages.append(
-                amessage(sys, 5, f'Suggestion: {sys["empire"]["name"]} {availableactions(sys,factionnames)} (gap to {sys["factions"][1]["name"]} is {(sys["factions"][0]["influence"]-sys["factions"][1]["influence"]):4.3}%)', dIcons['mininf']))
+                amessage(sys, 5, f'Suggestion: {sys["empire"]["name"]} {availableactions(sys,mainfaction)} (gap to {sys["factions"][1]["name"]} is {(sys["factions"][0]["influence"]-sys["factions"][1]["influence"]):4.3}%)', dIcons['mininf']))
 
     messages.sort()
 
@@ -422,24 +422,24 @@ def Misson_Gen(argv=''):
     # Write Orders various formats
     print('Saving Local Text...')
     CSNLog.info('Save Messages and json')
-    with open(f'data\\{factionnames[0]}Patrol.Csv', 'w') as io:  # CSV for Humans
+    with open(f'data\\{mainfaction}Patrol.Csv', 'w') as io:  # CSV for Humans
         io.writelines(f'System,X,Y,Z,Priority,Message\n')
         io.writelines(
             f'{x[1]},{x[2]},{x[3]},{x[4]},{x[5]},{x[7]}\n' for x in messages)
     # Text Version for Discord
-    with open(f'data\\{factionnames[0]}DiscordPatrol.txt', 'w') as io:
+    with open(f'data\\{mainfaction}DiscordPatrol.txt', 'w') as io:
         io.writelines(f'Canonn System Numberwang\n')
         io.writelines(f'{x[8]}{x[1]} : {x[7]}\n' for x in filter(
             lambda x: x[0] <= 10 or (x[0] > 20 and x[0] <= 30), messages))
     # Webhook Text Version for Discord
-    with open(f'data\\{factionnames[0]}DiscordWebhook.txt', 'w') as io:
+    with open(f'data\\{mainfaction}DiscordWebhook.txt', 'w') as io:
         io.writelines(f'{x[8]}{x[1]} : {x[7]}\n' for x in filter(
             lambda x: x[0] < 11 or (x[0] > 20 and x[0] <= 30), messagechanges))
     # Dump to file for comparison next run
-    with open(f'data\\{factionnames[0]}Message.json', 'w') as io:
+    with open(f'data\\{mainfaction}Message.json', 'w') as io:
         json.dump(messages, io, indent=4)
     # Dump to file for comparison next run
-    with open(f'data\\{factionnames[0]}Invaders.json', 'w') as io:
+    with open(f'data\\{mainfaction}Invaders.json', 'w') as io:
         json.dump(invaders, io, indent=4)
 
     # Discord Webhook
@@ -509,14 +509,14 @@ def amessage(sys, p, message, icon='', empire=''):
             return ([p, sys["system_name"], sys["coords"]["x"], sys["coords"]["y"], sys["coords"]["z"], 0, sys["empire"]["name"] if empire == '' and 'empire' in sys.keys() else empire, message, icon, True])
 
 
-def availableactions(system, factionnames):
+def availableactions(system, factionname):
     '''
     Returns a text of available actions for the faction in that system which can be retricted if you dont own stations with the correct services
     '''
     stations = system['stations']
     slist = list()
     for station in stations:
-        if station['controlling_minor_faction_cased'] in factionnames:
+        if station['controlling_minor_faction_cased'] == factionname:
             slist += list(x['name'] for x in station['services'])
 
     actions = ['Missions', 'Bounties']

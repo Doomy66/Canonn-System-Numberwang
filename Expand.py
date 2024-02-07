@@ -1,5 +1,7 @@
 from DataClassesExpansion import BubbleExpansion, ExpansionTarget, System
 from EDSM import GetSystemsFromEDSM
+import os
+import CSNSettings
 
 
 def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
@@ -10,7 +12,7 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
 
 
 if __name__ == '__main__':
-    myFactionName = 'Canonn'
+    myFactionName = CSNSettings.myfaction
     mySystemName = 'Yi Trica'
     myBubble: BubbleExpansion = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
@@ -38,15 +40,15 @@ if __name__ == '__main__':
     if targets:
         xPrintTargets('Extended ' + mySystemName, targets, length=5)
 
-    # Look for Simple Invasions of Player Factions into our Systems
-    print(
-        f"\nLook for Simple Invasions of Player Factions into {myFactionName} Systems")
-    for source_system in myBubble.systems:
-        if source_system.factions and source_system.factions[0].influence > 60 and source_system.factions[0].isPlayer:
-            targets = source_system.expansion_targets
-            if targets:
-                for t in targets[:3]:  # Only look at the top 3 targets
-                    if myBubble.getsystem(t.systemname).isfactionpresent(myFactionName):
-                        xPrintTargets(
-                            f"{source_system.name} ({source_system.factions[0].influence:.2f}) : {source_system.controllingFaction}", targets, length=3)
-                        break
+    # # Look for Simple Invasions of Player Factions into our Systems
+    # print(
+    #     f"\nLook for Simple Invasions of Player Factions into {myFactionName} Systems")
+    # for source_system in myBubble.systems:
+    #     if source_system.factions and source_system.factions[0].influence > 60 and source_system.factions[0].isPlayer:
+    #         targets = source_system.expansion_targets
+    #         if targets:
+    #             for t in targets[:3]:  # Only look at the top 3 targets
+    #                 if myBubble.getsystem(t.systemname).isfactionpresent(myFactionName):
+    #                     xPrintTargets(
+    #                         f"{source_system.name} ({source_system.factions[0].influence:.2f}) : {source_system.controllingFaction}", targets, length=3)
+    #                     break

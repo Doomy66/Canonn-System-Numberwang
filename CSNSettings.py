@@ -1,30 +1,28 @@
-try:
-    import Keys_Canonn as keys # This file only available to authorised CSN Developers
-except:
-    import Keys_Client as keys # Populate this file with your settings
+import logging
+import os
 
+# Canonn Discord
+wh_id = os.environ.get('wh_id')
+wh_token = os.environ.get('wh_token')
 
-#Canonn Discord
-wh_id = keys.wh_id
-wh_token = keys.wh_token
+# Canonn Google Sheet
+override_workbook = os.environ.get('override_workbook')
+override_sheet = os.environ.get('override_sheet')
 
-#Canonn Google Sheet
-override_workbook = keys.override_workbook
-override_sheet = keys.override_sheet
-
-factionnames = keys.factionnames
-extendedphase = keys.extendedphase
+# Faction Settings
+myfaction = os.environ.get('myfaction')
+extendedphase: bool = os.environ.get(
+    'extendedphase')[:1].upper() in ['Y', 'T']
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
-ignorepf = ['The Digiel Aggregate','Eternal Sunrise Association','Interstellar Incorporated','Lagrange Interstellar','FDMA Security Service', 'Wings Of Justice', "Marquis du Ma'a"]
+ignorepf = os.environ.get('ignorepf').split(",")
 
 # No orders to boost inf for system control etc. Leave it to the system owner.
-surrendered_systems = ['A List of System Names'] 
+surrendered_systems = ['A List of System Names']
 
 
-import os
-import logging
-logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR) # Else get spurious warnings
+logging.getLogger('googleapiclient.discovery_cache').setLevel(
+    logging.ERROR)  # Else get spurious warnings
 
 logging.basicConfig(filename='data\CSNLog.'+os.environ['COMPUTERNAME']+'.log',
                     filemode='a',
