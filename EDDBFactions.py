@@ -1,28 +1,37 @@
 import pickle
+from dataclasses import dataclass
 
-_EDDBHOME = {}
-_EDDPLAYER = {}
+
+@dataclass
+class fdetails:
+    """ Faction Details from the deceased EDDB data. EDDB is the best (only) known source of homesystem for player and special unique Factions """
+    homesystem: str = '<Unknown>'
+    isPlayer: bool = False
+
+
+# GLOBAL
+EDDBFACTIONS = {}
 
 
 def HomeSystem(factionname: str) -> str:
-    """ Returns the Home System (lower) on factionname"""
-    global _EDDBHOME
-    if not _EDDBHOME:
+    """ Returns the Home System (lowercase) on factionname"""
+    global EDDBFACTIONS
+    if not EDDBFACTIONS:
         LoadEDDBFactions()
-    return _EDDBHOME[factionname.lower()] if factionname.lower() in _EDDBHOME.keys() else '<Unkown>'
+    return EDDBFACTIONS.get(factionname.lower(), fdetails()).homesystem
 
 
 def isPlayer(factionname: str) -> bool:
-    """ Returns the Home System (lower) on factionname"""
-    global _EDDPLAYER
-    if not _EDDPLAYER:
+    """ Returns True if the factionname is a Player Created Faction """
+    global EDDBFACTIONS
+    if not EDDBFACTIONS:
         LoadEDDBFactions()
-    return _EDDPLAYER[factionname.lower()] if factionname.lower() in _EDDPLAYER.keys() else False
+    return EDDBFACTIONS.get(factionname.lower(), fdetails()).isPlayer
 
 
 def LoadEDDBFactions(location: str = 'EDDBFactions.pickle') -> None:
     """ Loads Pickle, default to same folder loaction"""
-    global _EDDBHOME, _EDDPLAYER
+    global EDDBFACTIONS
     eddbf: list = []
     print("EDDB Loading Faction Archive...")
     try:
@@ -32,11 +41,9 @@ def LoadEDDBFactions(location: str = 'EDDBFactions.pickle') -> None:
         pass
 
     for f in eddbf:
-        if 'home_system' in f.keys():
-            _EDDBHOME[f['name'].lower()] = f['home_system'].lower()
-        if 'is_player_faction' in f.keys():
-            _EDDPLAYER[f['name'].lower()] = f['is_player_faction']
+        EDDBFACTIONS[f['name'].lower()] = fdetails(
+            f.get('home_system'.lower(), '<Unknown>'), f.get('is_player_faction', False))
 
-    if not _EDDBHOME:
+    if not eddbf:
         print('EDDBFactions.pickle not loaded')
-        _EDDBHOME = {'None': 'EDDBFactions.pickle not loaded'}
+        EDDBFACTIONS = {'None': fdetails()}

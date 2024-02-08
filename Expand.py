@@ -56,6 +56,7 @@ if __name__ == '__main__':
 
     # Update System with live EliteBGS data
     # TODO Conflict status available ?
+    # TODO DateTime for cache control
     print('\nCache', mySystem)
     mySystem = LiveSystemDetails(mySystem)
     print('Live', mySystem)
