@@ -13,7 +13,7 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
     """
     edsmcache = os.environ.get('APPDATA')+"\CSN_EDSMPopulated.json"
 
-    def RefreshCache(edsmcache):
+    def RefreshCache(edsmcache) -> datetime:
         """ Checks Dates of Cache and API Data and downloads if required """
         EDSMPOPULATED = "https://www.edsm.net/dump/systemsPopulated.json.gz"
         cachedate: datetime.datetime = datetime.datetime.strptime(
@@ -41,6 +41,7 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
                     f.write(json.dumps(resp).encode('utf-8'))
         except:
             print(f"EDSM Offline !")
+        return lastmoddt
 
     def LoadCache(edsmcache) -> list:
         print('EDSM Loading...')
@@ -48,7 +49,7 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
             raw = json.loads(f.read().decode('utf-8'))
         return raw
 
-    RefreshCache(edsmcache)
+    lastmoddt = RefreshCache(edsmcache)
     raw = LoadCache(edsmcache)
 
     print('EDSM Converting to DataClass...')
@@ -56,9 +57,9 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
 
     systemlist: list(System) = []
     for rs in raw:
-        s = System('EDSM', rs['id'], rs['id64'], rs['name'],
-                   rs['coords']['x'], rs['coords']['y'], rs['coords']['z'], rs['allegiance'], rs['government'], rs[
-                       'state'], rs['economy'], rs['security'], rs['population'], rs['controllingFaction']['name']
+        s = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
+                   x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], allegiance=rs['allegiance'], government=rs['government'], economy=rs[
+                       'economy'], security=rs['security'], population=rs['population'], controllingFaction=rs['controllingFaction']['name'], updated=lastmoddt
                    )
         # Add Faction Presences
         if 'factions' in rs.keys():

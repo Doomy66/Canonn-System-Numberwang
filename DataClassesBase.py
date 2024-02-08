@@ -8,9 +8,13 @@ from datetime import datetime
 class State:
     state: str
     active: bool
+    opponent: str = ''
+    atstake: str = ''
+    dayswon: int = 0
+    dayslost: int = 0
 
     def __str__(self) -> str:
-        return self.state
+        return f"{self.state}" + ((f"{'' if self.active else ' Pending'} with {self.opponent} {self.dayswon} v {self.dayslost}") if self.opponent and 'war' in self.state.lower() else '')
 
 
 @dataclass
@@ -49,7 +53,7 @@ class Presence:
     source: str = ''
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.influence}%) {'Player' if self.isPlayer else ''} {'' if self.isNative else 'Non Native'} {'/'.join(x.state for x in self.states)}"
+        return f"{self.name} ({self.influence}%) {'Player ' if self.isPlayer else ''}{'' if self.isNative else 'Non Native' }{'/'.join(str(x) for x in self.states)}"
 
 
 @dataclass
@@ -91,6 +95,7 @@ class System:
     # stations: list = field(default_factory=list[Station])
     # Only Pouplated in BubbleExpansion Sub-Class
     expansion_targets: list = field(default_factory=list[ExpansionTarget])
+    updated: datetime = datetime.now()
 
     def __str__(self) -> str:
         ans = f"{self.name} : {self.controllingFaction} ({self.influence}%)"

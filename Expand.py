@@ -14,7 +14,7 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
 if __name__ == '__main__':
     # Tests and Examples of use
     myFactionName = CSNSettings.myfaction
-    mySystemName = 'Khun'
+    mySystemName = 'HR 6421'
     myBubble: BubbleExpansion = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
@@ -55,8 +55,6 @@ if __name__ == '__main__':
     #                     break
 
     # Update System with live EliteBGS data
-    # TODO Conflict status available ?
-    # TODO DateTime for cache control
     print('\nCache', mySystem)
-    mySystem = LiveSystemDetails(mySystem)
+    mySystem = LiveSystemDetails(mySystem, forced=True)
     print('Live', mySystem)
