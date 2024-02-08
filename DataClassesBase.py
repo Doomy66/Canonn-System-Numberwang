@@ -9,6 +9,9 @@ class State:
     state: str
     active: bool
 
+    def __str__(self) -> str:
+        return self.state
+
 
 @dataclass
 class Station:
@@ -39,11 +42,14 @@ class Presence:
     allegiance: str = ''
     government: str = ''
     influence: float = 0
-    state: str = ''
     happiness: str = ''
     isPlayer: bool = False
-    isNative: bool = False  # Calculated by System.addsystem
+    isNative: bool = False  # Calculated by System.addsystem - Too slow to be a property
     states: list = field(default_factory=list[State])
+    source: str = ''
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.influence}%) {'Player' if self.isPlayer else ''} {'' if self.isNative else 'Non Native'} {'/'.join(x.state for x in self.states)}"
 
 
 @dataclass
@@ -86,6 +92,12 @@ class System:
     # Only Pouplated in BubbleExpansion Sub-Class
     expansion_targets: list = field(default_factory=list[ExpansionTarget])
 
+    def __str__(self) -> str:
+        ans = f"{self.name} : {self.controllingFaction} ({self.influence}%)"
+        for faction in self.factions:
+            ans += f"\n    {faction}"
+        return ans
+
     @staticmethod
     def distance(a: "System", b: "System") -> float:
         """ Direct Straight Line Distance between 2 systems """
@@ -99,6 +111,7 @@ class System:
     def addfaction(self, faction: Presence) -> None:
         """ Add or Upate Faction Presense to a System"""
 
+        faction.source = self.source
         # Calculate Native Status
         if self.name in faction.name:
             faction.isNative = True

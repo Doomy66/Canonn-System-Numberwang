@@ -5,10 +5,9 @@ import requests
 import gzip
 from DataClassesBase import Presence, System, Bubble, State
 import CSNSettings
-# from dotenv import load_dotenv
 
 
-def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
+def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
     """ Reads latest daily download of populated systems from EDSM and creates a list of System Objects \n
         If a Faction is supplied, the list is cut down to that Faction and others withing range ly Cube
     """
@@ -57,11 +56,6 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
 
     systemlist: list(System) = []
     for rs in raw:
-        # if rs['name'] == 'Varati':
-        #     with open('data\EDSMExample.json', "w") as f:
-        #         f.write(json.dumps(rs, indent=4))
-
-        # Basic System Data
         s = System('EDSM', rs['id'], rs['id64'], rs['name'],
                    rs['coords']['x'], rs['coords']['y'], rs['coords']['z'], rs['allegiance'], rs['government'], rs[
                        'state'], rs['economy'], rs['security'], rs['population'], rs['controllingFaction']['name']
@@ -71,7 +65,7 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
             for rf in rs['factions']:
                 if rf['influence'] > 0:
                     f = Presence(rf['id'], rf['name'], allegiance=rf['allegiance'], government=rf['government'],
-                                 influence=round(100*rf['influence'], 2), state=rf['state'], happiness=rf['happiness'], isPlayer=rf['isPlayer'])
+                                 influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=rf['isPlayer'])
                     # Add States of Faction. NB States have very little information in EDSM
                     if 'activeStates' in rf.keys():
                         for rstate in rf['activeStates']:
@@ -83,12 +77,12 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
 
         systemlist.append(s)
 
-    # Reduce List to Empire and Systems within 60ly
+    # Reduce List to Empire and Systems within range (40 covers simple invasions, use 60 for extended)
     if Faction:
         empire = list(
             filter(lambda x: x.isfactionpresent(Faction), systemlist))
         systemlist = list(filter(lambda x: min(
-            map(lambda e: e.cube_distance(x, e), empire)) < 60, systemlist))
+            map(lambda e: e.cube_distance(x, e), empire)) <= range, systemlist))
     print(f'EDSM Converted to include {len(systemlist)} systems')
 
     return systemlist
