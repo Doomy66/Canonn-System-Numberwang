@@ -1,12 +1,34 @@
 from dataclasses import dataclass, field
 from math import sqrt
 from EDDBFactions import HomeSystem
+from datetime import datetime
 
 
 @dataclass
 class State:
     state: str
     active: bool
+
+
+@dataclass
+class Station:
+    """ Station, Base, Fleet Carrier etc"""
+    """ NOT YET IMPLEMENTED """
+    id: int
+    type: str
+    name: str
+    faction: str = ''
+    systemname: str = ''  # denormalised
+    # distance: float = 0
+    # body: str = ''
+    # allegiance: str = ''
+    # government: str = ''
+    # economy1: str = ''
+    # economy2: str = ''
+    # marketid: int
+    # hasshipyard: bool = False
+    # hasoutfitting: bool = False
+    # services: list = field(default_factory=list[str])
 
 
 @dataclass
@@ -58,8 +80,10 @@ class System:
     security: str = ''
     population: int = 0
     controllingFaction: str = ''
+    influence = 0
     factions: list = field(default_factory=list[Presence])
-    # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class
+    # stations: list = field(default_factory=list[Station])
+    # Only Pouplated in BubbleExpansion Sub-Class
     expansion_targets: list = field(default_factory=list[ExpansionTarget])
 
     @staticmethod
@@ -103,6 +127,10 @@ class System:
         if self.expansion_targets:
             return self.expansion_targets[0]
         return None
+
+    @property
+    def influence(self) -> float:
+        return self.factions[0].influence if self.factions else 0
 
 
 @dataclass

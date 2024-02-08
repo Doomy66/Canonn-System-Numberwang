@@ -12,6 +12,7 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
 
 
 if __name__ == '__main__':
+    # Tests and Examples of use
     myFactionName = CSNSettings.myfaction
     mySystemName = 'Parinta'
     myBubble: BubbleExpansion = BubbleExpansion(
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     if targets:
         xPrintTargets('Extended ' + mySystemName, targets, length=5)
 
-    # # Look for Simple Invasions of Player Factions into our Systems
+        # # Look for Simple Invasions of Player Factions into our Systems
     # print(
     #     f"\nLook for Simple Invasions of Player Factions into {myFactionName} Systems")
     # for source_system in myBubble.systems:

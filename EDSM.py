@@ -4,6 +4,7 @@ import json
 import requests
 import gzip
 from DataClassesBase import Presence, System, Bubble, State
+import CSNSettings
 # from dotenv import load_dotenv
 
 
@@ -32,6 +33,8 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
             # Needs to download fresh data
             if lastmoddt > cachedate:
                 print('EDSM Downloading...')
+                CSNSettings.CSNLog.info('EDSM Downloading...')
+
                 resp = requests.get(EDSMPOPULATED).content
                 resp = json.loads(gzip.decompress(resp))
                 print('EDSM Save Raw...')
@@ -50,8 +53,14 @@ def GetSystemsFromEDSM(Faction: str, range=30) -> list[System]:
     raw = LoadCache(edsmcache)
 
     print('EDSM Converting to DataClass...')
+    CSNSettings.CSNLog.info('EDSM Converting to DataClass...')
+
     systemlist: list(System) = []
     for rs in raw:
+        # if rs['name'] == 'Varati':
+        #     with open('data\EDSMExample.json', "w") as f:
+        #         f.write(json.dumps(rs, indent=4))
+
         # Basic System Data
         s = System('EDSM', rs['id'], rs['id64'], rs['name'],
                    rs['coords']['x'], rs['coords']['y'], rs['coords']['z'], rs['allegiance'], rs['government'], rs[

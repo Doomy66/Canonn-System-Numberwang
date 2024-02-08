@@ -1,5 +1,8 @@
 import logging
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Canonn Discord
 wh_id = os.environ.get('wh_id')
@@ -16,6 +19,7 @@ extendedphase: bool = os.environ.get(
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 ignorepf = os.environ.get('ignorepf').split(",")
+invasionparanoialevel = float(os.environ.get('invasionparanoialevel'))
 
 # No orders to boost inf for system control etc. Leave it to the system owner.
 surrendered_systems = ['A List of System Names']
@@ -31,4 +35,4 @@ logging.basicConfig(filename='data\CSNLog.'+os.environ['COMPUTERNAME']+'.log',
 
 
 CSNLog = logging.getLogger('CSN')
-CSNLog.info('Logging Configured')
+CSNLog.info(f'Logging Configured for {myfaction}')
