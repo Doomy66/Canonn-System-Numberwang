@@ -15,7 +15,20 @@ class State:
     dayslost: int = 0
 
     def __str__(self) -> str:
-        return f"{self.state}" + ((f"{'' if self.active == 'A' else ' Pending' if self.active == 'A' else ' Recovering'} with {self.opponent} {self.dayswon} v {self.dayslost}") if self.opponent and 'war' in self.state.lower() else '')
+        ans: str = f"{self.state}" + \
+            f"{'Active' if self.active == 'A' else ' Pending' if self.active == 'P' else ' Recovering'}"
+        if self.opponent and 'war' in self.state.lower():
+            if self.active == 'R':
+                if self.dayswon > self.dayslost:
+                    ans += f" Won {self.gain}"
+                elif self.dayswon < self.dayslost:
+                    ans += f" Lost {self.atstake}"
+                else:
+                    ans += ' Drawn'
+            else:
+                ans += f" with {self.opponent} {self.dayswon} v {self.dayslost}"
+
+        return ans
 
 
 @dataclass
