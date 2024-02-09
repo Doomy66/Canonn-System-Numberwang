@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from DataClassesBase import Bubble, System, ExpansionTarget, Presence
 import CSNSettings
 import simplejson as json
+from EliteBGS import LiveSystemDetails
 
 
 # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class

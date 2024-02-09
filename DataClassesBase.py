@@ -6,15 +6,16 @@ from datetime import datetime
 
 @dataclass
 class State:
-    state: str
-    active: bool
+    state: str  # NB can vary depending on source e.g 'Civil war' and 'Civilwar'
+    active: str = 'A'  # Active, Pending or Recovering
     opponent: str = ''
     atstake: str = ''
+    gain: str = ''
     dayswon: int = 0
     dayslost: int = 0
 
     def __str__(self) -> str:
-        return f"{self.state}" + ((f"{'' if self.active else ' Pending'} with {self.opponent} {self.dayswon} v {self.dayslost}") if self.opponent and 'war' in self.state.lower() else '')
+        return f"{self.state}" + ((f"{'' if self.active == 'A' else ' Pending' if self.active == 'A' else ' Recovering'} with {self.opponent} {self.dayswon} v {self.dayslost}") if self.opponent and 'war' in self.state.lower() else '')
 
 
 @dataclass

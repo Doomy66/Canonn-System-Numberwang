@@ -24,6 +24,13 @@ invasionparanoialevel = float(os.environ.get('invasionparanoialevel'))
 # No orders to boost inf for system control etc. Leave it to the system owner.
 surrendered_systems = ['A List of System Names']
 
+# Global Variables to count Requests
+myGlobals = {'nRequests': 0}
+
+
+def RequestCount() -> None:
+    myGlobals['nRequests'] += 1
+
 
 logging.getLogger('googleapiclient.discovery_cache').setLevel(
     logging.ERROR)  # Else get spurious warnings

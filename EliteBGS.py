@@ -1,9 +1,10 @@
 import requests
 import json
 from datetime import datetime
-from CSNSettings import CSNLog
-from DataClassesBase import System, Presence, State
+from CSNSettings import CSNLog, RequestCount
+from DataClassesBase import Bubble, System, Presence, State
 from EDDBFactions import isPlayer
+
 
 _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
 
@@ -27,6 +28,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
         payload = {'name': system.name, 'factionDetails': 'true'}
         resp = requests.get(url, params=payload)
         myload = json.loads(resp._content)["docs"][0]
+        RequestCount()
     except:
         CSNLog.info(
             f'Failed to find system "{system.name if system else "None"}"')
@@ -53,10 +55,13 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                                   influence=round(100*fp['influence'], 2))
             myPresence.isPlayer = isPlayer(myPresence.name)
             for state in fp['pending_states']:
-                myState = State(state[state].title(), False)
+                myState = State(state[state].title(), active='P')
                 myPresence.states.append(myState)
             for state in fp['active_states']:
-                myState = State(state['state'].title(), True)
+                myState = State(state['state'].title(), active='A')
+                myPresence.states.append(myState)
+            for state in fp['recovering_states']:
+                myState = State(state['state'].title(), active='R')
                 myPresence.states.append(myState)
 
             if myPresence.influence > 0:
@@ -73,6 +78,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                             state.atstake = f1['stake']
                             state.dayswon = f1['days_won']
                             state.dayslost = f2['days_won']
+                            state.gain = f2['stake']
                 if faction.name == f2['name']:
                     state: State
                     for state in faction.states:
@@ -81,6 +87,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                             state.atstake = f2['stake']
                             state.dayswon = f2['days_won']
                             state.dayslost = f1['days_won']
+                            state.gain = f1['stake']
 
         # Remove Fations that have left since previous data
         system.factions = list(
@@ -88,3 +95,43 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
 
     # NREQ += 1
     return system
+
+
+def EliteBGSFactionSystems(faction: str, page: int = 1) -> list:
+    """
+    Retrieve list of systems with faction present.
+    """
+    answer = list()
+    url = f"{_ELITEBGSURL}factions"
+    payload = {'name': faction, 'minimal': 'false',
+               'systemDetails': 'false', 'page': page}
+    try:
+        resp = requests.get(url, params=payload)
+        content = json.loads(resp._content)
+        myload = content["docs"][0]['faction_presence']
+        RequestCount()
+        for sys in myload:
+            # TODO Look through states to see if faction in conflict Pending,Active or Result
+            factionhasconflict = sys.get('conflicts', None)
+            answer.append(
+                (sys['system_name'], EliteBGSDateTime(sys['updated_at']), factionhasconflict))
+    except:
+        CSNLog.info(f'Failed to find systems for faction "{faction}"')
+        print(f'!Failed to find systems for faction "{faction}"')
+        myload = None
+        content = None
+    if content.get('hasNextPage', None):  # More Pages so recurse
+        answer += EliteBGSFactionSystems(faction, content['nextPage'])
+
+    return answer
+
+
+def RefreshFaction(bubble: Bubble, faction: str) -> None:
+    """ Gets EBGS data for any systems with stale data or a conflict"""
+    print(f"EBGS Refreshing systems for {faction}..")
+    systems = EliteBGSFactionSystems(faction=faction)
+    for sys_name, updated, inconflict in systems:
+        system = bubble.getsystem(sys_name)
+        if system.updated < updated or inconflict:
+            print(f" {sys_name, updated, system.updated}")
+            system = LiveSystemDetails(system)

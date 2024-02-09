@@ -68,17 +68,18 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
                     f = Presence(rf['id'], rf['name'], allegiance=rf['allegiance'], government=rf['government'],
                                  influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=rf['isPlayer'])
                     # Add States of Faction. NB States have very little information in EDSM
-                    if 'activeStates' in rf.keys():
-                        for rstate in rf['activeStates']:
-                            f.states.append(State(rstate['state'], True))
-                    if 'pendingStates' in rf.keys():
-                        for rstate in rf['pendingStates']:
-                            f.states.append(State(rstate['state'], False))
+                    for rstate in rf.get('activeStates', []):
+                        f.states.append(State(rstate['state'], active='A'))
+                    for rstate in rf.get('pendingStates', []):
+                        f.states.append(State(rstate['state'], active='P'))
+                    for rstate in rf.get('recoveringStates'):
+                        f.states.append(State(rstate['state'], active='R'))
+
                     s.addfaction(f)
 
         systemlist.append(s)
 
-    # Reduce List to Empire and Systems within range (40 covers simple invasions, use 60 for extended)
+    # Reduce List to Empire and Systems within range (40 covers simple invasions, use 60 for extended invasions)
     if Faction:
         empire = list(
             filter(lambda x: x.isfactionpresent(Faction), systemlist))
