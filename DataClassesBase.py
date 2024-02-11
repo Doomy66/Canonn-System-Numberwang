@@ -7,7 +7,7 @@ from datetime import datetime
 @dataclass
 class State:
     state: str  # NB can vary depending on source e.g 'Civil war' and 'Civilwar'
-    active: str = 'A'  # Active, Pending or Recovering
+    phase: str = 'A'  # Active, Pending or Recovering
     opponent: str = ''
     atstake: str = ''
     gain: str = ''
@@ -16,9 +16,9 @@ class State:
 
     def __str__(self) -> str:
         ans: str = f"{self.state}" + \
-            f"{'Active' if self.active == 'A' else ' Pending' if self.active == 'P' else ' Recovering'}"
-        if self.opponent and 'war' in self.state.lower():
-            if self.active == 'R':
+            f"{'' if self.phase == 'A' else ' Pending' if self.phase == 'P' else ' Recovering'}"
+        if self.opponent and self.isConflict:
+            if self.phase == 'R':
                 if self.dayswon > self.dayslost:
                     ans += f" Won {self.gain}"
                 elif self.dayswon < self.dayslost:
@@ -26,9 +26,13 @@ class State:
                 else:
                     ans += ' Drawn'
             else:
-                ans += f" with {self.opponent} {self.dayswon} v {self.dayslost}"
+                ans += f" with {self.opponent} ({self.dayswon} v {self.dayslost})"
 
         return ans
+
+    @property
+    def isConflict(self) -> bool:
+        return ('war' in self.state.lower() or 'election' in self.state.lower())
 
 
 @dataclass

@@ -55,7 +55,7 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
     print('EDSM Converting to DataClass...')
     CSNSettings.CSNLog.info('EDSM Converting to DataClass...')
 
-    systemlist: list(System) = []
+    systemlist: list[System] = []
     for rs in raw:
         s = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
                    x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], allegiance=rs['allegiance'], government=rs['government'], economy=rs[
@@ -69,11 +69,11 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
                                  influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=rf['isPlayer'])
                     # Add States of Faction. NB States have very little information in EDSM
                     for rstate in rf.get('activeStates', []):
-                        f.states.append(State(rstate['state'], active='A'))
+                        f.states.append(State(rstate['state'], phase='A'))
                     for rstate in rf.get('pendingStates', []):
-                        f.states.append(State(rstate['state'], active='P'))
+                        f.states.append(State(rstate['state'], phase='P'))
                     for rstate in rf.get('recoveringStates'):
-                        f.states.append(State(rstate['state'], active='R'))
+                        f.states.append(State(rstate['state'], phase='R'))
 
                     s.addfaction(f)
 
@@ -83,8 +83,11 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
     if Faction:
         empire = list(
             filter(lambda x: x.isfactionpresent(Faction), systemlist))
-        systemlist = list(filter(lambda x: min(
-            map(lambda e: e.cube_distance(x, e), empire)) <= range, systemlist))
+        if empire:
+            systemlist = list(filter(lambda x: min(
+                map(lambda e: e.cube_distance(x, e), empire)) <= range, systemlist))
+        else:
+            print('! Faction Not Found, you have the whole bubble !')
     print(f'EDSM Converted to include {len(systemlist)} systems')
 
     return systemlist

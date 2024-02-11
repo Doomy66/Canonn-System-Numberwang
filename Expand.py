@@ -1,8 +1,13 @@
+from dataclasses import dataclass
 from DataClassesExpansion import BubbleExpansion
 from DataClassesBase import Presence, System, ExpansionTarget, State
 from EDSM import GetSystemsFromEDSM
 import CSNSettings
 from EliteBGS import LiveSystemDetails, RefreshFaction
+
+from Overrides import CSNOverRideRead
+import simplejson as json
+import pickle
 
 
 def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
@@ -12,18 +17,35 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
         print(f"  {t.systemname} : {t} [{t.score:.3f}]")
 
 
+@dataclass
+class Message:
+    """ CSN Message """
+    systemname: str
+    priority: int
+    text: str
+    emoji: str = ''
+    override: str = ''
+
+    print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")
+
+
 if __name__ == '__main__':
-    # Tests and Examples of use
-    myFactionName = CSNSettings.myfaction
-    mySystemName = 'Salarhul'
-    myBubble: BubbleExpansion = BubbleExpansion(
-        GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
-    myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
-    mySystem: System = myBubble.getsystem(mySystemName)
-    targets: list[ExpansionTarget]
-    source_system: System
+    """ 
+        Tests and Examples of use
+        Most of the Expansion Calculations are done automatically as part of the Creation of the BubbleExpansion object
+        If LIVE values are required, then update relevant systems with live EBGS data and run Expansion check again.
+    """
+
+    # myFactionName = CSNSettings.myfaction
+    # mySystemName = 'Parinta'
+    # myBubble: BubbleExpansion = BubbleExpansion(
+    #     GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
+    # myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
+    # mySystem: System = myBubble.getsystem(mySystemName)
 
     # # List Faction's all likely Expansions
+    # targets: list[ExpansionTarget]
+    # source_system: System
     # print(f"List {myFactionName}'s all likely Expansions")
     # for source_system in myBubble.systems:
     #     if source_system.controllingFaction == myFactionName and source_system.factions[0].influence > 70:
@@ -56,9 +78,9 @@ if __name__ == '__main__':
     #                     break
 
     # # Update System with live EliteBGS data
-    print('\nCache', mySystem)
-    mySystem = LiveSystemDetails(mySystem, forced=True)
-    print('Live', mySystem)
+    # print('\nCache', mySystem)
+    # mySystem = LiveSystemDetails(mySystem, forced=True)
+    # print('Live', mySystem)
 
     # # Update a Factions Systems
     # RefreshFaction(myBubble, myFactionName)

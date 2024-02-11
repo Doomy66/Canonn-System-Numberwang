@@ -15,20 +15,28 @@ class BubbleExpansion(Bubble):
     EXTENDEDRANGE: float = 30
 
     def __post_init__(self):
-        # Calculate Simple Expansion for all Systems, or Extended as specified in .env
+        self._ExpandAll()
+
+    def _ExpandAll(self) -> None:
+        """ Calculate Simple Expansion for all Systems, or Extended as specified in .env """
         print('Calculating Expansion Targets...')
         CSNSettings.CSNLog.info('Calculating Expansion Targets...')
         system: System
         for system in self.systems:
+            # print('.', end='')
             system.expansion_targets = self.ExpandFromSystem(
-                system, extended=(system.controllingFaction == CSNSettings.myfaction and CSNSettings.extendedphase))
+                system, extended=(system.controllingFaction and system.controllingFaction == CSNSettings.myfaction and CSNSettings.extendedphase))
         self.saveExpansionJson()
         self.saveInvasionJson()
+        print('')
 
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
+        """ Calculate all expansion targets for a system"""
         targets: list[ExpansionTarget] = []
         for target_system in self.cube_systems(source_system, exclude_presense=source_system.controllingFaction):
             target_distance: float = source_system.distance(
+                source_system, target_system)
+            target_cube_distance: float = source_system.cube_distance(
                 source_system, target_system)
             if len(target_system.factions) > 7:
                 # Too many factions to invade
@@ -37,7 +45,7 @@ class BubbleExpansion(Bubble):
                 # Expansion into a spare slot
                 expansion = ExpansionTarget(
                     target_system.name, description='Expansion', score=target_distance/100)
-                if target_distance <= self.SIMPLERANGE:
+                if target_cube_distance <= self.SIMPLERANGE:
                     targets.append(expansion)
                 elif extended:
                     expansion.extended = True
@@ -51,7 +59,7 @@ class BubbleExpansion(Bubble):
                     if not (current_faction.isNative or current_faction.name == target_system.controllingFaction):
                         expansion = ExpansionTarget(
                             target_system.name, description='Invasion', faction=current_faction, score=current_faction.influence)
-                        if target_distance <= self.SIMPLERANGE:
+                        if target_cube_distance <= self.SIMPLERANGE:
                             targets.append(expansion)
                         elif extended:
                             expansion.extended = True

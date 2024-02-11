@@ -54,14 +54,15 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                                   allegiance=fd['allegiance'].title(), government=fd['government'].title(),
                                   influence=round(100*fp['influence'], 2))
             myPresence.isPlayer = isPlayer(myPresence.name)
+
             for state in fp['pending_states']:
-                myState = State(state[state].title(), active='P')
+                myState = State(state['state'].title(), phase='P')
                 myPresence.states.append(myState)
             for state in fp['active_states']:
-                myState = State(state['state'].title(), active='A')
+                myState = State(state['state'].title(), phase='A')
                 myPresence.states.append(myState)
             for state in fp['recovering_states']:
-                myState = State(state['state'].title(), active='R')
+                myState = State(state['state'].title(), phase='R')
                 myPresence.states.append(myState)
 
             if myPresence.influence > 0:
@@ -73,7 +74,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                 if faction.name == f1['name']:
                     state: State
                     for state in faction.states:
-                        if 'war' in state.state.lower():
+                        if state.isConflict:
                             state.opponent = f2['name']
                             state.atstake = f1['stake']
                             state.dayswon = f1['days_won']
@@ -82,7 +83,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                 if faction.name == f2['name']:
                     state: State
                     for state in faction.states:
-                        if 'war' in state.state.lower():
+                        if state.isConflict:
                             state.opponent = f1['name']
                             state.atstake = f2['stake']
                             state.dayswon = f2['days_won']
