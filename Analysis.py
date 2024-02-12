@@ -70,40 +70,44 @@ def Main(live=True):
     bubble = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))
 
-    # Load Overrides into Messages from Google
-    messages: list[Message] = list(Message(systemname=x[0], priority=x[1], text=x[2],
-                                           emoji=x[3], override=x[4]) for x in CSNOverRideRead()[1:])
-
     # Process Each System
     systems = bubble.faction_presence(myFactionName)
     system: System
     faction: Presence
 
     if live:
-        # TODO Recalc Expansions
         RefreshFaction(bubble, myFactionName)
+        # TODO Recalc Expansions
+
+    # Load Overrides into Messages from Google
+    messages: list[Message] = list(Message(systemname=x[0], priority=x[1], text=x[2],
+                                           emoji=x[3], override=x[4]) for x in CSNOverRideRead()[1:])
+    # Replace f strings in Overrirdes
+    for message in (_ for _ in messages if ('{' in _.text)):
+        system = bubble.getsystem(message.systemname)
+        myPresence: Presence = next(
+            (_ for _ in system.factions if _.name == myFactionName), None)
+        gap: float = system.influence - \
+            (system.factions[1].influence if len(system.factions) > 1 else 0)
+        gapfromtop: float = system.influence - myPresence.influence if myPresence else 0
+        expandto: str = str(
+            system.nextexpansion) if system.nextexpansion else 'None Detected'
+
+        for faction in system.factions:
+            if faction.name != myFactionName and faction.name in message.text:
+                message = ExpandMessage(message,
+                                        expandto=expandto, inf=faction.inf, gap=abs(faction.influence-myPresence.influence), happy='<?>', gapfromtop=system.influence-faction.influence)
+        else:
+            message = ExpandMessage(
+                message, expandto=expandto, inf=system.influence, gap=gap, happy='<?>', gapfromtop=gapfromtop)
 
     for system in systems:
         # Precalculations
-        expandto: str = str(
-            system.nextexpansion) if system.nextexpansion else 'None Detected'
-        happy: str = 'WorkingForTheMan'  # TODO !!
-        inf: float = system.influence
         gap: float = system.influence - \
             (system.factions[1].influence if len(system.factions) > 1 else 0)
         myPresence: Presence = next(
             (_ for _ in system.factions if _.name == myFactionName), None)
         gapfromtop: float = system.influence - myPresence.influence if myPresence else 0
-
-        # Replace f strings in Overrirdes for this system
-        for message in (_ for _ in messages if _.systemname == system.name and ('{' in _.text)):
-            for faction in system.factions:
-                if faction.name != myFactionName and faction.name in message.text:
-                    message = ExpandMessage(message,
-                                            expandto='No Idea', inf=faction.inf, gap=abs(faction.influence-myPresence.influence), happy=happy, gapfromtop=system.influence-faction.influence)
-            else:
-                message = ExpandMessage(message,
-                                        expandto=expandto, inf=inf, gap=gap, happy=happy, gapfromtop=gapfromtop)
 
         # Standard System Message
 

@@ -112,7 +112,6 @@ def EliteBGSFactionSystems(faction: str, page: int = 1) -> list:
         myload = content["docs"][0]['faction_presence']
         RequestCount()
         for sys in myload:
-            # TODO Look through states to see if faction in conflict Pending,Active or Result
             factionhasconflict = sys.get('conflicts', None)
             answer.append(
                 (sys['system_name'], EliteBGSDateTime(sys['updated_at']), factionhasconflict))
@@ -135,4 +134,4 @@ def RefreshFaction(bubble: Bubble, faction: str) -> None:
         system = bubble.getsystem(sys_name)
         if system.updated < updated or inconflict:
             print(f" {sys_name, updated, system.updated}")
-            system = LiveSystemDetails(system)
+            system = LiveSystemDetails(system, inconflict)
