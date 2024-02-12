@@ -87,9 +87,10 @@ def Main(live=True):
         system = bubble.getsystem(message.systemname)
         myPresence: Presence = next(
             (_ for _ in system.factions if _.name == myFactionName), None)
-        gap: float = system.influence - \
-            (system.factions[1].influence if len(system.factions) > 1 else 0)
-        gapfromtop: float = system.influence - myPresence.influence if myPresence else 0
+        gap: float = round(
+            system.influence - (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
+        gapfromtop: float = round(
+            system.influence - myPresence.influence if myPresence else 0, 2)
         expandto: str = str(
             system.nextexpansion) if system.nextexpansion else 'None Detected'
 
@@ -103,14 +104,14 @@ def Main(live=True):
 
     for system in systems:
         # Precalculations
-        gap: float = system.influence - \
-            (system.factions[1].influence if len(system.factions) > 1 else 0)
+        gap: float = round(system.influence -
+                           (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
         myPresence: Presence = next(
             (_ for _ in system.factions if _.name == myFactionName), None)
-        gapfromtop: float = system.influence - myPresence.influence if myPresence else 0
+        gapfromtop: float = round(
+            system.influence - myPresence.influence if myPresence else 0, 2)
 
         # Standard System Message
-
         # TODO Additional Flavour Messages (Some may go AFTER Override Check)
         # Aged
         # Tritium Refinary Low Price Active/Pending
