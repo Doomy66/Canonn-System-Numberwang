@@ -131,11 +131,8 @@ def Main(live=True):
             for message in messages[:]:
                 if (message.systemname == system.name) and (message.override == 'Peacetime'):
                     messages.remove(message)
-
-            # messages = list(
-            #     filter(lambda message: ((message.systemname == system.name) and (message.override != 'Peacetime')), messages))
             myMessage: Message = Message(
-                system.name, 2, f"{str(conflictstate)}")
+                system.name, 2, f"{str(conflictstate)}", dIcons[conflictstate.state.replace(' ', '').lower()])
             messages.append(myMessage)
             if conflictstate.phase:
                 continue
@@ -179,7 +176,9 @@ def Main(live=True):
     # TODO Discourd Update
     # TODO Patrol
     for message in messages:
-        print(f"{message.systemname:<30} - {message.priority:<2} - {message.text}")
+        if message.priority != 20:
+            print(
+                f"{message.systemname:<30} - {message.priority:<2} - {message.text:<80} {message.emoji}")
 
     # Save Messages for Update Comparison
     with open(f'data\\{myFactionName}CSNMessages.pickle', 'wb') as io:
