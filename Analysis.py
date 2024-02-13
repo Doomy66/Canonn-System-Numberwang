@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from DataClassesExpansion import BubbleExpansion
-from DataClassesBase import Presence, System, ExpansionTarget, State
-from EDSM import GetSystemsFromEDSM
-from EliteBGS import RefreshFaction
+from classes.BubbleExpansion import BubbleExpansion
+from classes.Presense import Presence
+from classes.System import System
+from classes.State import State
+from providers.EDSM import GetSystemsFromEDSM
+from providers.EliteBGS import RefreshFaction
 import CSNSettings
 
 from Overrides import CSNOverRideRead
