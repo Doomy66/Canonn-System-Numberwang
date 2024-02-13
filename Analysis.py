@@ -1,11 +1,10 @@
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from DataClassesExpansion import BubbleExpansion
 from DataClassesBase import Presence, System, ExpansionTarget, State
-from enum import Enum
 from EDSM import GetSystemsFromEDSM
 from EliteBGS import RefreshFaction
 import CSNSettings
-from datetime import datetime, timedelta
 
 from Overrides import CSNOverRideRead
 import pickle
@@ -26,13 +25,6 @@ dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
-
-
-def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
-    """ Debugging Print of Targets"""
-    print(f"{system_name}")
-    for t in targets[:length]:
-        print(f"  {t.systemname} : {t} [{t.score:.3f}]")
 
 
 @dataclass
@@ -66,7 +58,7 @@ def ExpandMessage(message: Message, expandto: str, inf: float, gap: float, happy
     return message
 
 
-def Main(live=True):
+def Main(uselivedata=True):
     myFactionName = CSNSettings.myfaction
     bubble = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))
@@ -76,9 +68,9 @@ def Main(live=True):
     system: System
     faction: Presence
 
-    if live:
+    if uselivedata:
         RefreshFaction(bubble, myFactionName)
-        # TODO Recalc Expansions
+        bubble._ExpandAll()
 
     # Load Overrides into Messages from Google
     messages: list[Message] = list(Message(systemname=x[0], priority=x[1], text=x[2],
@@ -113,18 +105,17 @@ def Main(live=True):
             system.influence - myPresence.influence if myPresence else 0, 2)
 
         # Standard System Message
-        # TODO Additional Flavour Messages (Some may go AFTER Override Check)
-        # Aged
+        # Stale Data
         age: timedelta = (datetime.now()-system.updated).days
         if age > system.influence/10:
             message = Message(
                 system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
             messages.append(message)
-        # Tritium Refinary Low Price Active/Pending
-        # GOLDRUSH
-        # DCOH Threat
-        # Retreats
-        # Invasions
+        # TODO Retreats
+        # TODO Invasions
+        # TODO DCOH Threat
+        # TODO Tritium Refinary Low Price Active/Pending
+        # TODO GOLDRUSH
 
         if any(_.override == 'Override' and _.systemname == system.name for _ in messages):
             continue  # No Internal Message
@@ -199,6 +190,6 @@ if __name__ == '__main__':
     """
 
     # # New Analysis
-    Main(live=True)
+    Main(uselivedata=True)
 
     print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")

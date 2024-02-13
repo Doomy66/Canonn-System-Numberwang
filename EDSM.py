@@ -85,7 +85,7 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
             filter(lambda x: x.isfactionpresent(Faction), systemlist))
         if empire:
             systemlist = list(filter(lambda x: min(
-                map(lambda e: e.cube_distance(x, e), empire)) <= range, systemlist))
+                map(lambda e: e.cube_distance(x), empire)) <= range, systemlist))
         else:
             print('! Faction Not Found, you have the whole bubble !')
     print(f'EDSM Converted to include {len(systemlist)} systems')

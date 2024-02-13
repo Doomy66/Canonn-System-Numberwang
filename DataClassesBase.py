@@ -121,15 +121,13 @@ class System:
             ans += f"\n    {faction}"
         return ans
 
-    @staticmethod
-    def distance(a: "System", b: "System") -> float:
+    def distance(self, othersystem: "System") -> float:
         """ Direct Straight Line Distance between 2 systems """
-        return (round(sqrt((a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2), 2))
+        return (round(sqrt((self.x-othersystem.x)**2+(self.y-othersystem.y)**2+(self.z-othersystem.z)**2), 2))
 
-    @staticmethod
-    def cube_distance(a: "System", b: "System") -> float:
+    def cube_distance(self, othersystem: "System") -> float:
         """ Maximum Axis Difference between 2 systems """
-        return (max(abs(a.x-b.x), abs(a.y-b.y), abs(a.z-b.z)))
+        return (max(abs(self.x-othersystem.x), abs(self.y-othersystem.y), abs(self.z-othersystem.z)))
 
     def addfaction(self, faction: Presence) -> None:
         """ Add or Upate Faction Presense to a System"""
