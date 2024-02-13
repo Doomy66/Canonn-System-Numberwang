@@ -5,6 +5,7 @@ from enum import Enum
 from EDSM import GetSystemsFromEDSM
 from EliteBGS import RefreshFaction
 import CSNSettings
+from datetime import datetime, timedelta
 
 from Overrides import CSNOverRideRead
 import pickle
@@ -24,7 +25,7 @@ dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
           "thargoid1": '<:Thargoid:1020771117939568660>'}
 
 SAFE_GAP = 15  # Urgent message if below...
-IGNORE_GAP = 30  # Ignore any gap over...
+IGNORE_GAP = 29  # Ignore any gap over...
 
 
 def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
@@ -114,6 +115,11 @@ def Main(live=True):
         # Standard System Message
         # TODO Additional Flavour Messages (Some may go AFTER Override Check)
         # Aged
+        age: timedelta = (datetime.now()-system.updated).days
+        if age > system.influence/10:
+            message = Message(
+                system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
+            messages.append(message)
         # Tritium Refinary Low Price Active/Pending
         # GOLDRUSH
         # DCOH Threat
@@ -176,7 +182,7 @@ def Main(live=True):
     # TODO Discourd Update
     # TODO Patrol
     for message in messages:
-        if message.priority != 20:
+        if message.priority <= 10 or message.priority > 20:
             print(
                 f"{message.systemname:<30} - {message.priority:<2} - {message.text:<80} {message.emoji}")
 
@@ -190,8 +196,6 @@ def Main(live=True):
 if __name__ == '__main__':
     """ 
         Tests and Examples of use
-        Most of the Expansion Calculations are done automatically as part of the Creation of the BubbleExpansion object
-        If LIVE values are required, then update relevant systems with live EBGS data and run Expansion check again.
     """
 
     # # New Analysis

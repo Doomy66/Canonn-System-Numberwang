@@ -15,6 +15,7 @@ class BubbleExpansion(Bubble):
     EXTENDEDRANGE: float = 30
 
     def __post_init__(self):
+        self.systems = sorted(self.systems, key=lambda x: x.name)
         self._ExpandAll()
 
     def _ExpandAll(self) -> None:

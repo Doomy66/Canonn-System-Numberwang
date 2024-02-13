@@ -131,7 +131,9 @@ def RefreshFaction(bubble: Bubble, faction: str) -> None:
     print(f"EBGS Refreshing systems for {faction}..")
     systems = EliteBGSFactionSystems(faction=faction)
     for sys_name, updated, inconflict in systems:
-        system = bubble.getsystem(sys_name)
+        system: System = bubble.getsystem(sys_name)
         if system.updated < updated or inconflict:
-            print(f" {sys_name, updated, system.updated}")
+            print(f"    {sys_name:30} : {updated:%c} - {system.updated:%c}")
             system = LiveSystemDetails(system, inconflict)
+        else:
+            system.updated = updated
