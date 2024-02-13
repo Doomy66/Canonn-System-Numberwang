@@ -21,6 +21,12 @@ extendedphase: bool = os.environ.get(
 ignorepf = os.environ.get('ignorepf').split(",")
 invasionparanoialevel = float(os.environ.get('invasionparanoialevel'))
 
+
+def isIgnored(faction: str) -> bool:
+    """ Returns True if faction name is in the list of ignored PF"""
+    return faction in ignorepf
+
+
 # No orders to boost inf for system control etc. Leave it to the system owner.
 surrendered_systems = ['A List of System Names']
 
