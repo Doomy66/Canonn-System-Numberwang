@@ -36,12 +36,15 @@ class BubbleExpansion(Bubble):
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
         """ Calculate all expansion targets for a system"""
         targets: list[ExpansionTarget] = []
-        for target_system in (x for x in self.cube_systems(source_system, exclude_presense=source_system.controllingFaction) if x.factions):
+        for target_system in self.cube_systems(source_system, exclude_presense=source_system.controllingFaction):
             target_distance: float = source_system.distance(target_system)
             target_cube_distance: float = source_system.cube_distance(
                 target_system)
             if len(target_system.factions) > 7:
                 # Too many factions to invade
+                pass
+            elif not target_system.factions:
+                # No factions - dead system or prison
                 pass
             elif len(target_system.factions) < 7:
                 # Expansion into a spare slot
