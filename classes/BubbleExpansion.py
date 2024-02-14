@@ -36,7 +36,7 @@ class BubbleExpansion(Bubble):
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
         """ Calculate all expansion targets for a system"""
         targets: list[ExpansionTarget] = []
-        for target_system in self.cube_systems(source_system, exclude_presense=source_system.controllingFaction):
+        for target_system in (x for x in self.cube_systems(source_system, exclude_presense=source_system.controllingFaction) if x.factions):
             target_distance: float = source_system.distance(target_system)
             target_cube_distance: float = source_system.cube_distance(
                 target_system)
@@ -46,7 +46,7 @@ class BubbleExpansion(Bubble):
             elif len(target_system.factions) < 7:
                 # Expansion into a spare slot
                 expansion = ExpansionTarget(
-                    target_system.name, description='Expansion', score=target_distance/100)
+                    target_system.name, description='Expansion', score=target_distance/100, faction=target_system.factions[0])
                 if target_cube_distance <= self.SIMPLERANGE:
                     targets.append(expansion)
                 elif extended:

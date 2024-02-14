@@ -12,7 +12,7 @@ class ExpansionTarget():
     faction: Presence = None
 
     def __str__(self) -> str:
-        ans = f"{'Extended ' if self.extended else ''}{self.description}"
+        ans = f"{self.systemname}{'*' if self.extended else ''} ({self.faction.name})"
         if self.description == 'Invasion':
-            ans = f"{ans} of {self.faction.name} ({self.faction.influence:.2f}%)"
+            ans = f"{self.systemname} {self.description} of {self.faction.name} ({self.faction.influence:.2f}%)"
         return ans
