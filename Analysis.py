@@ -6,6 +6,7 @@ from classes.System import System
 from classes.State import State
 from providers.EDSM import GetSystemsFromEDSM
 from providers.EliteBGS import RefreshFaction
+from api import dcohsummary
 import CSNSettings
 
 from Overrides import CSNOverRideRead
@@ -16,6 +17,7 @@ dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
           "civilwar": '<:EliteEagle:1020771075207991407> ',
           "override": '<:Salute2:1020771111073480715> ',
           "push": ':arrow_heading_up: ',
+
           "data": ':eyes: ',
           "infgap": ':dagger: ',
           "mininf": ':chart_with_downwards_trend: ',
@@ -70,13 +72,15 @@ def Main(uselivedata=True):
     system: System
     faction: Presence
 
+    dhoc = dcohsummary()
+
     if uselivedata:
         RefreshFaction(bubble, myFactionName)
         bubble._ExpandAll()
 
     # Load Overrides into Messages from Google
     messages: list[Message] = list(Message(systemname=x[0], priority=x[1], text=x[2],
-                                           emoji=x[3], override=x[4]) for x in CSNOverRideRead()[1:])
+                                           emoji=dIcons[x[3]], override=x[4]) for x in CSNOverRideRead()[1:])
     # Replace f strings in Overrirdes
     for message in (_ for _ in messages if ('{' in _.text)):
         system = bubble.getsystem(message.systemname)
@@ -113,9 +117,18 @@ def Main(uselivedata=True):
             message = Message(
                 system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
             messages.append(message)
+
         # TODO Retreats
         # TODO Invasions
-        # TODO DCOH Threat
+
+        # DCOH Threat
+        dcohthreat = next(
+            (x for x in dhoc if x['sys_name'] == system.name), None)
+        if dcohthreat and dcohthreat["progress"] < 100:
+            message = Message(
+                system.name, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', dIcons['thargoid1'])
+            messages.append(message)
+
         # TODO Tritium Refinary Low Price Active/Pending
         # TODO GOLDRUSH
 
