@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from classes.BubbleExpansion import BubbleExpansion
 from classes.Presense import Presence
 from classes.System import System
-from classes.State import State
+from classes.State import State, Phase
 from providers.EDSM import GetSystemsFromEDSM
 from providers.EliteBGS import RefreshFaction
 from api import dcohsummary
@@ -62,6 +62,33 @@ def ExpandMessage(message: Message, expandto: str, inf: float, gap: float, happy
     return message
 
 
+def GetOverrides(bubble: BubbleExpansion, myFactionName: str) -> list[Message]:
+    """ Gets all Manual Missions or Overrides (from Google) and expands any embeded variables """
+    # Load Overrides into Messages from Google
+    messages: list[Message] = list(Message(systemname=_[0], priority=_[1], text=_[2],
+                                           emoji=dIcons[_[3]], override=_[4]) for _ in CSNOverRideRead()[1:])
+    # Replace f strings in Overrirdes
+    for myMessage in (_ for _ in messages if ('{' in _.text)):
+        system = bubble.getsystem(myMessage.systemname)
+        myPresence: Presence = next(
+            (_ for _ in system.factions if _.name == myFactionName), None)
+        gap: float = round(
+            system.influence - (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
+        gapfromtop: float = round(
+            system.influence - myPresence.influence if myPresence else 0, 2)
+        expandto: str = str(
+            system.nextexpansion) if system.nextexpansion else 'None Detected'
+
+        for faction in system.factions:
+            if faction.name != myFactionName and faction.name in myMessage.text:
+                myMessage = ExpandMessage(myMessage,
+                                          expandto=expandto, inf=faction.inf, gap=abs(faction.influence-myPresence.influence), happy='<?>', gapfromtop=system.influence-faction.influence)
+        else:
+            myMessage = ExpandMessage(
+                myMessage, expandto=expandto, inf=system.influence, gap=gap, happy='<?>', gapfromtop=gapfromtop)
+    return messages
+
+
 def Main(uselivedata=True):
     myFactionName = CSNSettings.myfaction
     bubble = BubbleExpansion(
@@ -78,45 +105,26 @@ def Main(uselivedata=True):
         RefreshFaction(bubble, myFactionName)
         bubble._ExpandAll()
 
-    # Load Overrides into Messages from Google
-    messages: list[Message] = list(Message(systemname=x[0], priority=x[1], text=x[2],
-                                           emoji=dIcons[x[3]], override=x[4]) for x in CSNOverRideRead()[1:])
-    # Replace f strings in Overrirdes
-    for message in (_ for _ in messages if ('{' in _.text)):
-        system = bubble.getsystem(message.systemname)
-        myPresence: Presence = next(
-            (_ for _ in system.factions if _.name == myFactionName), None)
-        gap: float = round(
-            system.influence - (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
-        gapfromtop: float = round(
-            system.influence - myPresence.influence if myPresence else 0, 2)
-        expandto: str = str(
-            system.nextexpansion) if system.nextexpansion else 'None Detected'
+    # Load Overrides
+    messages: list[Message] = GetOverrides(bubble, myFactionName)
 
-        for faction in system.factions:
-            if faction.name != myFactionName and faction.name in message.text:
-                message = ExpandMessage(message,
-                                        expandto=expandto, inf=faction.inf, gap=abs(faction.influence-myPresence.influence), happy='<?>', gapfromtop=system.influence-faction.influence)
-        else:
-            message = ExpandMessage(
-                message, expandto=expandto, inf=system.influence, gap=gap, happy='<?>', gapfromtop=gapfromtop)
-
+    # Process all faction systems
     for system in systems:
-        # Precalculations
+        # Precalculationa
         gap: float = round(system.influence -
-                           (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
+                           (system.factions[1].influence if len(system.factions) > 1 else 0), 1)
         myPresence: Presence = next(
             (_ for _ in system.factions if _.name == myFactionName), None)
         gapfromtop: float = round(
-            system.influence - myPresence.influence if myPresence else 0, 2)
+            system.influence - myPresence.influence if myPresence else 0, 1)
 
         # Standard System Message
         # Stale Data
         age: timedelta = (datetime.now()-system.updated).days
         if age > system.influence/10:
-            message = Message(
+            myMessage = Message(
                 system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
-            messages.append(message)
+            messages.append(myMessage)
 
         # TODO Retreats
         # TODO Invasions
@@ -125,9 +133,9 @@ def Main(uselivedata=True):
         dcohthreat = next(
             (x for x in dhoc if x['sys_name'] == system.name), None)
         if dcohthreat and dcohthreat["progress"] < 100:
-            message = Message(
+            myMessage = Message(
                 system.name, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', dIcons['thargoid1'])
-            messages.append(message)
+            messages.append(myMessage)
 
         # TODO Tritium Refinary Low Price Active/Pending
         # TODO GOLDRUSH
@@ -140,13 +148,18 @@ def Main(uselivedata=True):
             (_ for _ in myPresence.states if _.isConflict), None)
         if conflictstate:
             # Remove Peacetime Overrides
-            for message in messages[:]:
-                if (message.systemname == system.name) and (message.override == 'Peacetime'):
-                    messages.remove(message)
+            for myMessage in messages[:]:
+                if (myMessage.systemname == system.name) and (myMessage.override == 'Peacetime'):
+                    messages.remove(myMessage)
             myMessage: Message = Message(
                 system.name, 2, f"{str(conflictstate)}", dIcons[conflictstate.state.replace(' ', '').lower()])
-            messages.append(myMessage)
-            if conflictstate.phase:
+
+            if conflictstate.phase == Phase.RECOVERING:
+                myMessage.priority = 21
+                myMessage.emoji = dIcons['info']
+                messages.append(myMessage)
+            else:
+                messages.append(myMessage)
                 continue
         elif any(_.systemname == system.name and _.override == 'Peacetime' for _ in messages):
             # Peacetime Override so no further message
@@ -155,14 +168,14 @@ def Main(uselivedata=True):
         # Not Yet In Control
         if system.controllingFaction != myFactionName:
             myMessage: Message = Message(
-                system.name, 3, f"Urgent: {myFactionName} Missons etc to gain system control (gap {gapfromtop:4.3}%)", dIcons['push'])
+                system.name, 3, f"Urgent: {myFactionName} Missons etc to gain system control (gap {gapfromtop:.1f}%)", dIcons['push'])
             messages.append(myMessage)
             continue
 
         # Gap Warning
         if gap <= SAFE_GAP:
             myMessage: Message = Message(
-                system.name, 4, f"Required: {myFactionName} Missons etc ({system.factions[1].name} is threatening, gap is only {gap:4.3}%)", dIcons['infgap'])
+                system.name, 4, f"Required: {myFactionName} Missons etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", dIcons['infgap'])
             messages.append(myMessage)
             continue
 
@@ -174,11 +187,10 @@ def Main(uselivedata=True):
                     SAFE_GAP <= (x.influence - x.factions[1].influence) <= IGNORE_GAP))))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:3]:
-        message = Message(
-            best3.name, 5, f"Suggestion: {myFactionName} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.2f}%)", dIcons['mininf'])
-        messages.append(message)
+        myMessage = Message(
+            best3.name, 5, f"Suggestion: {myFactionName} Missions etc : gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%", dIcons['mininf'])
+        messages.append(myMessage)
 
-    # TODO Process Overrides for Non-Faction Systems
     # TODO Fleet Carriers
 
     messages.sort(key=lambda x: x.priority)
@@ -187,10 +199,10 @@ def Main(uselivedata=True):
     # TODO Discord Full
     # TODO Discourd Update
     # TODO Patrol
-    for message in messages:
-        if message.priority <= 10 or message.priority > 20:
+    for myMessage in messages:
+        if myMessage.priority <= 10 or myMessage.priority > 20:
             print(
-                f"{message.systemname:<30} - {message.priority:<2} - {message.text:<80} {message.emoji}")
+                f"{myMessage.systemname:<30} - {myMessage.priority:<2} - {myMessage.text:<80} {myMessage.emoji}")
 
     # Save Messages for Update Comparison
     with open(f'data\\{myFactionName}CSNMessages.pickle', 'wb') as io:

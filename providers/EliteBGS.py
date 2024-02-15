@@ -70,6 +70,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
 
             if myPresence.influence > 0:
                 system.addfaction(myPresence)
+
         for conflict in myload.get('conflicts', []):
             f1 = conflict['faction1']
             f2 = conflict['faction2']
@@ -94,8 +95,9 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                             state.gain = f1['stake']
 
         # Remove Fations that have left since previous data
-        system.factions = list(
-            _ for _ in system.factions if _.source == 'EBGS')
+        system.factions = sorted(
+            list(
+                _ for _ in system.factions if _.source == 'EBGS'), key=lambda x: x.influence, reverse=True)
 
     # NREQ += 1
     return system

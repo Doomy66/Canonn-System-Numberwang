@@ -7,32 +7,40 @@ class Phase(Enum):
     ACTIVE = 'A'
     PENDING = 'P'
     RECOVERING = 'R'
+    UNKNOWN = 'U'
 
 
 @dataclass
 class State:
     """ Contains information about one of a Factions states"""
     state: str  # NB can vary depending on source e.g 'Civil war' and 'Civilwar'
-    phase: Phase = 'A'  # Active, Pending or Recovering
+    phase: Phase = Phase.ACTIVE
     opponent: str = ''
     atstake: str = ''
     gain: str = ''
     dayswon: int = 0
     dayslost: int = 0
 
+    def __post_init__(self) -> None:
+        # Convert str value into enum
+        for _ in Phase:
+            if self.phase == _.value:
+                self.phase = _
+
     def __str__(self) -> str:
         ans: str = f"{self.state}"
 
         if self.opponent and self.isConflict:
-            if self.phase == 'R':
+            ans += f" with {self.opponent} ({self.dayswon} v {self.dayslost})"
+            if self.phase == Phase.RECOVERING:
                 if self.dayswon > self.dayslost:
-                    ans += f" Won {self.gain}"
+                    ans += f" Won, gained {self.gain} "
                 elif self.dayswon < self.dayslost:
-                    ans += f" Lost {self.atstake}"
+                    ans += f" Lost, lost {self.atstake}"
                 else:
                     ans += ' Drawn'
             else:
-                ans += f" with {self.opponent} ({self.dayswon} v {self.dayslost}) {' Pending' if self.phase==Phase.PENDING else ''}"
+                ans += f"{' Pending' if self.phase==Phase.PENDING else ''}"
         else:
             ans += f"{'' if self.phase == Phase.ACTIVE else ' Pending' if self.phase == Phase.PENDING else ' Recovering'}"
 
