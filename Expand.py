@@ -1,9 +1,12 @@
 from dataclasses import dataclass
-from DataClassesExpansion import BubbleExpansion
-from DataClassesBase import Presence, System, ExpansionTarget, State
-from EDSM import GetSystemsFromEDSM
+from classes.BubbleExpansion import BubbleExpansion
+from classes.Presense import Presence
+from classes.System import System
+from classes.ExpansionTarget import ExpansionTarget
+from classes.State import State
+from providers.EDSM import GetSystemsFromEDSM
 import CSNSettings
-from EliteBGS import LiveSystemDetails, RefreshFaction
+from providers.EliteBGS import LiveSystemDetails, RefreshFaction
 
 from Overrides import CSNOverRideRead
 import simplejson as json

@@ -12,12 +12,16 @@ import CSNSettings
 from Overrides import CSNOverRideRead
 import pickle
 
+myFactionName = CSNSettings.myfaction
+myBubble = BubbleExpansion(
+    GetSystemsFromEDSM(myFactionName, 40))
+mySystems = myBubble.faction_presence(myFactionName)
+
 dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
           "election": ':ballot_box: ',
           "civilwar": '<:EliteEagle:1020771075207991407> ',
           "override": '<:Salute2:1020771111073480715> ',
           "push": ':arrow_heading_up: ',
-
           "data": ':eyes: ',
           "infgap": ':dagger: ',
           "mininf": ':chart_with_downwards_trend: ',
@@ -62,14 +66,17 @@ def ExpandMessage(message: Message, expandto: str, inf: float, gap: float, happy
     return message
 
 
-def GetOverrides(bubble: BubbleExpansion, myFactionName: str) -> list[Message]:
+def OverrideMessages() -> list[Message]:
     """ Gets all Manual Missions or Overrides (from Google) and expands any embeded variables """
+    faction: Presence
+    myPresence: Presence
+
     # Load Overrides into Messages from Google
     messages: list[Message] = list(Message(systemname=_[0], priority=_[1], text=_[2],
                                            emoji=dIcons[_[3]], override=_[4]) for _ in CSNOverRideRead()[1:])
     # Replace f strings in Overrirdes
     for myMessage in (_ for _ in messages if ('{' in _.text)):
-        system = bubble.getsystem(myMessage.systemname)
+        system = myBubble.getsystem(myMessage.systemname)
         myPresence: Presence = next(
             (_ for _ in system.factions if _.name == myFactionName), None)
         gap: float = round(
@@ -89,27 +96,67 @@ def GetOverrides(bubble: BubbleExpansion, myFactionName: str) -> list[Message]:
     return messages
 
 
-def Main(uselivedata=True):
-    myFactionName = CSNSettings.myfaction
-    bubble = BubbleExpansion(
-        GetSystemsFromEDSM(myFactionName, 40))
+def StaleDataMessages() -> list[Message]:
+    """ Checks Last Updated DateTime and Prompts Mission if Stales"""
+    messages: list[Message] = []
+    for system in mySystems:
+        # Stale Data
+        age: timedelta = (datetime.now()-system.updated).days
+        if age > system.influence/10:
+            myMessage = Message(
+                system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
+            messages.append(myMessage)
+    return messages
 
-    # Process Each System
-    systems = bubble.faction_presence(myFactionName)
-    system: System
-    faction: Presence
 
+def DCOHThargoidMessages() -> list[Message]:
+    """ Gets Thargoid Threat Messages"""
     dhoc = dcohsummary()
+    messages: list[Message] = []
+    for system in mySystems:
+        dcohthreat = next(
+            (x for x in dhoc if x['sys_name'] == system.name), None)
+        if dcohthreat and dcohthreat["progress"] < 100:
+            myMessage = Message(
+                system.name, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', dIcons['thargoid1'])
+            messages.append(myMessage)
+    return messages
 
+
+def RetreatMessages() -> list[Message]:
+    """ Prevent Retreat of Full Systems to prevent normal Expansion """
+    messages: list[Message] = []
+    for system in mySystems:
+        faction: Presence
+        # Mine, Currently Full, and there is an enemy faction in simple range
+        # TODO Also Consider PF and Ignored PF ?
+        if system.controllingFaction == myFactionName and system.factions and len(system.factions) == 7 and next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != myFactionName), None):
+            for faction in system.factions:
+                if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
+                    myMessage = Message(
+                        system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)")
+                    messages.append(myMessage)
+    return messages
+
+
+def Main(uselivedata=True):
     if uselivedata:
-        RefreshFaction(bubble, myFactionName)
-        bubble._ExpandAll()
+        RefreshFaction(myBubble, myFactionName)
+        myBubble._ExpandAll()
 
-    # Load Overrides
-    messages: list[Message] = GetOverrides(bubble, myFactionName)
+    messages: list[Message] = []
+    # Overrides
+    messages.extend(OverrideMessages())
+    # Stale
+    messages.extend(StaleDataMessages())
+    # DCOH Thargoid Threat
+    messages.extend(DCOHThargoidMessages())
+    # TODO Retreats - Not Tested vs Real Data
+    messages.extend(RetreatMessages())
 
     # Process all faction systems
-    for system in systems:
+    system: System
+    for system in mySystems:
         # Precalculationa
         gap: float = round(system.influence -
                            (system.factions[1].influence if len(system.factions) > 1 else 0), 1)
@@ -119,24 +166,7 @@ def Main(uselivedata=True):
             system.influence - myPresence.influence if myPresence else 0, 1)
 
         # Standard System Message
-        # Stale Data
-        age: timedelta = (datetime.now()-system.updated).days
-        if age > system.influence/10:
-            myMessage = Message(
-                system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
-            messages.append(myMessage)
-
-        # TODO Retreats
         # TODO Invasions
-
-        # DCOH Threat
-        dcohthreat = next(
-            (x for x in dhoc if x['sys_name'] == system.name), None)
-        if dcohthreat and dcohthreat["progress"] < 100:
-            myMessage = Message(
-                system.name, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', dIcons['thargoid1'])
-            messages.append(myMessage)
-
         # TODO Tritium Refinary Low Price Active/Pending
         # TODO GOLDRUSH
 
@@ -182,7 +212,7 @@ def Main(uselivedata=True):
         # End of system loop
 
     # Add 3 Lowest Gaps for Homework
-    best = list((x for x in systems if (x.controllingFaction ==
+    best = list((x for x in mySystems if (x.controllingFaction ==
                 myFactionName and (len(x.factions) > 1) and (
                     SAFE_GAP <= (x.influence - x.factions[1].influence) <= IGNORE_GAP))))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
