@@ -1,13 +1,14 @@
+import CSNSettings
+from classes.Station import Station
+from classes.State import State, Phase
+from classes.System import System
+from classes.Presense import Presence
+from classes.Bubble import Bubble
 import os
 import datetime
 import json
 import requests
 import gzip
-from classes.Bubble import Bubble
-from classes.Presense import Presence
-from classes.System import System
-from classes.State import State, Phase
-import CSNSettings
 
 
 def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
@@ -60,10 +61,10 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
 
     systemlist: list[System] = []
     for rs in raw:
-        s = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
-                   x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], allegiance=rs['allegiance'], government=rs['government'], economy=rs[
-                       'economy'], security=rs['security'], population=rs['population'], controllingFaction=rs['controllingFaction']['name'], updated=lastmoddt
-                   )
+        system = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
+                        x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], allegiance=rs['allegiance'], government=rs['government'], economy=rs[
+            'economy'], security=rs['security'], population=rs['population'], controllingFaction=rs['controllingFaction']['name'], updated=lastmoddt
+        )
         # Add Faction Presences
         if 'factions' in rs.keys():
             for rf in rs['factions']:
@@ -81,9 +82,16 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
                         f.states.append(
                             State(rstate['state'], phase=Phase.RECOVERING))
 
-                    s.addfaction(f)
-
-        systemlist.append(s)
+                    system.addfaction(f)
+        if 'stations' in rs.keys():
+            myStation: Station
+            for station in rs['stations']:
+                fname = station['controllingFaction']['name'] if 'controllingFaction' in station.keys(
+                ) else station['type']
+                myStation = Station(
+                    station['id'], station['type'], station['name'], fname, station['economy'], station['secondEconomy'], station['haveShipyard'], station['haveOutfitting'], station['otherServices'])
+                system.stations.append(myStation)
+        systemlist.append(system)
 
     # Reduce List to Empire and Systems within range (40 covers simple invasions, use 60 for extended invasions)
     if Faction:

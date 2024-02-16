@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from .Presense import Presence
 from .ExpansionTarget import ExpansionTarget
+from .Station import Station
 from providers.EDDBFactions import HomeSystem
 from math import sqrt
 
@@ -26,7 +27,7 @@ class System:
     controllingFaction: str = ''
     influence = 0
     factions: list = field(default_factory=list[Presence])
-    # stations: list = field(default_factory=list[Station])
+    stations: list = field(default_factory=list[Station])
     # Only Pouplated in BubbleExpansion Sub-Class
     expansion_targets: list = field(default_factory=list[ExpansionTarget])
     updated: datetime = datetime.now()
@@ -81,3 +82,9 @@ class System:
     @property
     def influence(self) -> float:
         return self.factions[0].influence if self.factions else 0
+
+    @property
+    def economysavailable(self) -> {str}:
+        ans = {x.economy1 for x in self.stations}.union(
+            {x.economy2 for x in self.stations if x.economy2})
+        return ans

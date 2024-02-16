@@ -130,7 +130,32 @@ def RetreatMessages() -> list[Message]:
     return messages
 
 
+# def MarketMessages() -> list[Message]:
+#     """ Interesting Market Messages """
+#     """ TODO Tritium needs to know if Tritium is sold """
+#     """ TODO Goldrush uses economy details of station 'extraction'ish """
+#     messages: list[Message] = []
+
+#     for system in mySystems:
+#         state: State
+#         sellsTritium: bool = False
+#         goldRushEconomy: bool = 'Extraction' in system.alleconomys ## A Faction's Station is Extraction, and a Faction's State is ISF
+#         for state in system.factions[0].states:
+#             if sellsTritium and state.state.lower() in {'drought', 'blight', 'terrorism'} and state.phase is not Phase.RECOVERING:
+#                 myMessage = Message(
+#                     system.name, 24, f"Tritium Opportunity{' Pending' if state.phase==Phase.PENDING else ''}")
+#                 messages.append(myMessage)
+#             if goldRushEconomy and state.state.lower() in {'infrastructurefailure'} and state.phase is not Phase.RECOVERING:
+#                 myMessage = Message(
+#                     system.name, 24, f"Gold Rush {' Pending' if state.phase==Phase.PENDING else ''}", dIcons['data'])
+#                 messages.append(myMessage)
+
+#     return messages
+
+
 def InvasionMessages(cycles: int = 5) -> list[Message]:
+    """ Turns Invasion Data calulated earlier into relevent Messages """
+    """ Only bothered with Non-Ignored PF """
     messages: list[Message] = []
     system: System
     target: ExpansionTarget
@@ -165,6 +190,9 @@ def Main(uselivedata=True):
     messages.extend(RetreatMessages())
     # TODO Invasions - Invasion Process Not Using Retreated Archive
     messages.extend(InvasionMessages(8))
+    # TODO Tritium Refinary Low Price Active/Pending
+    # TODO GOLDRUSH
+    # messages.extend(MarketMessages())
 
     # Process all faction systems
     system: System
@@ -177,21 +205,18 @@ def Main(uselivedata=True):
         gapfromtop: float = round(
             system.influence - myPresence.influence if myPresence else 0, 1)
 
-        # Standard System Message
-        # TODO Tritium Refinary Low Price Active/Pending
-        # TODO GOLDRUSH
-
         if any(_.override == Overide.OVERRIDE and _.systemname == system.name for _ in messages):
-            continue  # No Internal Message
+            continue  # No Internal Message for this System
 
         # Conflict for myFaction
         conflictstate: State = next(
             (_ for _ in myPresence.states if _.isConflict), None)
         if conflictstate:
-            # Remove Peacetime Overrides
-            for myMessage in messages[:]:
-                if (myMessage.systemname == system.name) and (myMessage.override == Overide.PEACETIME):
-                    messages.remove(myMessage)
+            # # Remove Peacetime Overrides - A Conflict Overrides such a message (!! Dont think this is required !!)
+            # for myMessage in messages[:]:
+            #     if (myMessage.systemname == system.name) and (myMessage.override == Overide.PEACETIME):
+            #         messages.remove(myMessage)
+
             myMessage: Message = Message(
                 system.name, 2, f"{str(conflictstate)}", dIcons[conflictstate.state.replace(' ', '').lower()])
 
@@ -201,10 +226,11 @@ def Main(uselivedata=True):
                 messages.append(myMessage)
             else:
                 messages.append(myMessage)
-                continue
-        elif any(_.systemname == system.name and _.override == Overide.PEACETIME for _ in messages):
+                continue  # No More Internal Messages
+
+        if any(_.systemname == system.name and _.override == Overide.PEACETIME for _ in messages):
             # Peacetime Override so no further message
-            continue
+            continue  # No More Internal Messages
 
         # Not Yet In Control
         if system.controllingFaction != myFactionName:
@@ -229,7 +255,7 @@ def Main(uselivedata=True):
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:3]:
         myMessage = Message(
-            best3.name, 5, f"Suggestion: {myFactionName} Missions etc : gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%", dIcons['mininf'])
+            best3.name, 5, f"Suggestion: {myFactionName} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%)", dIcons['mininf'])
         messages.append(myMessage)
 
     # TODO Fleet Carriers
