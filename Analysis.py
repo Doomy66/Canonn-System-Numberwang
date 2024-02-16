@@ -5,6 +5,7 @@ from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
 from classes.Message import Message, Overide
+from classes.ExpansionTarget import ExpansionTarget
 from providers.EDSM import GetSystemsFromEDSM
 from providers.EliteBGS import RefreshFaction
 from api import dcohsummary
@@ -129,6 +130,20 @@ def RetreatMessages() -> list[Message]:
     return messages
 
 
+def InvasionMessages(cycles: int = 5) -> list[Message]:
+    messages: list[Message] = []
+    system: System
+    target: ExpansionTarget
+    for system in myBubble.systems:
+        if system not in mySystems and system.nextexpansion and system.influence > CSNSettings.invasionparanoialevel and system.factions[0].isPlayer and system.controllingFaction not in CSNSettings.ignorepf:
+            for i, target in enumerate(system.expansion_targets[:cycles]):
+                if target.faction.name == myFactionName:
+                    messages.append(Message(system.name,
+                                    10, f"{system.controllingFaction} Possible {target.description} to {target.systemname} ({system.influence:.2f}%) Priority {i+1}", dIcons['data']))
+                    break
+    return messages
+
+
 def Main(uselivedata=True):
     global myBubble, mySystems
     myBubble = BubbleExpansion(
@@ -148,6 +163,8 @@ def Main(uselivedata=True):
     messages.extend(DCOHThargoidMessages())
     # TODO Retreats - Not Tested vs Real Data
     messages.extend(RetreatMessages())
+    # TODO Invasions - Invasion Process Not Using Retreated Archive
+    messages.extend(InvasionMessages(8))
 
     # Process all faction systems
     system: System
@@ -161,7 +178,6 @@ def Main(uselivedata=True):
             system.influence - myPresence.influence if myPresence else 0, 1)
 
         # Standard System Message
-        # TODO Invasions
         # TODO Tritium Refinary Low Price Active/Pending
         # TODO GOLDRUSH
 

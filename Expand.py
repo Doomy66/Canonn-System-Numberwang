@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     targets = mySystem.expansion_targets
     if targets:
-        xPrintTargets(mySystem.name, targets)
+        xPrintTargets(mySystem.name, targets, 99)
 
     # # List Faction's all likely Expansions
     # targets: list[ExpansionTarget]
