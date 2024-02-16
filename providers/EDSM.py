@@ -6,7 +6,7 @@ import gzip
 from classes.Bubble import Bubble
 from classes.Presense import Presence
 from classes.System import System
-from classes.State import State
+from classes.State import State, Phase
 import CSNSettings
 
 
@@ -72,11 +72,14 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
                                  influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=rf['isPlayer'])
                     # Add States of Faction. NB States have very little information in EDSM
                     for rstate in rf.get('activeStates', []):
-                        f.states.append(State(rstate['state'], phase='A'))
+                        f.states.append(
+                            State(rstate['state'], phase=Phase.ACTIVE))
                     for rstate in rf.get('pendingStates', []):
-                        f.states.append(State(rstate['state'], phase='P'))
+                        f.states.append(
+                            State(rstate['state'], phase=Phase.PENDING))
                     for rstate in rf.get('recoveringStates'):
-                        f.states.append(State(rstate['state'], phase='R'))
+                        f.states.append(
+                            State(rstate['state'], phase=Phase.RECOVERING))
 
                     s.addfaction(f)
 

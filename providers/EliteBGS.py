@@ -5,7 +5,7 @@ from CSNSettings import CSNLog, RequestCount
 from classes.Bubble import Bubble
 from classes.Presense import Presence
 from classes.System import System
-from classes.State import State
+from classes.State import State, Phase
 from providers.EDDBFactions import isPlayer
 
 
@@ -59,13 +59,13 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
             myPresence.isPlayer = isPlayer(myPresence.name)
 
             for state in fp['pending_states']:
-                myState = State(state['state'].title(), phase='P')
+                myState = State(state['state'].title(), phase=Phase.PENDING)
                 myPresence.states.append(myState)
             for state in fp['active_states']:
-                myState = State(state['state'].title(), phase='A')
+                myState = State(state['state'].title(), phase=Phase.ACTIVE)
                 myPresence.states.append(myState)
             for state in fp['recovering_states']:
-                myState = State(state['state'].title(), phase='R')
+                myState = State(state['state'].title(), phase=Phase.RECOVERING)
                 myPresence.states.append(myState)
 
             if myPresence.influence > 0:

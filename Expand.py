@@ -20,31 +20,24 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
         print(f"  {t.systemname} : {t} [{t.score:.3f}]")
 
 
-@dataclass
-class Message:
-    """ CSN Message """
-    systemname: str
-    priority: int
-    text: str
-    emoji: str = ''
-    override: str = ''
-
-    print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")
-
-
 if __name__ == '__main__':
     """ 
         Tests and Examples of use
         Most of the Expansion Calculations are done automatically as part of the Creation of the BubbleExpansion object
         If LIVE values are required, then update relevant systems with live EBGS data and run Expansion check again.
     """
+    # TODO EDDB Faction Retreat History
 
-    # myFactionName = CSNSettings.myfaction
-    # mySystemName = 'Parinta'
-    # myBubble: BubbleExpansion = BubbleExpansion(
-    #     GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
-    # myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
-    # mySystem: System = myBubble.getsystem(mySystemName)
+    myFactionName = CSNSettings.myfaction
+    mySystemName = 'Iapo Vuh'
+    myBubble: BubbleExpansion = BubbleExpansion(
+        GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
+    myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
+    mySystem: System = myBubble.getsystem(mySystemName)
+
+    targets = mySystem.expansion_targets
+    if targets:
+        xPrintTargets(mySystem.name, targets)
 
     # # List Faction's all likely Expansions
     # targets: list[ExpansionTarget]

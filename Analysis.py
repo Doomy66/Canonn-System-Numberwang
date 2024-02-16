@@ -4,6 +4,7 @@ from classes.BubbleExpansion import BubbleExpansion
 from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
+from classes.Message import Message, Overide
 from providers.EDSM import GetSystemsFromEDSM
 from providers.EliteBGS import RefreshFaction
 from api import dcohsummary
@@ -12,10 +13,9 @@ import CSNSettings
 from Overrides import CSNOverRideRead
 import pickle
 
-myFactionName = CSNSettings.myfaction
-myBubble = BubbleExpansion(
-    GetSystemsFromEDSM(myFactionName, 40))
-mySystems = myBubble.faction_presence(myFactionName)
+myFactionName: str = CSNSettings.myfaction
+myBubble: BubbleExpansion = None
+mySystems: list[System] = []
 
 dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
           "election": ':ballot_box: ',
@@ -33,16 +33,6 @@ dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
-
-
-@dataclass
-class Message:
-    """ CSN Message """
-    systemname: str
-    priority: int
-    text: str
-    emoji: str = ''
-    override: str = ''
 
 
 def WriteDiscord(myFactionName: str, Full: int, messages: list[Message]):
@@ -73,7 +63,7 @@ def OverrideMessages() -> list[Message]:
 
     # Load Overrides into Messages from Google
     messages: list[Message] = list(Message(systemname=_[0], priority=_[1], text=_[2],
-                                           emoji=dIcons[_[3]], override=_[4]) for _ in CSNOverRideRead()[1:])
+                                           emoji=dIcons[_[3]], override=Overide(_[4][:1])) for _ in CSNOverRideRead()[1:])
     # Replace f strings in Overrirdes
     for myMessage in (_ for _ in messages if ('{' in _.text)):
         system = myBubble.getsystem(myMessage.systemname)
@@ -129,7 +119,7 @@ def RetreatMessages() -> list[Message]:
     for system in mySystems:
         faction: Presence
         # Mine, Currently Full, and there is an enemy faction in simple range
-        # TODO Also Consider PF and Ignored PF ?
+        # TODO Also Consider PF and Ignored PF As Invader?
         if system.controllingFaction == myFactionName and system.factions and len(system.factions) == 7 and next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != myFactionName), None):
             for faction in system.factions:
                 if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
@@ -140,6 +130,11 @@ def RetreatMessages() -> list[Message]:
 
 
 def Main(uselivedata=True):
+    global myBubble, mySystems
+    myBubble = BubbleExpansion(
+        GetSystemsFromEDSM(myFactionName, 40))
+    mySystems = myBubble.faction_presence(myFactionName)
+
     if uselivedata:
         RefreshFaction(myBubble, myFactionName)
         myBubble._ExpandAll()
@@ -170,7 +165,7 @@ def Main(uselivedata=True):
         # TODO Tritium Refinary Low Price Active/Pending
         # TODO GOLDRUSH
 
-        if any(_.override == 'Override' and _.systemname == system.name for _ in messages):
+        if any(_.override == Overide.OVERRIDE and _.systemname == system.name for _ in messages):
             continue  # No Internal Message
 
         # Conflict for myFaction
@@ -179,7 +174,7 @@ def Main(uselivedata=True):
         if conflictstate:
             # Remove Peacetime Overrides
             for myMessage in messages[:]:
-                if (myMessage.systemname == system.name) and (myMessage.override == 'Peacetime'):
+                if (myMessage.systemname == system.name) and (myMessage.override == Overide.PEACETIME):
                     messages.remove(myMessage)
             myMessage: Message = Message(
                 system.name, 2, f"{str(conflictstate)}", dIcons[conflictstate.state.replace(' ', '').lower()])
@@ -191,7 +186,7 @@ def Main(uselivedata=True):
             else:
                 messages.append(myMessage)
                 continue
-        elif any(_.systemname == system.name and _.override == 'Peacetime' for _ in messages):
+        elif any(_.systemname == system.name and _.override == Overide.PEACETIME for _ in messages):
             # Peacetime Override so no further message
             continue
 
@@ -212,9 +207,9 @@ def Main(uselivedata=True):
         # End of system loop
 
     # Add 3 Lowest Gaps for Homework
-    best = list((x for x in mySystems if (x.controllingFaction ==
-                myFactionName and (len(x.factions) > 1) and (
-                    SAFE_GAP <= (x.influence - x.factions[1].influence) <= IGNORE_GAP))))
+    best = list((_ for _ in mySystems if (_.controllingFaction ==
+                myFactionName and (len(_.factions) > 1) and (
+                    SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:3]:
         myMessage = Message(
@@ -245,6 +240,7 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
+    # TODO dIcons from Data JSON/.env
 
     # # New Analysis
     Main(uselivedata=True)

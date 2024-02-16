@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class Phase(Enum):
@@ -8,6 +9,10 @@ class Phase(Enum):
     PENDING = 'P'
     RECOVERING = 'R'
     UNKNOWN = 'U'
+
+    @classmethod
+    def _missing_(cls, value: object) -> Any:
+        return cls.UNKNOWN
 
 
 @dataclass
@@ -20,12 +25,6 @@ class State:
     gain: str = ''
     dayswon: int = 0
     dayslost: int = 0
-
-    def __post_init__(self) -> None:
-        # Convert str value into enum
-        for _ in Phase:
-            if self.phase == _.value:
-                self.phase = _
 
     def __str__(self) -> str:
         ans: str = f"{self.state}"
