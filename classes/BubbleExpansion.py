@@ -1,13 +1,21 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .Bubble import Bubble
 from .System import System
 from .Presense import Presence
 from .ExpansionTarget import ExpansionTarget
 import CSNSettings
 import simplejson as json
+import os
+import pickle
+from api import factionsovertime
+from time import sleep
+from providers.EliteBGS import HistoryLoad
 
+
+DATADIR = '.\data'
 
 # Expansion : Couldnt work out how to use an Inheritance of System (with expension_targets) so added it to the base class
+
 
 @dataclass
 class BubbleExpansion(Bubble):
@@ -16,8 +24,11 @@ class BubbleExpansion(Bubble):
     SIMPLERANGE: float = 20
     EXTENDEDRANGE: float = 30
 
+    systemhistory: list = field(default_factory=dict[set[str]])
+
     def __post_init__(self):
         self.systems = sorted(self.systems, key=lambda x: x.name)
+        HistoryLoad(self)
         self._ExpandAll()
 
     def _ExpandAll(self) -> None:
@@ -40,6 +51,8 @@ class BubbleExpansion(Bubble):
             target_distance: float = source_system.distance(target_system)
             target_cube_distance: float = source_system.cube_distance(
                 target_system)
+            target_retreated_bonus = 100 if (source_system.controllingFaction in self.systemhistory[
+                target_system.name]) else 0
             if len(target_system.factions) > 7:
                 # Too many factions to invade
                 pass
@@ -49,7 +62,7 @@ class BubbleExpansion(Bubble):
             elif len(target_system.factions) < 7:
                 # Expansion into a spare slot
                 expansion = ExpansionTarget(
-                    target_system.name, description='Expansion', score=target_distance/100, faction=target_system.factions[0])
+                    target_system.name, description='Expansion', score=target_retreated_bonus+target_distance/100, faction=target_system.factions[0])
                 if target_cube_distance <= self.SIMPLERANGE:
                     targets.append(expansion)
                 elif extended:
@@ -63,7 +76,7 @@ class BubbleExpansion(Bubble):
                     # Must NOT be a Native or Controlling Faction
                     if not (current_faction.isNative or current_faction.name == target_system.controllingFaction):
                         expansion = ExpansionTarget(
-                            target_system.name, description='Invasion', faction=current_faction, score=current_faction.influence)
+                            target_system.name, description='Invasion', faction=current_faction, score=target_retreated_bonus+current_faction.influence)
                         if target_cube_distance <= self.SIMPLERANGE:
                             targets.append(expansion)
                         elif extended:
@@ -107,3 +120,37 @@ class BubbleExpansion(Bubble):
         with open(f'data\\{CSNSettings.myfaction}EDSMInvasionTargets.json', 'r') as io:
             targets = json.load(io)
         return targets
+
+    # def HistoryLoad(self) -> None:
+    #     """ Should really be in EliteBGS Provider but I dont get sibling modules"""
+    #     self.systemhistory = dict()
+    #     if os.path.exists(os.path.join(DATADIR, 'EBGS_SysHist2.pickle')):
+    #         with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'rb') as io:
+    #             self.systemhistory = pickle.load(io)
+    #     print(
+    #         f"Loading System History {len(self.systemhistory)}/{len(self.systems)}...")
+    #     system: System
+    #     anychanges: bool = False
+    #     for system in self.systems:
+    #         if not self.systemhistory.get(system.name, None):
+    #             self.systemhistory[system.name] = set(
+    #                 factionsovertime(system.name))
+    #             anychanges = True
+    #             sleep(5)  # Be nice to EBGS
+    #         if self.systemhistory.get(system.name):
+    #             faction: Presence
+    #             for faction in system.factions:
+    #                 if faction.name not in self.systemhistory[system.name]:
+    #                     print(
+    #                         f" New Expansion Detected {system.name}, {faction.name}")
+    #                     self.systemhistory[system.name].add(faction.name)
+    #                     anychanges = True
+    #     if anychanges:
+    #         self.HistorySave()
+
+    # def HistorySave(self):
+    #     """ Should really be in EliteBGS Provider but I dont get sibling modules"""
+    #     os.makedirs(DATADIR, exist_ok=True)
+    #     with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
+    #         pickle.dump(self.systemhistory, io)
+    #     return

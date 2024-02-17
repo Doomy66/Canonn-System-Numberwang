@@ -7,9 +7,14 @@ from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
 from providers.EDDBFactions import isPlayer
+import pickle
+import os
+from api import factionsovertime
+from time import sleep
 
 
 _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
+DATADIR = '.\data'
 
 
 def EliteBGSDateTime(datestring) -> datetime:
@@ -142,3 +147,53 @@ def RefreshFaction(bubble: Bubble, faction: str) -> None:
             system = LiveSystemDetails(system, inconflict)
         else:
             system.updated = updated
+
+
+def HistoryCovert():
+    systemhistory = dict()
+    oldfile = os.path.join(DATADIR, 'EBGS_SysHist.pickle')
+    if os.path.exists(oldfile):
+        with open(oldfile, 'rb') as io:
+            raw = pickle.load(io)
+            for x in raw:
+                systemhistory[x['name']] = {y for y in x['factions']}
+
+    os.makedirs(DATADIR, exist_ok=True)
+    with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
+        pickle.dump(systemhistory, io)
+    return
+
+
+def HistoryLoad(bubble) -> None:
+    bubble.systemhistory = dict()
+    if os.path.exists(os.path.join(DATADIR, 'EBGS_SysHist2.pickle')):
+        with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'rb') as io:
+            bubble.systemhistory = pickle.load(io)
+    print(
+        f"Loading System History {len(bubble.systemhistory)}/{len(bubble.systems)}...")
+    system: System
+    anychanges: bool = False
+    for system in bubble.systems:
+        # if system.name == 'Varati':
+        #     bubble.systemhistory[system.name] = {}  # TEST
+        if not bubble.systemhistory.get(system.name, None):
+            bubble.systemhistory[system.name] = set(
+                factionsovertime(system.name))
+            anychanges = True
+            sleep(5)  # Be nice to EBGS
+        else:
+            faction: Presence
+            for faction in system.factions:
+                if faction.name not in bubble.systemhistory[system.name]:
+                    print(
+                        f" New Expansion Detected {system.name}, {faction.name}")
+                    bubble.systemhistory[system.name].add(faction.name)
+                    anychanges = True
+    if anychanges:
+        HistorySave(bubble)
+
+
+def HistorySave(bubble):
+    os.makedirs(DATADIR, exist_ok=True)
+    with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
+        pickle.dump(bubble.systemhistory, io)
