@@ -5,10 +5,6 @@ from .Presense import Presence
 from .ExpansionTarget import ExpansionTarget
 import CSNSettings
 import simplejson as json
-import os
-import pickle
-from api import factionsovertime
-from time import sleep
 from providers.EliteBGS import HistoryLoad
 
 

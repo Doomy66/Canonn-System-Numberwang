@@ -150,6 +150,7 @@ def RefreshFaction(bubble: Bubble, faction: str) -> None:
 
 
 def HistoryCovert():
+    """ Converts the old List of Dict format SysHist to the new Dict+Set format"""
     systemhistory = dict()
     oldfile = os.path.join(DATADIR, 'EBGS_SysHist.pickle')
     if os.path.exists(oldfile):
@@ -165,6 +166,7 @@ def HistoryCovert():
 
 
 def HistoryLoad(bubble) -> None:
+    """ Loads, refreshes and saves System History. This is a Dict of Systems with a set containing ALL factions that have ever been present """
     bubble.systemhistory = dict()
     if os.path.exists(os.path.join(DATADIR, 'EBGS_SysHist2.pickle')):
         with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'rb') as io:
