@@ -16,8 +16,11 @@ import pickle
 def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
     """ Debugging Print of Targets"""
     print(f"{system_name}")
+    oursysnames = list(
+        x.name for x in myBubble.faction_presence(myFactionName))
     for t in targets[:length]:
-        print(f"  {t.systemname} : {t} [{t.score:.3f}]")
+        print(
+            f"  {'*' if t.systemname in oursysnames else ' '}{t.systemname} : {t} [{t.score:.3f}]")
 
 
 if __name__ == '__main__':
@@ -35,9 +38,11 @@ if __name__ == '__main__':
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
     mySystem: System = myBubble.getsystem(mySystemName)
 
+    print(myBubble.systemhistory[mySystemName])
+
     targets = mySystem.expansion_targets
     if targets:
-        xPrintTargets(mySystem.name, targets, 99)
+        xPrintTargets(mySystem.name, targets, 9)
 
     # # List Faction's all likely Expansions
     # targets: list[ExpansionTarget]

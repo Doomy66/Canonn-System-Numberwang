@@ -177,8 +177,8 @@ def HistoryLoad(bubble) -> None:
     anychanges: bool = False
     for system in bubble.systems:
         # if system.name == 'Varati':
-        #     bubble.systemhistory[system.name] = {}  # TEST
-        if not bubble.systemhistory.get(system.name, None):
+        #     bubble.systemhistory[system.name] = set()  # TEST
+        if system.population > 0 and not bubble.systemhistory.get(system.name, None):
             bubble.systemhistory[system.name] = set(
                 factionsovertime(system.name))
             anychanges = True

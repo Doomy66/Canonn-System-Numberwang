@@ -20,6 +20,7 @@ class BubbleExpansion(Bubble):
     SIMPLERANGE: float = 20
     EXTENDEDRANGE: float = 30
 
+    # key is system name, value is a set of all factions that have ever been present
     systemhistory: list = field(default_factory=dict[set[str]])
 
     def __post_init__(self):

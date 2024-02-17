@@ -9,7 +9,7 @@ import json
 from datetime import datetime, timedelta, timezone
 import time
 import sys
-from CSNSettings import CSNLog
+from CSNSettings import CSNLog, RequestCount
 
 from requests.models import Response
 
@@ -383,6 +383,7 @@ def factionsovertime(system_name, days=30, earliest=datetime(2017, 10, 8)):
             sys.stdout.write(':' if myload['history'] else '.')
             sys.stdout.flush()
             NREQ += 1
+            RequestCount()
 
             if myload['history']:
                 for h in myload['history']:
