@@ -13,6 +13,7 @@ import CSNSettings
 
 from Overrides import CSNOverRideRead
 import pickle
+from discord import SyncWebhook
 
 myFactionName: str = CSNSettings.myfaction
 myBubble: BubbleExpansion = None
@@ -36,18 +37,57 @@ SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
 
 
-def WriteDiscord(myFactionName: str, Full: int, messages: list[Message]):
+def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> None:
+    messages = list(filter(lambda _: _.isDiscord, messages))
     # Load Old Messages
     oldmessages: list[Message] = []
-    try:
-        # CSNLog.info('Load Saved Messages')
-        with open(f'data\\{myFactionName}CSNMessages.pickle', 'rb') as io:
-            oldmessages = pickle.load(io)
-    except:
-        pass
 
-    # TODO Compare with Old Messages
-    pass
+    if not Full:
+        try:
+            # CSNLog.info('Load Saved Messages')
+            with open(f'data\\{myFactionName}CSNMessages.pickle', 'rb') as io:
+                oldmessages = pickle.load(io)
+        except:
+            pass
+
+        for message in oldmessages:
+            # Remove Unchanged Messages
+            if message in messages:
+                messages.remove(message)
+            # Add Old Message as Complete
+            if message.systemname not in (x.systemname for x in messages):
+                message.complete = True
+                messages.append(message)
+
+    print('Discord Webhook...')
+    if CSNSettings.wh_id and messages:
+        webhook_text: str = ''
+        webhook_contined: str = ''
+        message: Message
+        webhook = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
+        for message in messages:
+            # wh_text += f"{message[8]}{message[1]} : {message[7]}{'' if message[9] else dIcons['notfresh'] }\n"
+            thistext: str = f"{message.emoji}{message.systemname} : {'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
+
+            # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
+            if len(webhook_text) < 1850:
+                webhook_text += thistext
+            else:
+                webhook_contined += thistext
+
+        print(
+            f"Web Hook Text length is limited to 2000 chars : {len(webhook_text)} + {len(webhook_contined)}")
+        csnicon = '<:canonn:1020771055532511312>'
+        if webhook_text != '':
+            print(webhook_text)
+            # webhook.send(
+            #     f'{"**Full Report**" if Full else "Latest News"} {csnicon} \n{webhook_text}')
+        else:
+            print("...Nothing to Report to Discord")
+        if webhook_contined != '':
+            print(webhook_contined)
+            # webhook.send(
+            #     f'"...continued {csnicon} \n{webhook_contined}')
 
 
 def ExpandMessage(message: Message, expandto: str, inf: float, gap: float, happy: str, gapfromtop: float) -> Message:
@@ -130,27 +170,28 @@ def RetreatMessages() -> list[Message]:
     return messages
 
 
-# def MarketMessages() -> list[Message]:
-#     """ Interesting Market Messages """
-#     """ TODO Tritium needs to know if Tritium is sold """
-#     """ TODO Goldrush uses economy details of station 'extraction'ish """
-#     messages: list[Message] = []
+def MarketMessages() -> list[Message]:
+    pass
+    # """ Interesting Market Messages """
+    # """ TODO Tritium needs to know if Tritium is sold """
+    # """ TODO Goldrush uses economy details of station 'extraction'ish """
+    # messages: list[Message] = []
 
-#     for system in mySystems:
-#         state: State
-#         sellsTritium: bool = False
-#         goldRushEconomy: bool = 'Extraction' in system.alleconomys ## A Faction's Station is Extraction, and a Faction's State is ISF
-#         for state in system.factions[0].states:
-#             if sellsTritium and state.state.lower() in {'drought', 'blight', 'terrorism'} and state.phase is not Phase.RECOVERING:
-#                 myMessage = Message(
-#                     system.name, 24, f"Tritium Opportunity{' Pending' if state.phase==Phase.PENDING else ''}")
-#                 messages.append(myMessage)
-#             if goldRushEconomy and state.state.lower() in {'infrastructurefailure'} and state.phase is not Phase.RECOVERING:
-#                 myMessage = Message(
-#                     system.name, 24, f"Gold Rush {' Pending' if state.phase==Phase.PENDING else ''}", dIcons['data'])
-#                 messages.append(myMessage)
+    # for system in mySystems:
+    #     state: State
+    #     sellsTritium: bool = False
+    #     goldRushEconomy: bool = 'Extraction' in system.alleconomys ## A Faction's Station is Extraction, and a Faction's State is ISF
+    #     for state in system.factions[0].states:
+    #         if sellsTritium and state.state.lower() in {'drought', 'blight', 'terrorism'} and state.phase is not Phase.RECOVERING:
+    #             myMessage = Message(
+    #                 system.name, 24, f"Tritium Opportunity{' Pending' if state.phase==Phase.PENDING else ''}")
+    #             messages.append(myMessage)
+    #         if goldRushEconomy and state.state.lower() in {'infrastructurefailure'} and state.phase is not Phase.RECOVERING:
+    #             myMessage = Message(
+    #                 system.name, 24, f"Gold Rush {' Pending' if state.phase==Phase.PENDING else ''}", dIcons['data'])
+    #             messages.append(myMessage)
 
-#     return messages
+    # return messages
 
 
 def InvasionMessages(cycles: int = 5) -> list[Message]:
@@ -190,6 +231,7 @@ def Main(uselivedata=True):
     messages.extend(RetreatMessages())
     # TODO Invasions - Invasion Process Not Using Retreated Archive
     messages.extend(InvasionMessages(8))
+    # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
     # TODO GOLDRUSH
     # messages.extend(MarketMessages())
@@ -263,8 +305,11 @@ def Main(uselivedata=True):
     messages.sort(key=lambda x: x.priority)
 
     # Output
-    # TODO Discord Full
-    # TODO Discourd Update
+    # Discord Full
+    WriteDiscord(myFactionName=myFactionName, Full=True, messages=messages[:])
+    # Discourd Update
+    WriteDiscord(myFactionName=myFactionName, Full=False, messages=messages[:])
+
     # TODO Patrol
     for myMessage in messages:
         if myMessage.priority <= 10 or myMessage.priority > 20:
