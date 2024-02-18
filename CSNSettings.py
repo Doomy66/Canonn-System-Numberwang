@@ -1,7 +1,6 @@
 import logging
-import os
 import platform
-from dotenv import load_dotenv, dotenv_values, find_dotenv
+from dotenv import dotenv_values
 import json
 
 myEnv = dotenv_values('.env.'+platform.node())
@@ -23,7 +22,14 @@ extendedphase: bool = myEnv.get(
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 ignorepf = myEnv.get('ignorepf').split(",")
-invasionparanoialevel = float(os.environ.get('invasionparanoialevel'))
+invasionparanoialevel = float(myEnv.get('invasionparanoialevel'))
+
+# dIcons from json file
+try:
+    with open(f'resources\\DiscordIcons', 'r') as io:
+        dIcons = json.load(io)
+except:
+    dIcons = {}
 
 
 def isIgnored(faction: str) -> bool:
@@ -37,21 +43,17 @@ surrendered_systems = ['A List of System Names']
 # Global Variables to count Requests
 myGlobals = {'nRequests': 0}
 
+# Keep a track of API Requests
+
 
 def RequestCount() -> None:
     myGlobals['nRequests'] += 1
 
 
-try:
-    with open(f'resources\\DiscordIcons', 'r') as io:
-        dIcons = json.load(io)
-except:
-    dIcons = {}
-
 logging.getLogger('googleapiclient.discovery_cache').setLevel(
     logging.ERROR)  # Else get spurious warnings
 
-logging.basicConfig(filename='data\CSNLog.'+os.environ['COMPUTERNAME']+'.log',
+logging.basicConfig(filename='data\CSNLog.'+platform.node()+'.log',
                     filemode='a',
                     format='%(asctime)s %(name)s %(levelname)s %(message)s',
                     level=logging.INFO)
