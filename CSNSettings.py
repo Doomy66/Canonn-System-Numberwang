@@ -1,25 +1,28 @@
 import logging
 import os
-from dotenv import load_dotenv
+import platform
+from dotenv import load_dotenv, dotenv_values, find_dotenv
 import json
 
-load_dotenv()
+myEnv = dotenv_values('.env.'+platform.node())
+if not myEnv:
+    myEnv = dotenv_values()
 
 # Canonn Discord
-wh_id = os.environ.get('wh_id')
-wh_token = os.environ.get('wh_token')
+wh_id = myEnv.get('wh_id')
+wh_token = myEnv.get('wh_token')
 
 # Canonn Google Sheet
-override_workbook = os.environ.get('override_workbook')
-override_sheet = os.environ.get('override_sheet')
+override_workbook = myEnv.get('override_workbook')
+override_sheet = myEnv.get('override_sheet')
 
 # Faction Settings
-myfaction = os.environ.get('myfaction')
-extendedphase: bool = os.environ.get(
+myfaction = myEnv.get('myfaction')
+extendedphase: bool = myEnv.get(
     'extendedphase')[:1].upper() in ['Y', 'T']
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
-ignorepf = os.environ.get('ignorepf').split(",")
+ignorepf = myEnv.get('ignorepf').split(",")
 invasionparanoialevel = float(os.environ.get('invasionparanoialevel'))
 
 

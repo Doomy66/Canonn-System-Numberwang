@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from classes.BubbleExpansion import BubbleExpansion
 from classes.Presense import Presence
@@ -11,6 +10,7 @@ from providers.EliteBGS import RefreshFaction
 from api import dcohsummary, getfleetcarrier
 from CSNSettings import dIcons
 import CSNSettings
+import platform
 
 from Overrides import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
 import pickle
@@ -23,7 +23,6 @@ mySystems: list[System] = []
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
-DEVELOPMENT = True
 
 
 def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> None:
@@ -48,40 +47,36 @@ def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> Non
                 message.complete = True
                 messages.append(message)
 
-    print('Discord Webhook...')
+    print(f"Discord Webhook : {'Full' if Full else 'Update'}...")
     if CSNSettings.wh_id and messages:
         webhook_text: str = ''
-        webhook_contined: str = ''
-        message: Message
+        webhook_extra: str = ''
         webhook = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
+        message: Message
         for message in messages:
             thistext: str = f"{message.emoji}{message.systemname} : {'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
             # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
             if len(webhook_text) < 1850:
                 webhook_text += thistext
             else:
-                webhook_contined += thistext
-
-        print(
-            f"Web Hook Text length is limited to 2000 chars : {len(webhook_text)} + {len(webhook_contined)}")
+                webhook_extra += thistext
 
         if webhook_text != '':
             print(webhook_text)
-            if not DEVELOPMENT:
-                webhook.send(
-                    f"{'**Full Report**' if Full else 'Latest News'} {dIcons['csnicon']} \n{webhook_text}")
+            webhook.send(
+                f"{'**Full Report**' if Full else 'Latest News'} {dIcons['csnicon']} \n{webhook_text}")
 
-        if webhook_contined != '':
-            print(webhook_contined)
-            if not DEVELOPMENT:
-                webhook.send(
-                    f"...continued {dIcons['csnicon']} \n{webhook_contined}")
+        if webhook_extra != '':
+            print(webhook_extra)
+            webhook.send(
+                f"...continued {dIcons['csnicon']} \n{webhook_extra}")
     else:
         print("...Nothing to Report to Discord")
 
 
 def WritePatrol(messages: list[Message]):
-    """System, X, Y, Z, TI=0, Faction=Canonn, Message, Icon"""
+    """ Convert Messages into Format Compatible with Google Sheet that is sent to EDMC\n"""
+    """ System, X, Y, Z, TI=0, Faction=Canonn, Message, Icon"""
     patrol = []
     for message in messages:
         if message.isPatrol:
@@ -257,6 +252,7 @@ def FillInMessages(count: int = 3) -> list[Message]:
 def Main(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
     """ Generates all Messages for the Faction and outputs to Discord/Google"""
     global myBubble, mySystems
+    print(f"CSN Analysis on {platform.node()}")
     myBubble = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))
     mySystems = myBubble.faction_presence(myFactionName)

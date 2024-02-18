@@ -1,16 +1,12 @@
 # Google API
 import pickle
 import os.path
-from typing import Type
 import CSNSettings
-
 
 from datetime import datetime
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-
-# pylint: disable=no-member
 
 # Traditional
 import requests
@@ -144,8 +140,7 @@ def CSNFleetCarrierRead():
 
 def CSNPatrolWrite(answer):
     """System, X, Y, Z, TI=0, Faction=Canonn, Message, Icon"""
-    """Col 285 Sector KZ-C b14-1	-133.21875	79.1875	-64.84375	0	Canonn	Suggestion: Canonn Missions, Bounties, Trade and Data (gap to Nones Resistance is 27.1%)	:chart_with_downwards_trend: 
-Col 285 Sector UZ-O c6-23	-138.375	2.78125	-82.40625	0	Canonn	Suggestion: Canonn Missions, Bounties, Trade and Data (gap to United Kidi Confederation is 24.6%)	:chart_with_downwards_trend: """
+    """Col 285 Sector KZ-C b14-1	-133.21875	79.1875	-64.84375	0	Canonn	Suggestion: Canonn Missions, Bounties, Trade and Data (gap to Nones Resistance is 27.1%)	:chart_with_downwards_trend: """
 
     mysheet_id = CSNSettings.override_workbook
     if not mysheet_id:
