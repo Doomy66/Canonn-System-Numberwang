@@ -11,7 +11,7 @@ from providers.EliteBGS import RefreshFaction
 from api import dcohsummary, getfleetcarrier
 import CSNSettings
 
-from Overrides import CSNOverRideRead, CSNFleetCarrierRead
+from Overrides import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
 import pickle
 from discord import SyncWebhook
 
@@ -91,6 +91,18 @@ def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> Non
         print("...Nothing to Report to Discord")
 
 
+def WritePatrol(messages: list[Message]):
+    """System, X, Y, Z, TI=0, Faction=Canonn, Message, Icon"""
+    patrol = []
+    for message in messages:
+        if message.isPatrol:
+            system = myBubble.getsystem(message.systemname)
+            patrol.append((message.systemname, system.x if system else 0, system.y if system else 0,
+                          system.z if system else 0, 0, 'Canonn', message.text, message.emoji))
+    print('Google Patrol...')
+    CSNPatrolWrite(patrol)
+
+
 def ExpandMessage(message: Message, expandto: str, inf: float, gap: float, happy: str, gapfromtop: float) -> Message:
     """ String Expansion of variables in a message """
     message.text = message.text.format(
@@ -136,7 +148,7 @@ def StaleDataMessages() -> list[Message]:
         age: timedelta = (datetime.now()-system.updated).days
         if age > system.influence/10:
             myMessage = Message(
-                system.name, 11, f"(Scan System to update data {int(age)} days old')", dIcons['data'])
+                system.name, 11, f"Scan System to update data {int(age)} days old", dIcons['data'])
             messages.append(myMessage)
     return messages
 
@@ -232,6 +244,20 @@ def FleetCarrierMessages() -> list[Message]:
     return messages
 
 
+def HomeworkMessages(count: int = 3) -> list[Message]:
+    """ 3 Systems with the lowest non urgent gaps """
+    messages: list[Message] = []
+    best = list((_ for _ in mySystems if (_.controllingFaction ==
+                myFactionName and (len(_.factions) > 1) and (
+                    SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
+    best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
+    for best3 in best[:count]:
+        myMessage = Message(
+            best3.name, 5, f"Suggestion: {myFactionName} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%)", dIcons['mininf'])
+        messages.append(myMessage)
+    return messages
+
+
 def Main(uselivedata=True):
     global myBubble, mySystems
     myBubble = BubbleExpansion(
@@ -249,16 +275,19 @@ def Main(uselivedata=True):
     messages.extend(StaleDataMessages())
     # DCOH Thargoid Threat
     messages.extend(DCOHThargoidMessages())
-    # TODO Retreats - Not Tested vs Real Data
+    # Retreats - TODO Testing
     messages.extend(RetreatMessages())
-    # TODO Invasions - Invasion Process Not Using Retreated Archive
+    # Invasions
     messages.extend(InvasionMessages(8))
+    # Fleet Carriers
+    messages.extend(FleetCarrierMessages())
+    # Homework 3 Systems with lowest gaps
+    messages.extend(HomeworkMessages(3))
+
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
     # TODO GOLDRUSH
     # messages.extend(MarketMessages())
-    # Fleet Carriers
-    messages.extend(FleetCarrierMessages())
 
     # Process all faction systems
     system: System
@@ -307,18 +336,7 @@ def Main(uselivedata=True):
             messages.append(myMessage)
             continue
 
-        # End of system loop
-
-    # Add 3 Lowest Gaps for Homework
-    best = list((_ for _ in mySystems if (_.controllingFaction ==
-                myFactionName and (len(_.factions) > 1) and (
-                    SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
-    best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
-    for best3 in best[:3]:
-        myMessage = Message(
-            best3.name, 5, f"Suggestion: {myFactionName} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%)", dIcons['mininf'])
-        messages.append(myMessage)
-
+    # End of system loop
     messages.sort(key=lambda x: x.priority)
 
     # Output
@@ -327,13 +345,10 @@ def Main(uselivedata=True):
     # Discourd Update
     WriteDiscord(myFactionName=myFactionName, Full=False, messages=messages[:])
 
-    # TODO Patrol
-    # for myMessage in messages:
-    #     if myMessage.priority <= 10 or myMessage.priority > 20:
-    #         print(
-    #             f"{myMessage.systemname:<30} - {myMessage.priority:<2} - {myMessage.text:<80} {myMessage.emoji}")
+    # Write Patrol to Google Sheet
+    WritePatrol(messages[:])
 
-    # Save Messages for Update Comparison
+    # Save Messages for update comparison
     with open(f'data\\{myFactionName}CSNMessages.pickle', 'wb') as io:
         pickle.dump(messages, io)
 
@@ -345,9 +360,4 @@ if __name__ == '__main__':
         Tests and Examples of use
     """
     # TODO dIcons from Data JSON/.env
-
-    # # New Analysis
-
     Main(uselivedata=True)
-
-    print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")
