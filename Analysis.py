@@ -8,10 +8,10 @@ from classes.Message import Message, Overide
 from classes.ExpansionTarget import ExpansionTarget
 from providers.EDSM import GetSystemsFromEDSM
 from providers.EliteBGS import RefreshFaction
-from api import dcohsummary
+from api import dcohsummary, getfleetcarrier
 import CSNSettings
 
-from Overrides import CSNOverRideRead
+from Overrides import CSNOverRideRead, CSNFleetCarrierRead
 import pickle
 from discord import SyncWebhook
 
@@ -51,11 +51,11 @@ def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> Non
             pass
 
         for message in oldmessages:
-            # Remove Unchanged Messages
             if message in messages:
+                # Remove Unchanged Messages
                 messages.remove(message)
-            # Add Old Message as Complete
-            if message.systemname not in (x.systemname for x in messages):
+            elif (message.systemname not in list(x.systemname for x in messages)) and message.isDiscord:
+                # Add Old Message as Complete
                 message.complete = True
                 messages.append(message)
 
@@ -82,12 +82,13 @@ def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> Non
             print(webhook_text)
             # webhook.send(
             #     f'{"**Full Report**" if Full else "Latest News"} {csnicon} \n{webhook_text}')
-        else:
-            print("...Nothing to Report to Discord")
+
         if webhook_contined != '':
             print(webhook_contined)
             # webhook.send(
             #     f'"...continued {csnicon} \n{webhook_contined}')
+    else:
+        print("...Nothing to Report to Discord")
 
 
 def ExpandMessage(message: Message, expandto: str, inf: float, gap: float, happy: str, gapfromtop: float) -> Message:
@@ -210,6 +211,27 @@ def InvasionMessages(cycles: int = 5) -> list[Message]:
     return messages
 
 
+def FleetCarrierMessages() -> list[Message]:
+    """ Location of Noted Fleet Carriers """
+    messages: list[Message] = []
+
+    carriers = CSNFleetCarrierRead()
+    for carrier in carriers:
+        currentsystem = None
+        if carrier['id'][0] != '!':
+            try:
+                thiscarrier = getfleetcarrier(carrier['id'])
+                currentsystem = thiscarrier['current_system']
+                message = Message(
+                    currentsystem, 9, f'{carrier["name"]} ({carrier["role"]})', dIcons['FC'])
+                messages.append(message)
+            except:
+                pass
+            if not currentsystem:
+                print(f'!!! Fleet Carrier {carrier["id"]} Failed !!!')
+    return messages
+
+
 def Main(uselivedata=True):
     global myBubble, mySystems
     myBubble = BubbleExpansion(
@@ -235,6 +257,8 @@ def Main(uselivedata=True):
     # TODO Tritium Refinary Low Price Active/Pending
     # TODO GOLDRUSH
     # messages.extend(MarketMessages())
+    # Fleet Carriers
+    messages.extend(FleetCarrierMessages())
 
     # Process all faction systems
     system: System
@@ -254,11 +278,6 @@ def Main(uselivedata=True):
         conflictstate: State = next(
             (_ for _ in myPresence.states if _.isConflict), None)
         if conflictstate:
-            # # Remove Peacetime Overrides - A Conflict Overrides such a message (!! Dont think this is required !!)
-            # for myMessage in messages[:]:
-            #     if (myMessage.systemname == system.name) and (myMessage.override == Overide.PEACETIME):
-            #         messages.remove(myMessage)
-
             myMessage: Message = Message(
                 system.name, 2, f"{str(conflictstate)}", dIcons[conflictstate.state.replace(' ', '').lower()])
 
@@ -300,8 +319,6 @@ def Main(uselivedata=True):
             best3.name, 5, f"Suggestion: {myFactionName} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%)", dIcons['mininf'])
         messages.append(myMessage)
 
-    # TODO Fleet Carriers
-
     messages.sort(key=lambda x: x.priority)
 
     # Output
@@ -311,10 +328,10 @@ def Main(uselivedata=True):
     WriteDiscord(myFactionName=myFactionName, Full=False, messages=messages[:])
 
     # TODO Patrol
-    for myMessage in messages:
-        if myMessage.priority <= 10 or myMessage.priority > 20:
-            print(
-                f"{myMessage.systemname:<30} - {myMessage.priority:<2} - {myMessage.text:<80} {myMessage.emoji}")
+    # for myMessage in messages:
+    #     if myMessage.priority <= 10 or myMessage.priority > 20:
+    #         print(
+    #             f"{myMessage.systemname:<30} - {myMessage.priority:<2} - {myMessage.text:<80} {myMessage.emoji}")
 
     # Save Messages for Update Comparison
     with open(f'data\\{myFactionName}CSNMessages.pickle', 'wb') as io:
