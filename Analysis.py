@@ -23,6 +23,7 @@ mySystems: list[System] = []
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
+DEVELOPMENT = True
 
 
 def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> None:
@@ -54,9 +55,7 @@ def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> Non
         message: Message
         webhook = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
         for message in messages:
-            # wh_text += f"{message[8]}{message[1]} : {message[7]}{'' if message[9] else dIcons['notfresh'] }\n"
             thistext: str = f"{message.emoji}{message.systemname} : {'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
-
             # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
             if len(webhook_text) < 1850:
                 webhook_text += thistext
@@ -65,16 +64,18 @@ def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> Non
 
         print(
             f"Web Hook Text length is limited to 2000 chars : {len(webhook_text)} + {len(webhook_contined)}")
-        csnicon = '<:canonn:1020771055532511312>'
+
         if webhook_text != '':
             print(webhook_text)
-            # webhook.send(
-            #     f'{"**Full Report**" if Full else "Latest News"} {csnicon} \n{webhook_text}')
+            if not DEVELOPMENT:
+                webhook.send(
+                    f"{'**Full Report**' if Full else 'Latest News'} {dIcons['csnicon']} \n{webhook_text}")
 
         if webhook_contined != '':
             print(webhook_contined)
-            # webhook.send(
-            #     f'"...continued {csnicon} \n{webhook_contined}')
+            if not DEVELOPMENT:
+                webhook.send(
+                    f"...continued {dIcons['csnicon']} \n{webhook_contined}")
     else:
         print("...Nothing to Report to Discord")
 
@@ -158,16 +159,23 @@ def DCOHThargoidMessages() -> list[Message]:
 def RetreatMessages() -> list[Message]:
     """ Prevent Retreat of Full Systems to prevent normal Expansion """
     messages: list[Message] = []
+    summary: list[str] = []
     for system in mySystems:
         faction: Presence
-        # Mine, Currently Full, and there is an enemy faction in simple range
-        # TODO Also Consider PF and Ignored PF As Invader?
-        if system.controllingFaction == myFactionName and system.factions and len(system.factions) == 7 and next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != myFactionName), None):
-            for faction in system.factions:
-                if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
-                    myMessage = Message(
-                        system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)")
-                    messages.append(myMessage)
+        # Mine, Currently Full, and there is another faction in simple range - Dont consider PF or Ignored, thats bad strategy
+        if system.controllingFaction == myFactionName and system.factions and len(system.factions) > 6:
+            if next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != myFactionName), None):
+                for faction in system.factions:
+                    if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
+                        myMessage = Message(
+                            system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)")
+                        summary.append(system.name)
+                        messages.append(myMessage)
+    if summary:
+        myMessage = Message('Retreats Detected in', 25,
+                            ','.join(summary), dIcons['data'])
+        messages.append(myMessage)
+
     return messages
 
 
@@ -202,7 +210,7 @@ def InvasionMessages(cycles: int = 5) -> list[Message]:
     system: System
     target: ExpansionTarget
     for system in myBubble.systems:
-        if system not in mySystems and system.nextexpansion and system.influence > CSNSettings.invasionparanoialevel and system.factions[0].isPlayer and system.controllingFaction not in CSNSettings.ignorepf:
+        if system not in mySystems and system.nextexpansion and system.influence > CSNSettings.invasionparanoialevel and system.controllingdetails.isPlayer and not CSNSettings.isIgnored(system.controllingFaction):
             for i, target in enumerate(system.expansion_targets[:cycles]):
                 if target.faction.name == myFactionName:
                     messages.append(Message(system.name,
@@ -232,7 +240,7 @@ def FleetCarrierMessages() -> list[Message]:
     return messages
 
 
-def HomeworkMessages(count: int = 3) -> list[Message]:
+def FillInMessages(count: int = 3) -> list[Message]:
     """ 3 Systems with the lowest non urgent gaps """
     messages: list[Message] = []
     best = list((_ for _ in mySystems if (_.controllingFaction ==
@@ -246,7 +254,8 @@ def HomeworkMessages(count: int = 3) -> list[Message]:
     return messages
 
 
-def Main(uselivedata=True):
+def Main(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
+    """ Generates all Messages for the Faction and outputs to Discord/Google"""
     global myBubble, mySystems
     myBubble = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))
@@ -257,20 +266,15 @@ def Main(uselivedata=True):
         myBubble._ExpandAll()
 
     messages: list[Message] = []
-    # Overrides
+    # Manually Specified Messages
     messages.extend(OverrideMessages())
-    # Stale
+    # General Messages
     messages.extend(StaleDataMessages())
-    # DCOH Thargoid Threat
     messages.extend(DCOHThargoidMessages())
-    # Retreats - TODO Testing
-    messages.extend(RetreatMessages())
-    # Invasions
-    messages.extend(InvasionMessages(8))
-    # Fleet Carriers
+    messages.extend(RetreatMessages())  # Retreats - TODO Testing
+    messages.extend(InvasionMessages())
     messages.extend(FleetCarrierMessages())
-    # Homework 3 Systems with lowest gaps
-    messages.extend(HomeworkMessages(3))
+    messages.extend(FillInMessages(count=3))
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
@@ -280,7 +284,7 @@ def Main(uselivedata=True):
     # Process all faction systems
     system: System
     for system in mySystems:
-        # Precalculationa
+        # Precalculations
         gap: float = round(system.influence -
                            (system.factions[1].influence if len(system.factions) > 1 else 0), 1)
         myPresence: Presence = next(
@@ -288,8 +292,9 @@ def Main(uselivedata=True):
         gapfromtop: float = round(
             system.influence - myPresence.influence if myPresence else 0, 1)
 
+        # Manual Override - No Internal Message for this System
         if any(_.override == Overide.OVERRIDE and _.systemname == system.name for _ in messages):
-            continue  # No Internal Message for this System
+            continue
 
         # Conflict for myFaction
         conflictstate: State = next(
@@ -329,9 +334,13 @@ def Main(uselivedata=True):
 
     # Output
     # Discord Full
-    WriteDiscord(myFactionName=myFactionName, Full=True, messages=messages[:])
+    if DiscordFullReport:
+        WriteDiscord(myFactionName=myFactionName,
+                     Full=True, messages=messages[:])  # Copy of messages on purpose
     # Discourd Update
-    WriteDiscord(myFactionName=myFactionName, Full=False, messages=messages[:])
+    if DiscordUpdateReport:
+        WriteDiscord(myFactionName=myFactionName,
+                     Full=False, messages=messages[:])  # Copy of messages on purpose
 
     # Write Patrol to Google Sheet
     WritePatrol(messages[:])
@@ -347,4 +356,4 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
-    Main(uselivedata=True)
+    Main(uselivedata=True, DiscordUpdateReport=True, DiscordFullReport=True)

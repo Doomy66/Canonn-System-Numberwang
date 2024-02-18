@@ -34,12 +34,10 @@ class BubbleExpansion(Bubble):
         CSNSettings.CSNLog.info('Calculating Expansion Targets...')
         system: System
         for system in self.systems:
-            # print('.', end='')
             system.expansion_targets = self.ExpandFromSystem(
                 system, extended=(system.controllingFaction and system.controllingFaction == CSNSettings.myfaction and CSNSettings.extendedphase))
         self.saveExpansionJson()
         self.saveInvasionJson()
-        print('')
 
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
         """ Calculate all expansion targets for a system"""

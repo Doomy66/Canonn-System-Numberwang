@@ -300,7 +300,6 @@ def Misson_Gen(argv=''):
 
     # Add Detected Retreats
     if detected_retreats:
-        print('')
         messages.append(amessage('Retreats Detected in', 25,
                         ', '.join(detected_retreats), dIcons['data']))
 

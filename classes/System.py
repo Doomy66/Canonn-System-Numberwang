@@ -81,10 +81,19 @@ class System:
 
     @property
     def influence(self) -> float:
+        """ Controlling Faction Influence"""
         return self.factions[0].influence if self.factions else 0
 
     @property
     def economysavailable(self) -> {str}:
+        """ Set of Economies of all Stations"""
         ans = {x.economy1 for x in self.stations}.union(
             {x.economy2 for x in self.stations if x.economy2})
         return ans
+
+    @property
+    def controllingdetails(self) -> Presence:
+        """ Presence of Controlling Faction"""
+        if self.factions:
+            return self.factions[0]
+        return None
