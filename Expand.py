@@ -44,46 +44,47 @@ if __name__ == '__main__':
     if targets:
         xPrintTargets(mySystem.name, targets, 9)
 
-    # # List Faction's all likely Expansions
-    # targets: list[ExpansionTarget]
-    # source_system: System
-    # print(f"List {myFactionName}'s all likely Expansions")
-    # for source_system in myBubble.systems:
-    #     if source_system.controllingFaction == myFactionName and source_system.factions[0].influence > 70:
-    #         targets = source_system.expansion_targets
-    #         if targets:
-    #             xPrintTargets(source_system.name, targets)
+    # List Faction's all likely Expansions
+    targets: list[ExpansionTarget]
+    source_system: System
+    print(f"List {myFactionName}'s all likely Expansions")
+    for source_system in myBubble.systems:
+        if source_system.controllingFaction == myFactionName and source_system.factions[0].influence > 70:
+            targets = source_system.expansion_targets
+            if targets:
+                xPrintTargets(source_system.name, targets)
 
-    # # Simple is calculated in Post Init
-    # print(f"\nSimple is calculated in Post Init unless the .env says otherwise")
-    # if mySystem.expansion_targets:
-    #     xPrintTargets('Default  '+mySystemName, mySystem.expansion_targets)
+    # Simple is calculated in Post Init
+    print(f"\nSimple is calculated in Post Init unless the .env says otherwise")
+    if mySystem.expansion_targets:
+        xPrintTargets('Default  '+mySystemName, mySystem.expansion_targets)
 
-    # # Need to recalculate to check for Extended
-    # print(f"Need to recalculate to check for Extended")
-    # targets = myBubble.ExpandFromSystem(mySystem, extended=True)
-    # if targets:
-    #     xPrintTargets('Extended ' + mySystemName, targets, length=5)
+    # Need to recalculate to check for Extended
+    print(f"Need to recalculate to check for Extended")
+    targets = myBubble.ExpandFromSystem(mySystem, extended=True)
+    if targets:
+        xPrintTargets('Extended ' + mySystemName, targets, length=5)
 
-    # # Look for Simple Invasions of Player Factions into our Systems
-    # print(
-    #     f"\nLook for Simple Invasions of Player Factions into {myFactionName} Systems")
-    # for source_system in myBubble.systems:
-    #     if source_system.factions and source_system.factions[0].influence > 60 and source_system.factions[0].isPlayer:
-    #         targets = source_system.expansion_targets
-    #         if targets:
-    #             for t in targets[:3]:  # Only look at the top 3 targets
-    #                 if myBubble.getsystem(t.systemname).isfactionpresent(myFactionName):
-    #                     xPrintTargets(
-    #                         f"{source_system.name} ({source_system.factions[0].influence:.2f}) : {source_system.controllingFaction}", targets, length=3)
-    #                     break
+    # Look for Simple Invasions of Player Factions into our Systems
+    print(
+        f"\nLook for Simple Invasions of Player Factions into {myFactionName} Systems")
+    for source_system in myBubble.systems:
+        if source_system.factions and source_system.factions[0].influence > 60 and source_system.factions[0].isPlayer:
+            targets = source_system.expansion_targets
+            if targets:
+                for t in targets[:3]:  # Only look at the top 3 targets
+                    if myBubble.getsystem(t.systemname).isfactionpresent(myFactionName):
+                        xPrintTargets(
+                            f"{source_system.name} ({source_system.factions[0].influence:.2f}) : {source_system.controllingFaction}", targets, length=3)
+                        break
 
-    # # Update System with live EliteBGS data
-    # print('\nCache', mySystem)
-    # mySystem = LiveSystemDetails(mySystem, forced=True)
-    # print('Live', mySystem)
+    # Update System with live EliteBGS data
+    print('\nCache', mySystem)
+    mySystem = LiveSystemDetails(mySystem, forced=True)
+    print('Live', mySystem)
 
-    # # Update a Factions Systems
-    # RefreshFaction(myBubble, myFactionName)
+    # Update a Factions Systems
+    RefreshFaction(myBubble, myFactionName)
+    myBubble._ExpandAll()
 
     print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")

@@ -40,7 +40,7 @@ def RequestCount() -> None:
 
 
 try:
-    with open(f'data\\DiscordIcons.json', 'r') as io:
+    with open(f'resources\\DiscordIcons', 'r') as io:
         dIcons = json.load(io)
 except:
     dIcons = {}

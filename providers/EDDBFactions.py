@@ -29,7 +29,7 @@ def isPlayer(factionname: str) -> bool:
     return EDDBFACTIONS.get(factionname.lower(), fdetails()).isPlayer
 
 
-def LoadEDDBFactions(location: str = 'EDDBFactions.pickle') -> None:
+def LoadEDDBFactions(location: str = 'resources\EDDBFactions.pickle') -> None:
     """ Loads Pickle, default to same folder loaction"""
     global EDDBFACTIONS
     eddbf: list = []
