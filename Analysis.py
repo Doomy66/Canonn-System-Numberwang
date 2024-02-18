@@ -9,6 +9,7 @@ from classes.ExpansionTarget import ExpansionTarget
 from providers.EDSM import GetSystemsFromEDSM
 from providers.EliteBGS import RefreshFaction
 from api import dcohsummary, getfleetcarrier
+from CSNSettings import dIcons
 import CSNSettings
 
 from Overrides import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
@@ -19,19 +20,6 @@ myFactionName: str = CSNSettings.myfaction
 myBubble: BubbleExpansion = None
 mySystems: list[System] = []
 
-dIcons = {"war": ':gun: ',  # 12/09/22 Stnadard Icons due to dead Discord
-          "election": ':ballot_box: ',
-          "civilwar": '<:EliteEagle:1020771075207991407> ',
-          "override": '<:Salute2:1020771111073480715> ',
-          "push": ':arrow_heading_up: ',
-          "data": ':eyes: ',
-          "infgap": ':dagger: ',
-          "mininf": ':chart_with_downwards_trend: ',
-          "info": ':information_source: ',
-          "end": ':clap: ',
-          "FC": ':anchor: ',
-          "notfresh": ':arrows_counterclockwise: ',
-          "thargoid1": '<:Thargoid:1020771117939568660>'}
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
@@ -359,5 +347,4 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
-    # TODO dIcons from Data JSON/.env
     Main(uselivedata=True)

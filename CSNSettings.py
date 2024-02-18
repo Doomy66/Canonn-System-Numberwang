@@ -1,6 +1,7 @@
 import logging
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -37,6 +38,12 @@ myGlobals = {'nRequests': 0}
 def RequestCount() -> None:
     myGlobals['nRequests'] += 1
 
+
+try:
+    with open(f'data\\DiscordIcons.json', 'r') as io:
+        dIcons = json.load(io)
+except:
+    dIcons = {}
 
 logging.getLogger('googleapiclient.discovery_cache').setLevel(
     logging.ERROR)  # Else get spurious warnings
