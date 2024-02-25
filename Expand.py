@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # TODO EDDB Faction Retreat History
 
     myFactionName = CSNSettings.myfaction
-    mySystemName = 'Iapo Vuh'
+    mySystemName = 'Arine'
     myBubble: BubbleExpansion = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
@@ -40,8 +40,7 @@ if __name__ == '__main__':
 
     print(myBubble.systemhistory[mySystemName])
 
-    targets = mySystem.expansion_targets
-    if targets:
+    if targets := mySystem.expansion_targets:
         xPrintTargets(mySystem.name, targets, 9)
 
     # List Faction's all likely Expansions
@@ -50,8 +49,7 @@ if __name__ == '__main__':
     print(f"List {myFactionName}'s all likely Expansions")
     for source_system in myBubble.systems:
         if source_system.controllingFaction == myFactionName and source_system.factions[0].influence > 70:
-            targets = source_system.expansion_targets
-            if targets:
+            if targets := source_system.expansion_targets:
                 xPrintTargets(source_system.name, targets)
 
     # Simple is calculated in Post Init
@@ -61,8 +59,7 @@ if __name__ == '__main__':
 
     # Need to recalculate to check for Extended
     print(f"Need to recalculate to check for Extended")
-    targets = myBubble.ExpandFromSystem(mySystem, extended=True)
-    if targets:
+    if targets := myBubble.ExpandFromSystem(mySystem, extended=True):
         xPrintTargets('Extended ' + mySystemName, targets, length=5)
 
     # Look for Simple Invasions of Player Factions into our Systems
@@ -70,8 +67,7 @@ if __name__ == '__main__':
         f"\nLook for Simple Invasions of Player Factions into {myFactionName} Systems")
     for source_system in myBubble.systems:
         if source_system.factions and source_system.factions[0].influence > 60 and source_system.factions[0].isPlayer:
-            targets = source_system.expansion_targets
-            if targets:
+            if targets := source_system.expansion_targets:
                 for t in targets[:3]:  # Only look at the top 3 targets
                     if myBubble.getsystem(t.systemname).isfactionpresent(myFactionName):
                         xPrintTargets(

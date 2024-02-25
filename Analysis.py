@@ -127,10 +127,10 @@ def OverrideMessages() -> list[Message]:
 def StaleDataMessages() -> list[Message]:
     """ Checks Last Updated DateTime and Prompts Mission if Stales"""
     messages: list[Message] = []
+    age: timedelta
     for system in mySystems:
         # Stale Data
-        age: timedelta = (datetime.now()-system.updated).days
-        if age > system.influence/10:
+        if (age := (datetime.now()-system.updated).days) > system.influence/10:
             myMessage = Message(
                 system.name, 11, f"Scan System to update data {int(age)} days old", dIcons['data'])
             messages.append(myMessage)
@@ -293,9 +293,9 @@ def Main(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
             continue
 
         # Conflict for myFaction
-        conflictstate: State = next(
-            (_ for _ in myPresence.states if _.isConflict), None)
-        if conflictstate:
+        conflictstate: State
+        if (conflictstate := next(
+                (_ for _ in myPresence.states if _.isConflict), None)):
             myMessage: Message = Message(
                 system.name, 2, f"{str(conflictstate)}", dIcons[conflictstate.state.replace(' ', '').lower()])
 
@@ -305,6 +305,7 @@ def Main(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
                 messages.append(myMessage)
             else:
                 messages.append(myMessage)
+                # TODO ? Delete Peacetime Message ? Not normally required as Peacetimes are normally silent
                 continue  # No More Internal Messages
 
         if any(_.systemname == system.name and _.override == Overide.PEACETIME for _ in messages):
@@ -352,4 +353,6 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
+    # TODO argument and schedule
+    # TODO retreat testing
     Main(uselivedata=True, DiscordUpdateReport=True, DiscordFullReport=True)
