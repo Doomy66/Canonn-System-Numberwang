@@ -1,16 +1,9 @@
-from dataclasses import dataclass
 from classes.BubbleExpansion import BubbleExpansion
-from classes.Presense import Presence
 from classes.System import System
 from classes.ExpansionTarget import ExpansionTarget
-from classes.State import State
 from providers.EDSM import GetSystemsFromEDSM
 import CSNSettings
 from providers.EliteBGS import LiveSystemDetails, RefreshFaction
-
-from Overrides import CSNOverRideRead
-import simplejson as json
-import pickle
 
 
 def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
@@ -25,7 +18,7 @@ def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):
 
 if __name__ == '__main__':
     """ 
-        Tests and Examples of use
+        Tests and Examples of use of Expansion process
         Most of the Expansion Calculations are done automatically as part of the Creation of the BubbleExpansion object
         If LIVE values are required, then update relevant systems with live EBGS data and run Expansion check again.
     """
