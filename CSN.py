@@ -249,7 +249,7 @@ def FillInMessages(count: int = 3) -> list[Message]:
     return messages
 
 
-def Main(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
+def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
     """ Generates all Messages for the Faction and outputs to Discord/Google"""
     global myBubble, mySystems
     print(f"CSN Analysis on {platform.node()}")
@@ -353,5 +353,5 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
-    # TODO argument and schedule
-    Main(uselivedata=True, DiscordUpdateReport=False, DiscordFullReport=True)
+    GenerateMissions(uselivedata=True,
+                     DiscordUpdateReport=False, DiscordFullReport=True)
