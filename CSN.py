@@ -354,4 +354,4 @@ if __name__ == '__main__':
         Tests and Examples of use
     """
     GenerateMissions(uselivedata=True,
-                     DiscordUpdateReport=False, DiscordFullReport=True)
+                     DiscordUpdateReport=True, DiscordFullReport=False)
