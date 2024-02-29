@@ -163,7 +163,7 @@ def RetreatMessages() -> list[Message]:
                 for faction in system.factions:
                     if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
                         myMessage = Message(
-                            system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)")
+                            system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)", dIcons['override'])
                         summary.append(system.name)
                         messages.append(myMessage)
     if summary:
@@ -267,7 +267,7 @@ def Main(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
     # General Messages
     messages.extend(StaleDataMessages())
     messages.extend(DCOHThargoidMessages())
-    messages.extend(RetreatMessages())  # Retreats - TODO Testing
+    messages.extend(RetreatMessages())
     messages.extend(InvasionMessages())
     messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(count=3))
@@ -354,5 +354,4 @@ if __name__ == '__main__':
         Tests and Examples of use
     """
     # TODO argument and schedule
-    # TODO retreat testing
-    Main(uselivedata=True, DiscordUpdateReport=True, DiscordFullReport=True)
+    Main(uselivedata=True, DiscordUpdateReport=False, DiscordFullReport=True)
