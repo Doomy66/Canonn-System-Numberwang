@@ -249,10 +249,11 @@ def InvasionAlert(faction, mininf=70, show=True, lookahead=3, live=False):
     print(f'Checking for Future Invasions of {faction} Systems:')
     for counter, home in enumerate(homesystems):
         update_progress(counter/len(homesystems), home)
-        invaders = filter(lambda x: x['name'] not in homesystems
-                          and x['name'] not in donesystems
-                          and x['population'] > 0
-                          and x['influence'] > mininf/100, spansh.cubearea(home, rangeSimple, live=live))  # 03/12/22 Only bother with Simple Range
+        # dbs = spansh.cubearea(home, rangeSimple, live=live)
+        invaders = list(filter(lambda x: x['name'] not in homesystems
+                               and x['name'] not in donesystems
+                               and x['population'] > 0
+                               and x['influence'] > mininf/100, spansh.cubearea(home, rangeSimple, live=live)))  # 03/12/22 Only bother with Simple Range
         for invader in invaders:
             targets = list(filter(lambda x: x['name'] in homesystems, ExpansionFromSystem(invader['name'], live=live, simpleonly=True)[
                            :lookahead]))  # Check if next lookahead expansions will target the home faction

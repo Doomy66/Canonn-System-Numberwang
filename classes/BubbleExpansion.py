@@ -99,11 +99,11 @@ class BubbleExpansion(Bubble):
         return targets
 
     def saveInvasionJson(self) -> None:
-        """ Saves all player factions invading myfactions systems\n"""
+        """ Saves all factions invading myfactions systems\n"""
         """ Called from post_init so should already have been run """
         s: System
         allexpansions = list({'name': s.name, 'faction': s.controllingFaction, 'target': s.nextexpansion.systemname, 'expansionType': str(s.nextexpansion), 'influence': s.influence}
-                             for s in self.systems if (s.nextexpansion and self.getsystem(s.nextexpansion.systemname).controllingFaction == CSNSettings.myfaction and s.influence > CSNSettings.invasionparanoialevel and s.factions[0].isPlayer and s.controllingFaction not in CSNSettings.ignorepf))
+                             for s in self.systems if (s.nextexpansion and self.getsystem(s.nextexpansion.systemname).controllingFaction == CSNSettings.myfaction and s.influence > CSNSettings.invasionparanoialevel))
 
         with open(f'data\\{CSNSettings.myfaction}EDSMInvasionTargets.json', 'w') as io:  # Dump to file
             json.dump(allexpansions, io, indent=4)
