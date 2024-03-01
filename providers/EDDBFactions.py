@@ -26,7 +26,8 @@ def isPlayer(factionname: str) -> bool:
     global EDDBFACTIONS
     if not EDDBFACTIONS:
         LoadEDDBFactions()
-    return EDDBFACTIONS.get(factionname.lower(), fdetails()).isPlayer
+    answer = EDDBFACTIONS.get(factionname.lower(), fdetails()).isPlayer
+    return answer
 
 
 def LoadEDDBFactions(location: str = 'resources\EDDBFactions.pickle') -> None:

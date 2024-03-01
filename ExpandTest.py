@@ -33,12 +33,11 @@ if __name__ == '__main__':
     myBubble._ExpandAll()
 
     # System Details
-    mySystemName = 'Arine'
+    mySystemName = 'Vorden'
+    mySystemName = 'HIP 86568'
     mySystem: System = myBubble.getsystem(mySystemName)
-    print(myBubble.systemhistory[mySystemName])
-
-    # if targets := mySystem.expansion_targets:
-    #     xPrintTargets(mySystem.name, targets, 9)
+    if targets := mySystem.expansion_targets:
+        xPrintTargets(mySystem.name, targets, 9)
 
     # # List Faction's all likely Expansions
     # targets: list[ExpansionTarget]

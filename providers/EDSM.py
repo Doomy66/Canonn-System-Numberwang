@@ -4,6 +4,7 @@ from classes.State import State, Phase
 from classes.System import System
 from classes.Presense import Presence
 from classes.Bubble import Bubble
+from .EDDBFactions import isPlayer
 import os
 import datetime
 import json
@@ -69,8 +70,9 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
         if 'factions' in rs.keys():
             for rf in rs['factions']:
                 if rf['influence'] > 0:
+                    # EDSM seems to be a bad source for isPlayer, using EDDB Arcive
                     f = Presence(rf['id'], rf['name'], allegiance=rf['allegiance'], government=rf['government'],
-                                 influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=rf['isPlayer'])
+                                 influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=isPlayer(rf['name']))
                     # Add States of Faction. NB States have very little information in EDSM
                     for rstate in rf.get('activeStates', []):
                         f.states.append(

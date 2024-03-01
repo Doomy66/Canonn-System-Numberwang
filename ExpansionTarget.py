@@ -6,6 +6,7 @@ from datetime import datetime
 from SpanshBGS import SpanshBGS, cubedist, sysdist
 import simplejson as json
 from dataclasses import dataclass
+import CSNSettings
 
 spansh = None  # Global Variabel to store an instance of the Framework
 rangeSimple = 20
@@ -177,7 +178,7 @@ def ExpansionFromSystem(system_name, show=False, avoided_systems=None, avoid_add
 
     if show:
         print(
-            f"Expansion from {sys['name']} ({100*round(sys['influence'],1)}%):")
+            f"Expansion from {sys['name']} ({100*sys['influence']:.1f}%):")
         if not sysInRange or sysInRange[0]['sys_priority'] == 1000:
             print(f" ! No Candidates ")
         else:
@@ -193,7 +194,7 @@ def ExpansionFromSystem(system_name, show=False, avoided_systems=None, avoid_add
     return sysInRange
 
 
-def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70, live=False, extendedphase=False):
+def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=CSNSettings.invasionparanoialevel, live=False, extendedphase=False):
     global spansh
     print(f"Expansion Candidates for {faction}:")
     if not spansh:
@@ -234,7 +235,7 @@ def ExpansionCandidates(faction, show=False, prebooked=None, inflevel=70, live=F
     return list(filter(lambda x: x['expansion'], candidates))
 
 
-def InvasionAlert(faction, mininf=70, show=True, lookahead=3, live=False):
+def InvasionAlert(faction, mininf=CSNSettings.invasionparanoialevel, show=True, lookahead=3, live=False):
     '''
     Will report all systems that would expand into a faction system within lookahead cycles
     '''
