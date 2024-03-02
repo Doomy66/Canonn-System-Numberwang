@@ -1,15 +1,15 @@
 import requests
 import json
-from datetime import datetime
 from CSNSettings import CSNLog, RequestCount
 from classes.Bubble import Bubble
 from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
 from providers.EDDBFactions import isPlayer
+from datetime import datetime, timedelta, timezone
+import time
 import pickle
 import os
-from api import factionsovertime
 from time import sleep
 
 
@@ -103,8 +103,6 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
         system.factions = sorted(
             list(
                 _ for _ in system.factions if _.source == 'EBGS'), key=lambda x: x.influence, reverse=True)
-
-    # NREQ += 1
     return system
 
 
@@ -180,7 +178,7 @@ def HistoryLoad(bubble) -> None:
         #     bubble.systemhistory[system.name] = set()  # TEST
         if system.population > 0 and not bubble.systemhistory.get(system.name, None):
             bubble.systemhistory[system.name] = set(
-                factionsovertime(system.name))
+                FactionsEverPresent(system.name))
             anychanges = True
             sleep(5)  # Be nice to EBGS
         else:
@@ -199,3 +197,45 @@ def HistorySave(bubble):
     os.makedirs(DATADIR, exist_ok=True)
     with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
         pickle.dump(bubble.systemhistory, io)
+
+# elitebgs #Garud says 1st record is 8th Oct 1997
+
+
+def FactionsEverPresent(system_name, days=30, earliest=datetime(2017, 10, 8)):
+    '''
+    Return a list of all factions that have ever been in the system
+    Can be compared to current factions to identify historic retreats
+    Really sorry this takes so long, but ebgs is the ONLY source of this data
+    and a full scan through system history is the ONLY way to get the data out of ebgs
+    '''
+    global NREQ
+
+    factions = list()
+    maxTime = datetime.now()
+    minTime = None
+    earliest = datetime(2017, 10, 8)  # Garud says 1st record is 8th Oct 2017
+    url = f"{_ELITEBGSURL}systems"
+
+    print(f"Historic Info for {system_name} ")
+    while minTime != earliest:
+        minTime = max(earliest, maxTime+timedelta(days=-days))
+
+        # There is no TRY Block as it might make the cache invalid and cause a total rebuild
+        payload = {'name': system_name, 'timeMin': int(
+            1000*time.mktime(minTime.timetuple())), 'timeMax': int(1000*time.mktime(maxTime.timetuple()))}
+        resp = requests.get(url, params=payload)
+        myload = json.loads(resp._content)["docs"]
+        RequestCount()
+        if len(myload):  # Was getting nothing for a specific Detention Center
+            myload = myload[0]
+            if myload['history']:
+                for h in myload['history']:
+                    for f in h['factions']:
+                        if f['name'] not in factions:
+                            factions.append(f['name'])  # Faction Arrived
+                            print(f"{f['name']} - {myload['updated_at']}")
+            maxTime = minTime
+        else:
+            break
+    print('')
+    return factions

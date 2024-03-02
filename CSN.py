@@ -304,5 +304,6 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
+    full = False
     GenerateMissions(uselivedata=True,
-                     DiscordUpdateReport=True, DiscordFullReport=False)
+                     DiscordUpdateReport=not full, DiscordFullReport=full)
