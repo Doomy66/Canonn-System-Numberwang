@@ -47,8 +47,8 @@ def LoadEDDBFactions(location: str = 'resources\EDDBFactions.pickle') -> None:
             f.get('home_system'.lower(), '<Unknown>'), f.get('is_player_faction', False))
 
     if not eddbf:
-        CSNLog("EDDBFactions.pickle FAILED!")
+        CSNLog.info("EDDBFactions.pickle FAILED!")
         print('EDDBFactions.pickle not loaded')
         EDDBFACTIONS = {'None': fdetails()}
     else:
-        CSNLog("EDDBFactions Loaded")
+        CSNLog.info("EDDBFactions Loaded")

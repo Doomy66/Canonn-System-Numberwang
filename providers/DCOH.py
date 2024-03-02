@@ -21,8 +21,8 @@ def dcohsummary():
                           ["level"], "progress": 100*sys["progressPercent"] if sys["progressPercent"] else 0})
     except:
         print("!!DCOH Error")
-        CSNLog('DCOH Error')
+        CSNLog.info('DCOH Error')
         return answer
 
-    CSNLog('DCOH Complete')
+    CSNLog.info('DCOH Complete')
     return answer

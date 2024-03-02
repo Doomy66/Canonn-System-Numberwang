@@ -13,7 +13,7 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
 
     if not Full:
         try:
-            # CSNLog.info('Load Saved Messages')
+            CSNSettings.CSNLog.info('Load Saved Messages')
             with open(f'data\\{CSNSettings.myfaction}CSNMessages.pickle', 'rb') as io:
                 oldmessages = pickle.load(io)
         except:
@@ -46,13 +46,14 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
             print(webhook_text)
             webhook.send(
                 f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.dIcons['csnicon']} \n{webhook_text}")
-            CSNSettings.CSNLog(f"Discord {len(webhook_text)} chars")
+            CSNSettings.CSNLog.info(f"Discord {len(webhook_text)} chars")
 
         if webhook_extra != '':
             print(webhook_extra)
             webhook.send(
                 f"...continued {CSNSettings.dIcons['csnicon']} \n{webhook_extra}")
-            CSNSettings.CSNLog(f"Discord extra {len(webhook_extra)} chars")
+            CSNSettings.CSNLog.info(
+                f"Discord extra {len(webhook_extra)} chars")
     else:
-        CSNSettings.CSNLog(f"Discord : Nothing to Report")
+        CSNSettings.CSNLog.info(f"Discord : Nothing to Report")
         print("...Nothing to Report to Discord")
