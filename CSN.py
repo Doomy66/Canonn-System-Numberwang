@@ -25,7 +25,7 @@ SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
 
 
-def WriteDiscord(myFactionName: str, Full: bool, messages: list[Message]) -> None:
+def WriteDiscord(Full: bool, messages: list[Message]) -> None:
     messages = list(filter(lambda _: _.isDiscord, messages))
     # Load Old Messages
     oldmessages: list[Message] = []
@@ -332,12 +332,12 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # Output
     # Discord Full
     if DiscordFullReport:
-        WriteDiscord(myFactionName=myFactionName,
-                     Full=True, messages=messages[:])  # Copy of messages on purpose
+        # Copy of messages on purpose
+        WriteDiscord(Full=True, messages=messages[:])
     # Discourd Update
     if DiscordUpdateReport:
-        WriteDiscord(myFactionName=myFactionName,
-                     Full=False, messages=messages[:])  # Copy of messages on purpose
+        # Copy of messages on purpose
+        WriteDiscord(Full=False, messages=messages[:])
 
     # Write Patrol to Google Sheet
     WritePatrol(messages[:])
@@ -354,4 +354,4 @@ if __name__ == '__main__':
         Tests and Examples of use
     """
     GenerateMissions(uselivedata=True,
-                     DiscordUpdateReport=False, DiscordFullReport=True)
+                     DiscordUpdateReport=True, DiscordFullReport=False)
