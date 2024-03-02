@@ -8,46 +8,45 @@ if not myEnv:
     myEnv = dotenv_values()
 
 # Canonn Discord
-wh_id = myEnv.get('wh_id')
-wh_token = myEnv.get('wh_token')
+WEBHOOK_ID = myEnv.get('wh_id')
+WEBHOOK_TOKEN = myEnv.get('wh_token')
 
 # Canonn Google Sheet
-override_workbook = myEnv.get('override_workbook')
-override_sheet = myEnv.get('override_sheet')
+OVERRIDE_WORKBOOK = myEnv.get('override_workbook')
 
 # Faction Settings
-myfaction = myEnv.get('myfaction')
-extendedphase: bool = myEnv.get(
+FACTION = myEnv.get('myfaction')
+EXTENDEDPHASE: bool = myEnv.get(
     'extendedphase')[:1].upper() in ['Y', 'T']
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
-ignorepf = myEnv.get('ignorepf').split(",")
-invasionparanoialevel = float(myEnv.get('invasionparanoialevel'))
+_IGNOREPF = myEnv.get('ignorepf').split(",")
+PARANOIA_LEVEL = float(myEnv.get('invasionparanoialevel'))
 
 # dIcons from json file
 try:
     with open(f'resources\\DiscordIcons', 'r') as io:
-        dIcons = json.load(io)
+        ICONS = json.load(io)
 except:
-    dIcons = {}
+    ICONS = {}
 
 
 def isIgnored(faction: str) -> bool:
     """ Returns True if faction name is in the list of ignored PF"""
-    return faction in ignorepf
+    return faction in _IGNOREPF
 
 
-# No orders to boost inf for system control etc. Leave it to the system owner.
+# No orders to boost inf for system control etc. Leave it to the system owner. Not Used Yet.
 surrendered_systems = ['A List of System Names']
 
 # Global Variables to count Requests
-myGlobals = {'nRequests': 0}
+GLOBALS = {'nRequests': 0}
 
 # Keep a track of API Requests
 
 
 def RequestCount() -> None:
-    myGlobals['nRequests'] += 1
+    GLOBALS['nRequests'] += 1
 
 
 logging.getLogger('googleapiclient.discovery_cache').setLevel(
@@ -60,4 +59,4 @@ logging.basicConfig(filename='data\CSNLog.'+platform.node()+'.log',
 
 
 CSNLog = logging.getLogger('CSN')
-CSNLog.info(f'>>>>>>>> Start Logging for {myfaction}')
+CSNLog.info(f'>>>>>>>> Start Logging for {FACTION}')

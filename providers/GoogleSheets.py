@@ -11,8 +11,6 @@ from google.auth.transport.requests import Request
 # Traditional
 import requests
 import csv
-import pygsheets
-import json
 from contextlib import closing
 
 # If modifying these scopes, delete the file token.pickle.
@@ -42,11 +40,10 @@ def GoogleSheetService():  # Authorise and Return a sheet object to work on
 def CSNOverRideReadSafe():  # Read without Google API
     answer = []
     answer.append(['System', 'Priority', 'Mission', 'Emoji', 'Type'])
-    mysheet_id = CSNSettings.override_workbook
-    if not mysheet_id:
+    if not CSNSettings.OVERRIDE_WORKBOOK:
         return (answer)
     readaction = f'export?format=csv&gid={CSNSettings.overide_sheet}'
-    url = f'https://docs.google.com/spreadsheets/d/{mysheet_id}/{readaction}'
+    url = f'https://docs.google.com/spreadsheets/d/{CSNSettings.OVERRIDE_WORKBOOK}/{readaction}'
     with closing(requests.get(url, stream=True)) as r:
         reader = csv.reader(r.content.decode(
             'utf-8').splitlines(), delimiter=',')
@@ -62,13 +59,12 @@ def CSNOverRideReadSafe():  # Read without Google API
 def CSNOverRideRead():
     answer = []
     answer.append(['System', 'Priority', 'Mission'])
-    mysheet_id = CSNSettings.override_workbook
-    if not mysheet_id:
+    if not CSNSettings.OVERRIDE_WORKBOOK:
         return (answer)
     myrange = 'Overrides!A2:E'
     sheet = GoogleSheetService().spreadsheets()
 
-    result = sheet.values().get(spreadsheetId=mysheet_id,
+    result = sheet.values().get(spreadsheetId=CSNSettings.OVERRIDE_WORKBOOK,
                                 range=myrange).execute()
     values = result.get('values', [])
 
@@ -88,8 +84,8 @@ def CSNOverRideRead():
 
 def CSNSchedule(now=datetime.utcnow().hour):
     answer = []
-    if CSNSettings.override_workbook:
-        mysheet_id = CSNSettings.override_workbook
+    if CSNSettings.OVERRIDE_WORKBOOK:
+        mysheet_id = CSNSettings.OVERRIDE_WORKBOOK
         if not mysheet_id:
             return (answer)
         myrange = 'Overrides!F2:G25'
@@ -115,7 +111,7 @@ def CSNFleetCarrierRead():
     Load list of registered BGS FC from CSNPatrol sheet
     '''
     answer = list()
-    mysheet_id = CSNSettings.override_workbook
+    mysheet_id = CSNSettings.OVERRIDE_WORKBOOK
     if not mysheet_id:
         return (answer)
     myrange = 'FC!A2:D'
@@ -142,16 +138,18 @@ def CSNPatrolWrite(answer):
     """System, X, Y, Z, TI=0, Faction=Canonn, Message, Icon"""
     """Col 285 Sector KZ-C b14-1	-133.21875	79.1875	-64.84375	0	Canonn	Suggestion: Canonn Missions, Bounties, Trade and Data (gap to Nones Resistance is 27.1%)	:chart_with_downwards_trend: """
 
-    mysheet_id = CSNSettings.override_workbook
-    if not mysheet_id:
+    CSNSettings.OVERRIDE_WORKBOOK
+    if not CSNSettings.OVERRIDE_WORKBOOK:
+        CSNSettings.CSNLog.info('No Patrol Google Sheet defined')
         return ('No API')
+    CSNSettings.CSNLog.info('Update Patrol on Google Sheet')
     mysheet = 'CSNPatrol'
     sheet = GoogleSheetService().spreadsheets()
 
     # Datestamp my mayhem
     myrange = f'{mysheet}!H1'
     myvalue = [[datetime.now().ctime()]]
-    result = sheet.values().update(spreadsheetId=mysheet_id,
+    result = sheet.values().update(spreadsheetId=CSNSettings.OVERRIDE_WORKBOOK,
                                    range=myrange,
                                    valueInputOption='USER_ENTERED',
                                    body={'values': myvalue}
@@ -159,12 +157,12 @@ def CSNPatrolWrite(answer):
 
     # Clear in case the new patrol is shorted
     myrange = f'{mysheet}!A2:H'
-    result = sheet.values().clear(spreadsheetId=mysheet_id,
+    result = sheet.values().clear(spreadsheetId=CSNSettings.OVERRIDE_WORKBOOK,
                                   range=myrange,
                                   body={}).execute()
 
     # Write the new patrol
-    result = sheet.values().update(spreadsheetId=mysheet_id,
+    result = sheet.values().update(spreadsheetId=CSNSettings.OVERRIDE_WORKBOOK,
                                    valueInputOption='RAW',
                                    range=myrange,
                                    body=dict(majorDimension='ROWS',
@@ -176,84 +174,6 @@ def CSNPatrolWrite(answer):
 def CSNFactionname(faction_id, factions):
     factionmatch = list(filter(lambda x: x['id'] == faction_id, factions))
     return factionmatch[0]['name'] if len(factionmatch) > 0 else None
-
-
-def CSNAttractions(cspace):
-
-    print('.Loading Sheet')
-    client = pygsheets.authorize()
-    mysheet = 'Canonn Attractions'
-    gDoc = client.open('CSNPatrol')
-    gWorkSheet = gDoc.worksheet('title', mysheet)
-    gSheet = gWorkSheet.get_all_records(head=1)
-
-    print('.Load Factions ')
-    url = 'https://eddb.io/archive/v6/factions.json'
-    r = requests.get(url, allow_redirects=True)
-    factions = json.loads(r.content)
-
-    print('.Load Attractions')
-    url = 'https://eddb.io/archive/v6/attractions.json'
-    r = requests.get(url, allow_redirects=True)
-    attractions = json.loads(r.content)
-
-    # Sort
-    print('.Preload')
-    for attraction in attractions:
-        matches = list(
-            filter(lambda x: cspace[x]['eddb_id'] == attraction['system_id'], cspace))
-        attraction['system_name'] = matches[0] if len(matches) > 0 else '!'
-        if 'body_name' not in attraction or not attraction['body_name']:
-            attraction['body_name'] = 'None'
-
-    print('.Process')
-    for attraction in attractions:
-        if attraction['system_name'] != '!':  # Is in a valid system
-            # Get Controlling Faction Name
-            factionname = CSNFactionname(
-                attraction['controlling_minor_faction_id'], factions) if attraction['controlling_minor_faction_id'] else None
-
-            # Look for Attaction in Sheet
-            found = False
-            for ssline in gSheet:
-                if ssline['System'] == attraction['system_name'] and ssline['Name'] == attraction['name']:  # Update
-                    if ssline['Body'] != attraction['body_name'] or ssline['Type'] != attraction['group_name'] or ssline['Inst Type'] != attraction['layout']['installation_type_name'] or ssline['Faction'] != factionname:
-                        ssline['Body'] = attraction['body_name']
-                        ssline['Type'] = attraction['group_name']
-                        ssline['Inst Type'] = attraction['layout']['installation_type_name']
-                        ssline['Faction'] = factionname
-                    found = True
-                    break
-            if not found:  # Add
-                gSheet.append({'System': attraction['system_name'], 'Body': attraction['body_name'], 'Name': attraction['name'], 'Type': attraction['group_name'],
-                               'Inst Type': attraction['layout']['installation_type_name'], 'Comments': '', 'Faction': factionname})
-
-    # Add All Systems via a Nav Beacon (WAS and Stations)
-    for i, x in enumerate(cspace):
-        sys = cspace[x]
-        navbs = list(filter(
-            lambda x: x['System'] == sys['system_name'] and x['Name'] == 'Nav Beacon', gSheet))
-        if len(navbs) == 0:
-            print('Adding System')
-            gSheet.append({'System': sys['system_name'], 'Body': sys['system_name'], 'Name': 'Nav Beacon', 'Type': '',
-                           'Inst Type': '', 'Comments': '', 'Faction': ''})
-
-    print('.Save Data')
-    gSheet = sorted(
-        gSheet, key=lambda x: x['System']+x['Body']+' !' + x['Name'])
-    post = list()
-    for ssline in gSheet:
-        post.append([ssline['System'],
-                     ssline['Body'],
-                     ssline['Name'],
-                     ssline['Type'],
-                     ssline['Inst Type'] if ssline['Inst Type'] else '',
-                     ssline['Faction'] if ssline['Faction'] else '',
-                     ssline['Comments']])
-
-    gWorkSheet.update_values(f'A2:G{1+len(post)}', post)
-
-    return None
 
 
 def Test():

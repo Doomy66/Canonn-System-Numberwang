@@ -14,7 +14,7 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
     if not Full:
         try:
             CSNSettings.CSNLog.info('Load Saved Messages')
-            with open(f'data\\{CSNSettings.myfaction}CSNMessages.pickle', 'rb') as io:
+            with open(f'data\\{CSNSettings.FACTION}CSNMessages.pickle', 'rb') as io:
                 oldmessages = pickle.load(io)
         except:
             pass
@@ -29,10 +29,11 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
                 messages.append(message)
 
     print(f"Discord Webhook : {'Full' if Full else 'Update'}...")
-    if CSNSettings.wh_id and messages:
+    if CSNSettings.WEBHOOK_ID and messages:
         webhook_text: str = ''
         webhook_extra: str = ''
-        webhook = SyncWebhook.partial(CSNSettings.wh_id, CSNSettings.wh_token)
+        webhook = SyncWebhook.partial(
+            CSNSettings.WEBHOOK_ID, CSNSettings.WEBHOOK_TOKEN)
         message: Message
         for message in messages:
             thistext: str = f"{message.emoji}{message.systemname} : {'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
@@ -45,13 +46,13 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
         if webhook_text != '':
             print(webhook_text)
             webhook.send(
-                f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.dIcons['csnicon']} \n{webhook_text}")
+                f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.ICONS['csnicon']} \n{webhook_text}")
             CSNSettings.CSNLog.info(f"Discord {len(webhook_text)} chars")
 
         if webhook_extra != '':
             print(webhook_extra)
             webhook.send(
-                f"...continued {CSNSettings.dIcons['csnicon']} \n{webhook_extra}")
+                f"...continued {CSNSettings.ICONS['csnicon']} \n{webhook_extra}")
             CSNSettings.CSNLog.info(
                 f"Discord extra {len(webhook_extra)} chars")
     else:

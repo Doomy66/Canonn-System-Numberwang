@@ -22,7 +22,7 @@ if __name__ == '__main__':
         Most of the Expansion Calculations are done automatically as part of the Creation of the BubbleExpansion object
         If LIVE values are required, then update relevant systems with live EBGS data and run Expansion check again.
     """
-    myFactionName = CSNSettings.myfaction
+    myFactionName = CSNSettings.FACTION
     myBubble: BubbleExpansion = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
@@ -68,4 +68,4 @@ if __name__ == '__main__':
     #                         f"{source_system.name} ({source_system.factions[0].influence:.2f}) : {source_system.controllingFaction}", targets, length=3)
     #                     break
 
-    print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")
+    print(f"EBGS Requests : {CSNSettings.GLOBALS['nRequests']}")

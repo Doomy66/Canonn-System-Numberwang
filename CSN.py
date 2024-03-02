@@ -19,7 +19,6 @@ from providers.GoogleSheets import CSNOverRideRead, CSNFleetCarrierRead, CSNPatr
 
 
 myBubble: BubbleExpansion = None
-mySystems: list[System] = []
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
@@ -52,12 +51,12 @@ def OverrideMessages() -> list[Message]:
 
     # Load Overrides into Messages from Google
     messages: list[Message] = list(Message(systemname=_[0], priority=_[1], text=_[2],
-                                           emoji=CSNSettings.dIcons[_[3]], override=Overide(_[4][:1])) for _ in CSNOverRideRead()[1:])
+                                           emoji=CSNSettings.ICONS[_[3]], override=Overide(_[4][:1])) for _ in CSNOverRideRead()[1:])
     # Replace f strings in Overrirdes
     for myMessage in (_ for _ in messages if ('{' in _.text)):
         system = myBubble.getsystem(myMessage.systemname)
         myPresence: Presence = next(
-            (_ for _ in system.factions if _.name == CSNSettings.myfaction), None)
+            (_ for _ in system.factions if _.name == CSNSettings.FACTION), None)
         gap: float = round(
             system.influence - (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
         gapfromtop: float = round(
@@ -66,7 +65,7 @@ def OverrideMessages() -> list[Message]:
             system.nextexpansion) if system.nextexpansion else 'None Detected'
 
         for faction in system.factions:
-            if faction.name != CSNSettings.myfaction and faction.name in myMessage.text:
+            if faction.name != CSNSettings.FACTION and faction.name in myMessage.text:
                 myMessage = ExpandMessage(myMessage,
                                           expandto=expandto, inf=faction.inf, gap=abs(faction.influence-myPresence.influence), happy='<?>', gapfromtop=system.influence-faction.influence)
         else:
@@ -75,7 +74,7 @@ def OverrideMessages() -> list[Message]:
     return messages
 
 
-def StaleDataMessages() -> list[Message]:
+def StaleDataMessages(mySystems: list[System]) -> list[Message]:
     """ Checks Last Updated DateTime and Prompts Mission if Stales"""
     messages: list[Message] = []
     age: timedelta
@@ -83,12 +82,12 @@ def StaleDataMessages() -> list[Message]:
         # Stale Data
         if (age := (datetime.now()-system.updated).days) > system.influence/10:
             myMessage = Message(
-                system.name, 11, f"Scan System to update data {int(age)} days old", CSNSettings.dIcons['data'])
+                system.name, 11, f"Scan System to update data {int(age)} days old", CSNSettings.ICONS['data'])
             messages.append(myMessage)
     return messages
 
 
-def DCOHThargoidMessages() -> list[Message]:
+def DCOHThargoidMessages(mySystems: list[System]) -> list[Message]:
     """ Gets Thargoid Threat Messages"""
     dhoc = dcohsummary()
     messages: list[Message] = []
@@ -97,29 +96,29 @@ def DCOHThargoidMessages() -> list[Message]:
             (x for x in dhoc if x['sys_name'] == system.name), None)
         if dcohthreat and dcohthreat["progress"] < 100:
             myMessage = Message(
-                system.name, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', CSNSettings.dIcons['thargoid1'])
+                system.name, 9, f'Thargoid {dcohthreat["threat"]} : Progress {int(dcohthreat["progress"])}%', CSNSettings.ICONS['thargoid1'])
             messages.append(myMessage)
     return messages
 
 
-def RetreatMessages() -> list[Message]:
+def RetreatMessages(mySystems: list[System]) -> list[Message]:
     """ Prevent Retreat of Full Systems to prevent normal Expansion """
     messages: list[Message] = []
     summary: list[str] = []
     for system in mySystems:
         faction: Presence
         # Mine, Currently Full, and there is another faction in simple range - Dont consider PF or Ignored, thats bad strategy
-        if system.controllingFaction == CSNSettings.myfaction and system.factions and len(system.factions) > 6:
-            if next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != CSNSettings.myfaction), None):
+        if system.controllingFaction == CSNSettings.FACTION and system.factions and len(system.factions) > 6:
+            if next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != CSNSettings.FACTION), None):
                 for faction in system.factions:
                     if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
                         myMessage = Message(
-                            system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)", CSNSettings.dIcons['override'])
+                            system.name, 7, f"Support {faction.name} to be above 5% to prevent Retreat ({round(faction.influence,1)}%)", CSNSettings.ICONS['override'])
                         summary.append(system.name)
                         messages.append(myMessage)
     if summary:
         myMessage = Message('Retreats Detected in', 25,
-                            ','.join(summary), CSNSettings.dIcons['data'])
+                            ','.join(summary), CSNSettings.ICONS['data'])
         messages.append(myMessage)
 
     return messages
@@ -149,18 +148,19 @@ def MarketMessages() -> list[Message]:
     # return messages
 
 
-def InvasionMessages(cycles: int = 5) -> list[Message]:
+def InvasionMessages(mySystems: list[System], max_cycles: int = 5, paranoia_level: float = CSNSettings.PARANOIA_LEVEL, all_factions=False) -> list[Message]:
     """ Turns Invasion Data calulated earlier into relevent Messages """
     """ Only bothered with Non-Ignored PF """
     messages: list[Message] = []
     system: System
     target: ExpansionTarget
     for system in myBubble.systems:
-        if system not in mySystems and system.nextexpansion and system.influence > CSNSettings.invasionparanoialevel and system.controllingdetails.isPlayer and not CSNSettings.isIgnored(system.controllingFaction):
-            for i, target in enumerate(system.expansion_targets[:cycles]):
-                if target.faction.name == CSNSettings.myfaction:
+        if system not in mySystems and system.nextexpansion and system.influence > paranoia_level and \
+                (all_factions or (system.controllingdetails.isPlayer and not CSNSettings.isIgnored(system.controllingFaction))):
+            for i, target in enumerate(system.expansion_targets[:max_cycles]):
+                if target.faction.name == CSNSettings.FACTION:
                     messages.append(Message(system.name,
-                                    10, f"{system.controllingFaction} Possible {target.description} to {target.systemname} ({system.influence:.2f}%) Priority {i+1}", CSNSettings.dIcons['data']))
+                                    10, f"{system.controllingFaction} Possible {target.description} to {target.systemname} ({system.influence:.2f}%) Priority {i+1}", CSNSettings.ICONS['data']))
                     break
     return messages
 
@@ -177,7 +177,7 @@ def FleetCarrierMessages() -> list[Message]:
                 thiscarrier = getfleetcarrier(carrier['id'])
                 currentsystem = thiscarrier['current_system']
                 message = Message(
-                    currentsystem, 9, f'{carrier["name"]} ({carrier["role"]})', CSNSettings.dIcons['FC'])
+                    currentsystem, 9, f'{carrier["name"]} ({carrier["role"]})', CSNSettings.ICONS['FC'])
                 messages.append(message)
             except:
                 pass
@@ -186,43 +186,43 @@ def FleetCarrierMessages() -> list[Message]:
     return messages
 
 
-def FillInMessages(count: int = 3) -> list[Message]:
+def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
     """ 3 Systems with the lowest non urgent gaps """
     messages: list[Message] = []
     # Yeah, showing off pythonic, not exactly readable
     best = list((_ for _ in mySystems if (_.controllingFaction ==
-                CSNSettings.myfaction and (len(_.factions) > 1) and (
+                CSNSettings.FACTION and (len(_.factions) > 1) and (
                     SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:count]:
         myMessage = Message(
-            best3.name, 5, f"Suggestion: {CSNSettings.myfaction} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%)", CSNSettings.dIcons['mininf'])
+            best3.name, 5, f"Suggestion: {CSNSettings.FACTION} Missions etc (gap to {best3.factions[1].name} is {best3.influence-best3.factions[1].influence:.1f}%)", CSNSettings.ICONS['mininf'])
         messages.append(myMessage)
     return messages
 
 
 def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
     """ Generates all Messages for the Faction and outputs to Discord/Google"""
-    global myBubble, mySystems
+    global myBubble
     print(f"CSN Analysis on {platform.node()}")
     myBubble = BubbleExpansion(
-        GetSystemsFromEDSM(CSNSettings.myfaction, 40))
-    mySystems = myBubble.faction_presence(CSNSettings.myfaction)
+        GetSystemsFromEDSM(CSNSettings.FACTION, 40))
+    mySystems = myBubble.faction_presence(CSNSettings.FACTION)
 
     if uselivedata:
-        RefreshFaction(myBubble, CSNSettings.myfaction)
+        RefreshFaction(myBubble, CSNSettings.FACTION)
         myBubble._ExpandAll()
 
     messages: list[Message] = []
     # Manually Specified Messages
     messages.extend(OverrideMessages())
     # General Additional Messages
-    messages.extend(StaleDataMessages())
-    messages.extend(DCOHThargoidMessages())
-    messages.extend(RetreatMessages())
-    messages.extend(InvasionMessages())
+    messages.extend(StaleDataMessages(mySystems))
+    messages.extend(DCOHThargoidMessages(mySystems))
+    messages.extend(RetreatMessages(mySystems))
+    messages.extend(InvasionMessages(mySystems))
     messages.extend(FleetCarrierMessages())
-    messages.extend(FillInMessages(count=3))
+    messages.extend(FillInMessages(mySystems, count=3))
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
@@ -236,7 +236,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         gap: float = round(system.influence -
                            (system.factions[1].influence if len(system.factions) > 1 else 0), 1)
         myPresence: Presence = next(
-            (_ for _ in system.factions if _.name == CSNSettings.myfaction), None)
+            (_ for _ in system.factions if _.name == CSNSettings.FACTION), None)
         gapfromtop: float = round(
             system.influence - myPresence.influence if myPresence else 0, 1)
 
@@ -249,11 +249,11 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         if (conflictstate := next(
                 (_ for _ in myPresence.states if _.isConflict), None)):
             myMessage: Message = Message(
-                system.name, 2, f"{str(conflictstate)}", CSNSettings.dIcons[conflictstate.state.replace(' ', '').lower()])
+                system.name, 2, f"{str(conflictstate)}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
 
             if conflictstate.phase == Phase.RECOVERING:
                 myMessage.priority = 21
-                myMessage.emoji = CSNSettings.dIcons['info']
+                myMessage.emoji = CSNSettings.ICONS['info']
                 messages.append(myMessage)
             else:
                 messages.append(myMessage)
@@ -265,16 +265,16 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             continue  # No More Internal Messages
 
         # Not Yet In Control
-        if system.controllingFaction != CSNSettings.myfaction:
+        if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 3, f"Urgent: {CSNSettings.myfaction} Missons etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.dIcons['push'])
+                system.name, 3, f"Urgent: {CSNSettings.FACTION} Missons etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
             continue
 
         # Gap Warning
         if gap <= SAFE_GAP:
             myMessage: Message = Message(
-                system.name, 4, f"Required: {CSNSettings.myfaction} Missons etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.dIcons['infgap'])
+                system.name, 4, f"Required: {CSNSettings.FACTION} Missons etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
             messages.append(myMessage)
             continue
 
@@ -293,12 +293,12 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     WritePatrol(messages[:])
 
     # Save Messages for update comparison
-    with open(f'data\\{CSNSettings.myfaction}CSNMessages.pickle', 'wb') as io:
+    with open(f'data\\{CSNSettings.FACTION}CSNMessages.pickle', 'wb') as io:
         pickle.dump(messages, io)
 
-    print(f"Complete : EBGS Requests {CSNSettings.myGlobals['nRequests']}")
+    print(f"Complete : EBGS Requests {CSNSettings.GLOBALS['nRequests']}")
     CSNSettings.CSNLog.info(
-        f"Complete : EBGS Requests {CSNSettings.myGlobals['nRequests']}\n")
+        f"Complete : EBGS Requests {CSNSettings.GLOBALS['nRequests']}\n")
 
 
 if __name__ == '__main__':

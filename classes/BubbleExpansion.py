@@ -35,7 +35,7 @@ class BubbleExpansion(Bubble):
         system: System
         for system in self.systems:
             system.expansion_targets = self.ExpandFromSystem(
-                system, extended=(system.controllingFaction and system.controllingFaction == CSNSettings.myfaction and CSNSettings.extendedphase))
+                system, extended=(system.controllingFaction and system.controllingFaction == CSNSettings.FACTION and CSNSettings.EXTENDEDPHASE))
         self.saveExpansionJson()
         self.saveInvasionJson()
 
@@ -85,16 +85,16 @@ class BubbleExpansion(Bubble):
         """ Saves best expansion target for all myfactions systems\n"""
         """ Called from post_init so should already have been run """
         allexpansions = list({'name': s.name, 'target': s.nextexpansion.systemname, 'expansionType': str(s.nextexpansion)}
-                             for s in self.systems if s.controllingFaction == CSNSettings.myfaction and s.nextexpansion)
+                             for s in self.systems if s.controllingFaction == CSNSettings.FACTION and s.nextexpansion)
 
-        with open(f'data\\{CSNSettings.myfaction}EDSMExpansionTargets.json', 'w') as io:  # Dump to file
+        with open(f'data\\{CSNSettings.FACTION}EDSMExpansionTargets.json', 'w') as io:  # Dump to file
             json.dump(allexpansions, io, indent=4)
 
     @staticmethod
     def loadExpansionJson() -> list:
         """ Returns the best expansion target for all myfactions systems previously saved to json """
         targets = []
-        with open(f'data\\{CSNSettings.myfaction}EDSMExpansionTargets.json', 'r') as io:
+        with open(f'data\\{CSNSettings.FACTION}EDSMExpansionTargets.json', 'r') as io:
             targets = json.load(io)
         return targets
 
@@ -103,16 +103,16 @@ class BubbleExpansion(Bubble):
         """ Called from post_init so should already have been run """
         s: System
         allexpansions = list({'name': s.name, 'faction': s.controllingFaction, 'target': s.nextexpansion.systemname, 'expansionType': str(s.nextexpansion), 'influence': s.influence}
-                             for s in self.systems if (s.nextexpansion and self.getsystem(s.nextexpansion.systemname).controllingFaction == CSNSettings.myfaction and s.influence > CSNSettings.invasionparanoialevel))
+                             for s in self.systems if (s.nextexpansion and self.getsystem(s.nextexpansion.systemname).controllingFaction == CSNSettings.FACTION and s.influence > CSNSettings.PARANOIA_LEVEL))
 
-        with open(f'data\\{CSNSettings.myfaction}EDSMInvasionTargets.json', 'w') as io:  # Dump to file
+        with open(f'data\\{CSNSettings.FACTION}EDSMInvasionTargets.json', 'w') as io:  # Dump to file
             json.dump(allexpansions, io, indent=4)
 
     @staticmethod
     def loadInvasionJson() -> list:
         """ Returns the best expansion target for all myfactions systems previously saved to json """
         targets = []
-        with open(f'data\\{CSNSettings.myfaction}EDSMInvasionTargets.json', 'r') as io:
+        with open(f'data\\{CSNSettings.FACTION}EDSMInvasionTargets.json', 'r') as io:
             targets = json.load(io)
         return targets
 
