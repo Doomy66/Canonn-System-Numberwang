@@ -1,21 +1,11 @@
-from ssl import ALERT_DESCRIPTION_BAD_CERTIFICATE_HASH_VALUE
-from typing import Iterable
 from Bubble import update_progress
-import api
-from datetime import datetime
 from SpanshBGS import SpanshBGS, cubedist, sysdist
 import simplejson as json
-from dataclasses import dataclass
 import CSNSettings
 
 spansh = None  # Global Variabel to store an instance of the Framework
 rangeSimple = 20
 rangeExtended = 30
-
-
-@dataclass
-class answers():
-    pass
 
 
 def ExpansionToSystem(system, show=True, simpleonly=False, assumeretreat=False, easyinvade=False, live=False, avoidsystem=''):
@@ -377,6 +367,7 @@ def FrameReset():
 
 
 if __name__ == '__main__':
+    pass
     # These functions use the daily EDDB data dump, so are upto 24 hours out of date, but no API calls and is significantly faster
     # ExpansionCandidates("Canonn",show=True)
     # ExpansionFromSystem("Pachanu",True)
@@ -388,5 +379,3 @@ if __name__ == '__main__':
 
     # ExpansionFromSystem("Col 285 Sector XF-N c7-20",True)
     # ExpansionToSystem("Wanggu",show=True,simpleonly=True)
-
-    print(f"Done : API {api.NREQ}")

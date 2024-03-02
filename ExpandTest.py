@@ -1,8 +1,8 @@
+import CSNSettings
 from classes.BubbleExpansion import BubbleExpansion
 from classes.System import System
 from classes.ExpansionTarget import ExpansionTarget
 from providers.EDSM import GetSystemsFromEDSM
-import CSNSettings
 from providers.EliteBGS import LiveSystemDetails, RefreshFaction
 
 
@@ -22,8 +22,6 @@ if __name__ == '__main__':
         Most of the Expansion Calculations are done automatically as part of the Creation of the BubbleExpansion object
         If LIVE values are required, then update relevant systems with live EBGS data and run Expansion check again.
     """
-    # TODO EDDB Faction Retreat History
-
     myFactionName = CSNSettings.myfaction
     myBubble: BubbleExpansion = BubbleExpansion(
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions

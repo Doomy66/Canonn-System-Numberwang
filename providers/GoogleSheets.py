@@ -1,4 +1,4 @@
-# Google API
+# Link to Canonn's Google Sheets
 import pickle
 import os.path
 import CSNSettings

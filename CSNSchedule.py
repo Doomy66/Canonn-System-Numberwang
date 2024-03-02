@@ -1,5 +1,5 @@
 from CSN import GenerateMissions
-from Overrides import CSNSchedule
+from providers.GoogleSheets import CSNSchedule
 
 
 def Schedule():
