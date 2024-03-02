@@ -60,4 +60,4 @@ logging.basicConfig(filename='data\CSNLog.'+platform.node()+'.log',
 
 
 CSNLog = logging.getLogger('CSN')
-CSNLog.info(f'Logging Configured for {myfaction}')
+CSNLog.info(f'>>>>>>>> Start Logging for {myfaction}')

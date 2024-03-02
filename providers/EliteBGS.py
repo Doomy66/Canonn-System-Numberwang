@@ -37,6 +37,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
         resp = requests.get(url, params=payload)
         myload = json.loads(resp._content)["docs"][0]
         RequestCount()
+        # CSNLog.info(f"EBGS Live Data for {system.name}")
     except:
         CSNLog.info(
             f'Failed to find system "{system.name if system else "None"}"')
@@ -99,7 +100,7 @@ def LiveSystemDetails(system: System, forced: bool = False) -> System:
                             state.dayslost = f1['days_won']
                             state.gain = f1['stake']
 
-        # Remove Fations that have left since previous data
+        # Remove Factions that have left since EDSM data
         system.factions = sorted(
             list(
                 _ for _ in system.factions if _.source == 'EBGS'), key=lambda x: x.influence, reverse=True)
@@ -137,6 +138,7 @@ def EliteBGSFactionSystems(faction: str, page: int = 1) -> list:
 def RefreshFaction(bubble: Bubble, faction: str) -> None:
     """ Gets EBGS data for any systems with stale data or a conflict"""
     print(f"EBGS Refreshing systems for {faction}..")
+    CSNLog.info(f"EBGS Refreshing systems for {faction}")
     systems = EliteBGSFactionSystems(faction=faction)
     for sys_name, updated, inconflict in systems:
         system: System = bubble.getsystem(sys_name)
@@ -197,8 +199,6 @@ def HistorySave(bubble):
     os.makedirs(DATADIR, exist_ok=True)
     with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
         pickle.dump(bubble.systemhistory, io)
-
-# elitebgs #Garud says 1st record is 8th Oct 1997
 
 
 def FactionsEverPresent(system_name, days=30, earliest=datetime(2017, 10, 8)):

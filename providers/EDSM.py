@@ -33,7 +33,6 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
             resp = requests.head(EDSMPOPULATED)
             lastmoddt = datetime.datetime.strptime(
                 resp.headers._store['last-modified'][1], '%a, %d %b %Y %H:%M:%S %Z')
-
             # Needs to download fresh data
             if lastmoddt > cachedate:
                 print('EDSM Downloading...')
@@ -41,10 +40,12 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
 
                 resp = requests.get(EDSMPOPULATED).content
                 resp = json.loads(gzip.decompress(resp))
-                print('EDSM Save Raw...')
+                print('EDSM Saving...')
+                CSNSettings.CSNLog.info('EDSM Saving...')
                 with gzip.open(edsmcache, "w") as f:
                     f.write(json.dumps(resp).encode('utf-8'))
         except:
+            CSNSettings.CSNLog.info('EDSM Offline !')
             print(f"EDSM Offline !")
         return lastmoddt
 
@@ -52,6 +53,7 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
         print('EDSM Loading...')
         with gzip.open(edsmcache, "r") as f:
             raw = json.loads(f.read().decode('utf-8'))
+            CSNSettings.CSNLog.info('EDSM Loaded')
         return raw
 
     lastmoddt = RefreshCache(edsmcache)
@@ -105,7 +107,8 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
         else:
             print('! Faction Not Found, you have the whole bubble !')
     print(f'EDSM Converted to include {len(systemlist)} systems')
-
+    CSNSettings.CSNLog.info(
+        f'EDSM Converted to DataClass : {len(systemlist)} systems')
     return systemlist
 
 

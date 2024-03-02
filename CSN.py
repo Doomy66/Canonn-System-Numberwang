@@ -189,6 +189,7 @@ def FleetCarrierMessages() -> list[Message]:
 def FillInMessages(count: int = 3) -> list[Message]:
     """ 3 Systems with the lowest non urgent gaps """
     messages: list[Message] = []
+    # Yeah, showing off pythonic, not exactly readable
     best = list((_ for _ in mySystems if (_.controllingFaction ==
                 CSNSettings.myfaction and (len(_.factions) > 1) and (
                     SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
@@ -215,7 +216,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages: list[Message] = []
     # Manually Specified Messages
     messages.extend(OverrideMessages())
-    # General Messages
+    # General Additional Messages
     messages.extend(StaleDataMessages())
     messages.extend(DCOHThargoidMessages())
     messages.extend(RetreatMessages())
@@ -228,7 +229,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # TODO GOLDRUSH
     # messages.extend(MarketMessages())
 
-    # Process all faction systems
+    # System Status Message
     system: System
     for system in mySystems:
         # Precalculations
@@ -256,7 +257,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
                 messages.append(myMessage)
             else:
                 messages.append(myMessage)
-                # TODO ? Delete Peacetime Message ? Not normally required as Peacetimes are normally silent
+                # TODO ? Could delete Peacetime Message, but it is not normally required as Peacetimes are normally Discord silent
                 continue  # No More Internal Messages
 
         if any(_.systemname == system.name and _.override == Overide.PEACETIME for _ in messages):
@@ -283,11 +284,9 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # Output
     # Discord Full
     if DiscordFullReport:
-        # Copy of messages on purpose
         WriteDiscord(Full=True, messages=messages[:])
     # Discourd Update
     if DiscordUpdateReport:
-        # Copy of messages on purpose
         WriteDiscord(Full=False, messages=messages[:])
 
     # Write Patrol to Google Sheet
@@ -297,7 +296,9 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     with open(f'data\\{CSNSettings.myfaction}CSNMessages.pickle', 'wb') as io:
         pickle.dump(messages, io)
 
-    print(f"EBGS Requests : {CSNSettings.myGlobals['nRequests']}")
+    print(f"Complete : EBGS Requests {CSNSettings.myGlobals['nRequests']}")
+    CSNSettings.CSNLog.info(
+        f"Complete : EBGS Requests {CSNSettings.myGlobals['nRequests']}\n")
 
 
 if __name__ == '__main__':
