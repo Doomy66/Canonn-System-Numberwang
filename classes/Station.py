@@ -16,6 +16,7 @@ class Station:
     economy1: str = ''
     economy2: str = ''
     # marketid: int
+    hasmarket: bool = False
     hasshipyard: bool = False
     hasoutfitting: bool = False
     services: list = field(default_factory=list[str])
