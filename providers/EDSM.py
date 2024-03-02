@@ -110,22 +110,23 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
 
 
 if __name__ == '__main__':
+    pass
     # Some Tests and Examples
-    myFactionName = os.environ.get('myfaction')
-    myBubble = Bubble(GetSystemsFromEDSM(myFactionName))
+    # myFactionName = os.environ.get('myfaction')
+    # myBubble = Bubble(GetSystemsFromEDSM(myFactionName))
 
-    mySystemName = 'Khun'
-    mySystem: System = myBubble.getsystem(mySystemName)
-    print('System :', mySystem.name)
+    # mySystemName = 'Khun'
+    # mySystem: System = myBubble.getsystem(mySystemName)
+    # print('System :', mySystem.name)
 
-    systems = myBubble.cube_systems(mySystem, exclude_presense=myFactionName)
-    print(
-        f"Targets for {mySystemName} Via Bubble [{len(systems)}] {', '.join(x.name for x in systems)}")
+    # systems = myBubble.cube_systems(mySystem, exclude_presense=myFactionName)
+    # print(
+    #     f"Targets for {mySystemName} Via Bubble [{len(systems)}] {', '.join(x.name for x in systems)}")
 
-    systems = myBubble.faction_presence(myFactionName)
-    print(
-        f"Faction Presence via Bubble for {myFactionName} [{len(systems)}] : {', '.join(x.name for x in systems)}")
+    # systems = myBubble.faction_presence(myFactionName)
+    # print(
+    #     f"Faction Presence via Bubble for {myFactionName} [{len(systems)}] : {', '.join(x.name for x in systems)}")
 
-    print(f"Faction Native Status in Varati")
-    for f in myBubble.getsystem('Varati').factions:
-        print(f" {f.name} - {f.isNative}")
+    # print(f"Faction Native Status in Varati")
+    # for f in myBubble.getsystem('Varati').factions:
+    #     print(f" {f.name} - {f.isNative}")

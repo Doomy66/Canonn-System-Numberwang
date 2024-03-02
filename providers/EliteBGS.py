@@ -6,7 +6,7 @@ from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
 from providers.EDDBFactions import isPlayer
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import time
 import pickle
 import os
@@ -17,7 +17,7 @@ _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
 DATADIR = '.\data'
 
 
-def EliteBGSDateTime(datestring) -> datetime:
+def EliteBGSDateTime(datestring: str) -> datetime:
     """
     Converts Eligte BGS DateTime string to DateTime
     """

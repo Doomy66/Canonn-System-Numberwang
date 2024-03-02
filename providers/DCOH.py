@@ -1,6 +1,7 @@
 # Defence Council of Humanity provides Thargoid Activity
 import requests
 import json
+from CSNSettings import CSNLog
 
 
 def dcohsummary():
@@ -20,6 +21,8 @@ def dcohsummary():
                           ["level"], "progress": 100*sys["progressPercent"] if sys["progressPercent"] else 0})
     except:
         print("!!DCOH Error")
+        CSNLog('DCOH Error')
+        return answer
 
-    print('DCOH Complete')
+    CSNLog('DCOH Complete')
     return answer
