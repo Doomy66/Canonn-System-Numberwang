@@ -4,7 +4,7 @@ from classes.State import State, Phase
 from classes.System import System
 from classes.Presense import Presence
 from classes.Bubble import Bubble
-from .EDDBFactions import isPlayer
+from providers.EDDBFactions import isPlayer
 import os
 import datetime
 import json

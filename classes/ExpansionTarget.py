@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .Presense import Presence
+from classes.Presense import Presence
 
 
 @dataclass

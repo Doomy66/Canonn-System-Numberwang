@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
-from .Bubble import Bubble
-from .System import System
-from .Presense import Presence
-from .ExpansionTarget import ExpansionTarget
+from classes.Bubble import Bubble
+from classes.System import System
+from classes.Presense import Presence
+from classes.ExpansionTarget import ExpansionTarget
 import CSNSettings
 import simplejson as json
 from providers.EliteBGS import HistoryLoad

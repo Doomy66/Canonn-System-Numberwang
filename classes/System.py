@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from .Presense import Presence
-from .ExpansionTarget import ExpansionTarget
-from .Station import Station
+from classes.Presense import Presence
+from classes.ExpansionTarget import ExpansionTarget
+from classes.Station import Station
 from providers.EDDBFactions import HomeSystem
 from math import sqrt
 

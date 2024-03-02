@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from .System import System
+from classes.System import System
 from math import sqrt
 
 
