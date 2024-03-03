@@ -3,7 +3,7 @@ from classes.BubbleExpansion import BubbleExpansion
 from classes.System import System
 from classes.ExpansionTarget import ExpansionTarget
 from providers.EDSM import GetSystemsFromEDSM
-from providers.EliteBGS import LiveSystemDetails, RefreshFaction
+from providers.EliteBGS import EBGSLiveSystem, RefreshFaction
 
 
 def xPrintTargets(system_name: str, targets: list[ExpansionTarget], length=5):

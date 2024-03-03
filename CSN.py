@@ -322,4 +322,3 @@ if __name__ == '__main__':
 
     # TODO Make CSN Functions generic to be used as a toolkit in ExpandTest
     # TODO Get rid of Bubble, just use Bubble Expansion - Beware may start circular references.
-    # TODO Expansion to consider Conflict Locks

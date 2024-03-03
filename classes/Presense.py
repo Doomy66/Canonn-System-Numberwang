@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from classes.State import State
+from classes.State import State, Phase
 
 
 @dataclass
@@ -18,3 +18,8 @@ class Presence:
 
     def __str__(self) -> str:
         return f"{self.name} ({self.influence}%) {'Player ' if self.isPlayer else ''}{'' if self.isNative else 'Non Native' }{'/'.join(str(x) for x in self.states)}"
+
+    @property
+    def activeconflict(self) -> State:
+        """ Conflict State if available """
+        return next((x for x in self.states if x.isConflict and x.phase in (Phase.ACTIVE, Phase.PENDING)), None)

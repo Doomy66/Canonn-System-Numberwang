@@ -15,7 +15,7 @@ _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
 DATADIR = '.\data'
 
 
-def EliteBGSDateTime(datestring: str) -> datetime:
+def EBGSDateTime(datestring: str) -> datetime:
     """
     Converts Eligte BGS DateTime string to DateTime
     """
@@ -38,7 +38,7 @@ def EBGSCache_Load() -> dict[System]:
     return answer
 
 
-def LiveSystemDetails(system: System, forced: bool = False, cached=None) -> System:
+def EBGSLiveSystem(system: System, forced: bool = False, cached=None) -> System:
     """
     Retrieve system and faction inf values from elitebgs using cached value if possible. 
     "refresh" will ignore cache and refresh the data. 
@@ -58,7 +58,7 @@ def LiveSystemDetails(system: System, forced: bool = False, cached=None) -> Syst
             f'!! Failed to find system "{system.name if system else "None"}"')
         return system
 
-    updated = EliteBGSDateTime(myload['updated_at'])
+    updated = EBGSDateTime(myload['updated_at'])
     # Ensure EBGS data isnt stale
     if updated > system.updated or forced:
         system.source = 'EBGS'
@@ -120,7 +120,7 @@ def LiveSystemDetails(system: System, forced: bool = False, cached=None) -> Syst
     return system
 
 
-def EliteBGSFactionSystems(faction: str, page: int = 1) -> list:
+def EBGSFactionSystems(faction: str, page: int = 1) -> list:
     """
     Retrieve list of systems with faction present.
     """
@@ -136,14 +136,14 @@ def EliteBGSFactionSystems(faction: str, page: int = 1) -> list:
         for sys in myload:
             factionhasconflict = sys.get('conflicts', None)
             answer.append(
-                (sys['system_name'], EliteBGSDateTime(sys['updated_at']), factionhasconflict))
+                (sys['system_name'], EBGSDateTime(sys['updated_at']), factionhasconflict))
     except:
         CSNLog.info(f'Failed to find systems for faction "{faction}"')
         print(f'!Failed to find systems for faction "{faction}"')
         myload = None
         content = None
     if content.get('hasNextPage', None):  # More Pages so recurse
-        answer += EliteBGSFactionSystems(faction, content['nextPage'])
+        answer += EBGSFactionSystems(faction, content['nextPage'])
 
     return answer
 
@@ -152,7 +152,7 @@ def RefreshFaction(mySystems: list[System], myFaction: str) -> None:
     """ Gets EBGS data for any systems with stale data or a conflict"""
     print(f"EBGS Refreshing systems for {myFaction}..")
     CSNLog.info(f"EBGS Refreshing systems for {myFaction}")
-    ebgs_system_summary = EliteBGSFactionSystems(faction=myFaction)
+    ebgs_system_summary = EBGSFactionSystems(faction=myFaction)
     cache: dict[System] = EBGSCache_Load()
     for sys_name, updated, inconflict in ebgs_system_summary:
         system: System = next(
@@ -164,7 +164,7 @@ def RefreshFaction(mySystems: list[System], myFaction: str) -> None:
         elif system.updated < updated or inconflict:
             CSNLog.info(f"EBGS Request {sys_name:30} : {updated:%c}")
             print(f" EBGS Request {sys_name:30} : {updated:%c}")
-            system = LiveSystemDetails(system, inconflict)
+            system = EBGSLiveSystem(system, inconflict)
             cache[sys_name] = system
         else:
             system.updated = updated
@@ -172,7 +172,7 @@ def RefreshFaction(mySystems: list[System], myFaction: str) -> None:
     EBGSCache_Save(cache)
 
 
-def FactionsEverPresent(system_name, days=30, earliest=datetime(2017, 10, 8)):
+def EBGSPreviousVisitors(system_name, days=30, earliest=datetime(2017, 10, 8)):
     '''
     Return a list of all factions that have ever been in the system
     Can be compared to current factions to identify historic retreats

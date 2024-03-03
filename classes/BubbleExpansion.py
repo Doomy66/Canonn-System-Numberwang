@@ -5,7 +5,7 @@ from classes.Presense import Presence
 from classes.ExpansionTarget import ExpansionTarget
 import CSNSettings
 import simplejson as json
-from providers.EliteBGS import FactionsEverPresent
+from providers.EliteBGS import EBGSPreviousVisitors
 import pickle
 import os
 from time import sleep
@@ -69,8 +69,8 @@ class BubbleExpansion(Bubble):
                 # Possible Invasion
                 current_faction: Presence
                 for current_faction in target_system.factions:
-                    # Must NOT be a Native or Controlling Faction
-                    if not (current_faction.isNative or current_faction.name == target_system.controllingFaction):
+                    # Must NOT be a Native or Controlling Faction, or in a conflict
+                    if not (current_faction.isNative or current_faction.name == target_system.controllingFaction or current_faction.activeconflict):
                         expansion = ExpansionTarget(
                             target_system.name, description='Invasion', faction=current_faction, score=target_retreated_bonus+current_faction.influence)
                         if target_cube_distance <= self.SIMPLERANGE:
@@ -139,7 +139,7 @@ class BubbleExpansion(Bubble):
             #     bubble.systemhistory[system.name] = set()  # TEST
             if system.population > 0 and not self.systemhistory.get(system.name, None):
                 self.systemhistory[system.name] = set(
-                    FactionsEverPresent(system.name))
+                    EBGSPreviousVisitors(system.name))
                 anychanges = True
                 sleep(5)  # Be nice to EBGS
             else:
@@ -152,37 +152,3 @@ class BubbleExpansion(Bubble):
                         anychanges = True
         if anychanges:
             HistorySave()
-
-    # def HistoryLoad(self) -> None:
-    #     """ Should really be in EliteBGS Provider but I dont get sibling modules"""
-    #     self.systemhistory = dict()
-    #     if os.path.exists(os.path.join(DATADIR, 'EBGS_SysHist2.pickle')):
-    #         with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'rb') as io:
-    #             self.systemhistory = pickle.load(io)
-    #     print(
-    #         f"Loading System History {len(self.systemhistory)}/{len(self.systems)}...")
-    #     system: System
-    #     anychanges: bool = False
-    #     for system in self.systems:
-    #         if not self.systemhistory.get(system.name, None):
-    #             self.systemhistory[system.name] = set(
-    #                 factionsovertime(system.name))
-    #             anychanges = True
-    #             sleep(5)  # Be nice to EBGS
-    #         if self.systemhistory.get(system.name):
-    #             faction: Presence
-    #             for faction in system.factions:
-    #                 if faction.name not in self.systemhistory[system.name]:
-    #                     print(
-    #                         f" New Expansion Detected {system.name}, {faction.name}")
-    #                     self.systemhistory[system.name].add(faction.name)
-    #                     anychanges = True
-    #     if anychanges:
-    #         self.HistorySave()
-
-    # def HistorySave(self):
-    #     """ Should really be in EliteBGS Provider but I dont get sibling modules"""
-    #     os.makedirs(DATADIR, exist_ok=True)
-    #     with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
-    #         pickle.dump(self.systemhistory, io)
-    #     return
