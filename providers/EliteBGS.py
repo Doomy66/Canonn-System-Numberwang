@@ -1,8 +1,6 @@
 import requests
 import json
 from CSNSettings import CSNLog, RequestCount
-from classes.Bubble import Bubble
-# from classes.BubbleExpansion import BubbleExpansion
 from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
@@ -11,7 +9,6 @@ from datetime import datetime, timedelta
 import time
 import pickle
 import os
-from time import sleep
 
 
 _ELITEBGSURL = 'https://elitebgs.app/api/ebgs/v5/'
@@ -27,11 +24,13 @@ def EliteBGSDateTime(datestring: str) -> datetime:
 
 
 def EBGSCache_Save(cache) -> None:
+    """ Saves systems as most recent version of EBGS data """
     with open(os.path.join(DATADIR, 'EBGS_Cache.pickle'), 'wb') as io:
         pickle.dump(cache, io)
 
 
 def EBGSCache_Load() -> dict[System]:
+    """ Load most recent versions systems according to EBGS - Pickle can be deleted with minimal impact """
     answer = dict()
     if os.path.exists(os.path.join(DATADIR, 'EBGS_Cache.pickle')):
         with open(os.path.join(DATADIR, 'EBGS_Cache.pickle'), 'rb') as io:
@@ -149,20 +148,21 @@ def EliteBGSFactionSystems(faction: str, page: int = 1) -> list:
     return answer
 
 
-def RefreshFaction(bubble: Bubble, faction: str) -> None:
+def RefreshFaction(mySystems: list[System], myFaction: str) -> None:
     """ Gets EBGS data for any systems with stale data or a conflict"""
-    print(f"EBGS Refreshing systems for {faction}..")
-    CSNLog.info(f"EBGS Refreshing systems for {faction}")
-    ebgs_system_summary = EliteBGSFactionSystems(faction=faction)
+    print(f"EBGS Refreshing systems for {myFaction}..")
+    CSNLog.info(f"EBGS Refreshing systems for {myFaction}")
+    ebgs_system_summary = EliteBGSFactionSystems(faction=myFaction)
     cache: dict[System] = EBGSCache_Load()
     for sys_name, updated, inconflict in ebgs_system_summary:
-        system: System = bubble.getsystem(sys_name)
+        system: System = next(
+            (x for x in mySystems if x.name.lower() == sys_name.lower()), None)
         if cache.get(sys_name) and cache[sys_name].updated == updated:
             system = cache[sys_name]
-            CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c}")
-            print(f" EBGS Cache {sys_name:30} : {updated:%c}")
+            # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c}")
+            print(f" EBGS Cached  {sys_name:30} : {updated:%c}")
         elif system.updated < updated or inconflict:
-            CSNLog(f"EBGS Request {sys_name:30} : {updated:%c}")
+            CSNLog.info(f"EBGS Request {sys_name:30} : {updated:%c}")
             print(f" EBGS Request {sys_name:30} : {updated:%c}")
             system = LiveSystemDetails(system, inconflict)
             cache[sys_name] = system
@@ -170,58 +170,6 @@ def RefreshFaction(bubble: Bubble, faction: str) -> None:
             system.updated = updated
 
     EBGSCache_Save(cache)
-
-
-def HistoryCovert():
-    """ Converts the old List of Dict format SysHist to the new Dict+Set format"""
-    systemhistory = dict()
-    oldfile = os.path.join(DATADIR, 'EBGS_SysHist.pickle')
-    if os.path.exists(oldfile):
-        with open(oldfile, 'rb') as io:
-            raw = pickle.load(io)
-            for x in raw:
-                systemhistory[x['name']] = {y for y in x['factions']}
-
-    os.makedirs(DATADIR, exist_ok=True)
-    with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
-        pickle.dump(systemhistory, io)
-    return
-
-
-def HistoryLoad(bubble) -> None:
-    """ Loads, refreshes and saves System History. This is a Dict of Systems with a set containing ALL factions that have ever been present """
-    bubble.systemhistory = dict()
-    if os.path.exists(os.path.join(DATADIR, 'EBGS_SysHist2.pickle')):
-        with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'rb') as io:
-            bubble.systemhistory = pickle.load(io)
-    print(
-        f"Loading System History {len(bubble.systemhistory)}/{len(bubble.systems)}...")
-    system: System
-    anychanges: bool = False
-    for system in bubble.systems:
-        # if system.name == 'Varati':
-        #     bubble.systemhistory[system.name] = set()  # TEST
-        if system.population > 0 and not bubble.systemhistory.get(system.name, None):
-            bubble.systemhistory[system.name] = set(
-                FactionsEverPresent(system.name))
-            anychanges = True
-            sleep(5)  # Be nice to EBGS
-        else:
-            faction: Presence
-            for faction in system.factions:
-                if faction.name not in bubble.systemhistory[system.name]:
-                    print(
-                        f" New Expansion Detected {system.name}, {faction.name}")
-                    bubble.systemhistory[system.name].add(faction.name)
-                    anychanges = True
-    if anychanges:
-        HistorySave(bubble)
-
-
-def HistorySave(bubble):
-    os.makedirs(DATADIR, exist_ok=True)
-    with open(os.path.join(DATADIR, 'EBGS_SysHist2.pickle'), 'wb') as io:
-        pickle.dump(bubble.systemhistory, io)
 
 
 def FactionsEverPresent(system_name, days=30, earliest=datetime(2017, 10, 8)):

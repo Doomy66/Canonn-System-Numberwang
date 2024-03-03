@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from classes.System import System
 from math import sqrt
+import CSNSettings
 
 
 @dataclass
@@ -8,6 +9,9 @@ class Bubble:
     """ Contains a list of the Sytems. 
         Create your list of Sysems from a Factory of your choice """
     systems: list = field(default_factory=list[System])
+    empire: str = CSNSettings.FACTION
+    # key is system name, value is a set of all factions that have ever been present
+    systemhistory: list = field(default_factory=dict[set[str]])
 
     def getsystem(self, name: str) -> System:
         """ Returns a System object from it's name """

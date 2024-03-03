@@ -27,6 +27,7 @@ if __name__ == '__main__':
         GetSystemsFromEDSM(myFactionName, 40))  # max(30, 20+20) to allow check for Simple Invasions
     myBubble.systems = sorted(myBubble.systems, key=lambda x: x.name)
     # Update a Factions Systems
+    mySystems: list[System] = myBubble.faction_presence(myFactionName)
     RefreshFaction(myBubble, myFactionName)
     myBubble._ExpandAll()
 

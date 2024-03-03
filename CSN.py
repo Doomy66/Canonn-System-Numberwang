@@ -101,15 +101,15 @@ def DCOHThargoidMessages(mySystems: list[System]) -> list[Message]:
     return messages
 
 
-def RetreatMessages(mySystems: list[System]) -> list[Message]:
+def RetreatMessages(mySystems: list[System], myfaction: str = CSNSettings.FACTION) -> list[Message]:
     """ Prevent Retreat of Full Systems to prevent normal Expansion """
     messages: list[Message] = []
     summary: list[str] = []
     for system in mySystems:
         faction: Presence
         # Mine, Currently Full, and there is another faction in simple range - Dont consider PF or Ignored, thats bad strategy
-        if system.controllingFaction == CSNSettings.FACTION and system.factions and len(system.factions) > 6:
-            if next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != CSNSettings.FACTION), None):
+        if system.controllingFaction == myfaction and system.factions and len(system.factions) > 6:
+            if next((_ for _ in myBubble.cube_systems(system, myBubble.SIMPLERANGE) if _.controllingFaction != myfaction), None):
                 for faction in system.factions:
                     if faction.states and next((_ for _ in faction.states if _.state.lower() == 'retreat' and _.phase != Phase.RECOVERING), None):
                         myMessage = Message(
@@ -148,9 +148,9 @@ def MarketMessages() -> list[Message]:
     # return messages
 
 
-def InvasionMessages(mySystems: list[System], max_cycles: int = 5, paranoia_level: float = CSNSettings.PARANOIA_LEVEL, all_factions=False) -> list[Message]:
+def InvasionMessages(mySystems: list[System], max_cycles: int = 5, paranoia_level: float = CSNSettings.PARANOIA_LEVEL, myfaction: str = CSNSettings.FACTION, all_factions=False) -> list[Message]:
     """ Turns Invasion Data calulated earlier into relevent Messages """
-    """ Only bothered with Non-Ignored PF """
+    """ Only bothered with Non-Ignored PF unless all_factions is TRUE"""
     messages: list[Message] = []
     system: System
     target: ExpansionTarget
@@ -158,7 +158,7 @@ def InvasionMessages(mySystems: list[System], max_cycles: int = 5, paranoia_leve
         if system not in mySystems and system.nextexpansion and system.influence > paranoia_level and \
                 (all_factions or (system.controllingdetails.isPlayer and not CSNSettings.isIgnored(system.controllingFaction))):
             for i, target in enumerate(system.expansion_targets[:max_cycles]):
-                if target.faction.name == CSNSettings.FACTION:
+                if target.faction.name == myfaction:
                     messages.append(Message(system.name,
                                     10, f"{system.controllingFaction} Possible {target.description} to {target.systemname} ({system.influence:.2f}%) Priority {i+1}", CSNSettings.ICONS['data']))
                     break
@@ -201,17 +201,27 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
     return messages
 
 
+def GetSystemsWithLive(faction: str = CSNSettings.FACTION, range=40) -> list[System]:
+    answer: list[System] = []
+    answer = GetSystemsFromEDSM(faction, range)
+    RefreshFaction(answer, faction)
+    return answer
+
+
 def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateReport=False):
     """ Generates all Messages for the Faction and outputs to Discord/Google"""
     global myBubble
     print(f"CSN Analysis on {platform.node()}")
-    myBubble = BubbleExpansion(
-        GetSystemsFromEDSM(CSNSettings.FACTION, 40))
+    if uselivedata:
+        myBubble = BubbleExpansion(GetSystemsWithLive())
+    else:
+        myBubble = BubbleExpansion(GetSystemsFromEDSM())
+
     mySystems = myBubble.faction_presence(CSNSettings.FACTION)
 
-    if uselivedata:
-        RefreshFaction(myBubble, CSNSettings.FACTION)
-        myBubble._ExpandAll()
+    # if uselivedata:
+    #     RefreshFaction(mySystems, CSNSettings.FACTION)
+    #     myBubble._ExpandAll()
 
     messages: list[Message] = []
     # Manually Specified Messages
@@ -310,9 +320,6 @@ if __name__ == '__main__':
     GenerateMissions(uselivedata=True,
                      DiscordUpdateReport=not full, DiscordFullReport=full)
 
-    # TODO Expansion to consider Conflict Locks
-    # TODO Cache EBGS
-    # TODO EBGS History Refresh to be part of Initialisation to ensure ones a system is in the History it gets refreshed regardless of the current faction bubble
     # TODO Make CSN Functions generic to be used as a toolkit in ExpandTest
-    # TODO Get rid of Bubble, just use Bubble Expansion
-    # TODO Add EBGS Refresh to Bubble Init if faction provided, can then remove 2nd Expand Calc Phase
+    # TODO Get rid of Bubble, just use Bubble Expansion - Beware may start circular references.
+    # TODO Expansion to consider Conflict Locks

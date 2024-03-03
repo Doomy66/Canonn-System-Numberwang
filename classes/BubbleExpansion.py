@@ -5,7 +5,10 @@ from classes.Presense import Presence
 from classes.ExpansionTarget import ExpansionTarget
 import CSNSettings
 import simplejson as json
-from providers.EliteBGS import HistoryLoad
+from providers.EliteBGS import FactionsEverPresent
+import pickle
+import os
+from time import sleep
 
 
 DATADIR = '.\data'
@@ -20,12 +23,10 @@ class BubbleExpansion(Bubble):
     SIMPLERANGE: float = 20
     EXTENDEDRANGE: float = 30
 
-    # key is system name, value is a set of all factions that have ever been present
-    systemhistory: list = field(default_factory=dict[set[str]])
-
     def __post_init__(self):
         self.systems = sorted(self.systems, key=lambda x: x.name)
-        HistoryLoad(self)
+        if self.empire == CSNSettings.FACTION:  # Keep the History file for your own faction
+            self.HistoryLoad()
         self._ExpandAll()
 
     def _ExpandAll(self) -> None:
@@ -115,6 +116,42 @@ class BubbleExpansion(Bubble):
         with open(f'data\\{CSNSettings.FACTION}EDSMInvasionTargets.json', 'r') as io:
             targets = json.load(io)
         return targets
+
+    def HistoryLoad(self) -> None:
+        """ Loads, refreshes and saves System History. This is a Dict of Systems with a set containing ALL factions that have ever been present """
+        """ BEWARE Assumes Bubble has been reduced to a faction and Never Reduces"""
+
+        def HistorySave():
+            os.makedirs(DATADIR, exist_ok=True)
+            with open(os.path.join(DATADIR, self.empire+'EBGS_SysHist.pickle'), 'wb') as io:
+                pickle.dump(self.systemhistory, io)
+
+        self.systemhistory = dict()
+        if os.path.exists(os.path.join(DATADIR, self.empire+'EBGS_SysHist.pickle')):
+            with open(os.path.join(DATADIR, self.empire+'EBGS_SysHist.pickle'), 'rb') as io:
+                self.systemhistory = pickle.load(io)
+        print(
+            f"Loading System History {len(self.systemhistory)}/{len(self.systems)}...")
+        system: System
+        anychanges: bool = False
+        for system in self.systems:
+            # if system.name == 'Varati':
+            #     bubble.systemhistory[system.name] = set()  # TEST
+            if system.population > 0 and not self.systemhistory.get(system.name, None):
+                self.systemhistory[system.name] = set(
+                    FactionsEverPresent(system.name))
+                anychanges = True
+                sleep(5)  # Be nice to EBGS
+            else:
+                faction: Presence
+                for faction in system.factions:
+                    if faction.name not in self.systemhistory[system.name]:
+                        print(
+                            f" New Expansion Detected {system.name}, {faction.name}")
+                        self.systemhistory[system.name].add(faction.name)
+                        anychanges = True
+        if anychanges:
+            HistorySave()
 
     # def HistoryLoad(self) -> None:
     #     """ Should really be in EliteBGS Provider but I dont get sibling modules"""
