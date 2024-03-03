@@ -2,6 +2,7 @@ import requests
 import json
 from CSNSettings import CSNLog, RequestCount
 from classes.Bubble import Bubble
+# from classes.BubbleExpansion import BubbleExpansion
 from classes.Presense import Presence
 from classes.System import System
 from classes.State import State, Phase
@@ -25,7 +26,20 @@ def EliteBGSDateTime(datestring: str) -> datetime:
     return (datetime.strptime(datestring[:len(dformat) + 2], dformat))
 
 
-def LiveSystemDetails(system: System, forced: bool = False) -> System:
+def EBGSCache_Save(cache) -> None:
+    with open(os.path.join(DATADIR, 'EBGS_Cache.pickle'), 'wb') as io:
+        pickle.dump(cache, io)
+
+
+def EBGSCache_Load() -> dict[System]:
+    answer = dict()
+    if os.path.exists(os.path.join(DATADIR, 'EBGS_Cache.pickle')):
+        with open(os.path.join(DATADIR, 'EBGS_Cache.pickle'), 'rb') as io:
+            answer = pickle.load(io)
+    return answer
+
+
+def LiveSystemDetails(system: System, forced: bool = False, cached=None) -> System:
     """
     Retrieve system and faction inf values from elitebgs using cached value if possible. 
     "refresh" will ignore cache and refresh the data. 
@@ -139,14 +153,23 @@ def RefreshFaction(bubble: Bubble, faction: str) -> None:
     """ Gets EBGS data for any systems with stale data or a conflict"""
     print(f"EBGS Refreshing systems for {faction}..")
     CSNLog.info(f"EBGS Refreshing systems for {faction}")
-    systems = EliteBGSFactionSystems(faction=faction)
-    for sys_name, updated, inconflict in systems:
+    ebgs_system_summary = EliteBGSFactionSystems(faction=faction)
+    cache: dict[System] = EBGSCache_Load()
+    for sys_name, updated, inconflict in ebgs_system_summary:
         system: System = bubble.getsystem(sys_name)
-        if system.updated < updated or inconflict:
-            print(f"    {sys_name:30} : {updated:%c} - {system.updated:%c}")
+        if cache.get(sys_name) and cache[sys_name].updated == updated:
+            system = cache[sys_name]
+            CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c}")
+            print(f" EBGS Cache {sys_name:30} : {updated:%c}")
+        elif system.updated < updated or inconflict:
+            CSNLog(f"EBGS Request {sys_name:30} : {updated:%c}")
+            print(f" EBGS Request {sys_name:30} : {updated:%c}")
             system = LiveSystemDetails(system, inconflict)
+            cache[sys_name] = system
         else:
             system.updated = updated
+
+    EBGSCache_Save(cache)
 
 
 def HistoryCovert():

@@ -305,6 +305,14 @@ if __name__ == '__main__':
     """ 
         Tests and Examples of use
     """
+    # Default/Manual Usage
     full = False
     GenerateMissions(uselivedata=True,
                      DiscordUpdateReport=not full, DiscordFullReport=full)
+
+    # TODO Expansion to consider Conflict Locks
+    # TODO Cache EBGS
+    # TODO EBGS History Refresh to be part of Initialisation to ensure ones a system is in the History it gets refreshed regardless of the current faction bubble
+    # TODO Make CSN Functions generic to be used as a toolkit in ExpandTest
+    # TODO Get rid of Bubble, just use Bubble Expansion
+    # TODO Add EBGS Refresh to Bubble Init if faction provided, can then remove 2nd Expand Calc Phase

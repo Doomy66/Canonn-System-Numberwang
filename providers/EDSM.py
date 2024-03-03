@@ -12,7 +12,7 @@ import requests
 import gzip
 
 
-def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
+def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
     """ Reads latest daily download of populated systems from EDSM and creates a list of System Objects \n
         If a Faction is supplied, the list is cut down to that Faction and others withing range ly Cube
     """
@@ -98,9 +98,9 @@ def GetSystemsFromEDSM(Faction: str, range=40) -> list[System]:
         systemlist.append(system)
 
     # Reduce List to Empire and Systems within range (40 covers simple invasions, use 60 for extended invasions)
-    if Faction:
+    if faction:
         empire = list(
-            filter(lambda x: x.isfactionpresent(Faction), systemlist))
+            filter(lambda x: x.isfactionpresent(faction), systemlist))
         if empire:
             systemlist = list(filter(lambda x: min(
                 map(lambda e: e.cube_distance(x), empire)) <= range, systemlist))

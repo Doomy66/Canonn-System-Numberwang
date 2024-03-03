@@ -52,3 +52,7 @@ def LoadEDDBFactions(location: str = 'resources\EDDBFactions.pickle') -> None:
         EDDBFACTIONS = {'None': fdetails()}
     else:
         CSNLog.info("EDDBFactions Loaded")
+
+
+# Might be nice for it to be auto inited, but gets triggered before the start of the Logging. Looks odd
+# LoadEDDBFactions()
