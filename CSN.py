@@ -18,7 +18,7 @@ from providers.DCOH import dcohsummary
 from providers.GoogleSheets import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
 
 
-myBubble: BubbleExpansion = None
+myBubble: BubbleExpansion = None  # type: ignore
 
 SAFE_GAP = 15  # Urgent message if below...
 IGNORE_GAP = 29  # Ignore any gap over...
@@ -54,9 +54,9 @@ def OverrideMessages() -> list[Message]:
                                            emoji=CSNSettings.ICONS[_[3]], override=Overide(_[4][:1])) for _ in CSNOverRideRead()[1:])
     # Replace f strings in Overrirdes
     for myMessage in (_ for _ in messages if ('{' in _.text)):
-        system = myBubble.getsystem(myMessage.systemname)
+        system: System = myBubble.getsystem(myMessage.systemname)
         myPresence: Presence = next(
-            (_ for _ in system.factions if _.name == CSNSettings.FACTION), None)
+            (_ for _ in system.factions if _.name == CSNSettings.FACTION), None)  # type: ignore
         gap: float = round(
             system.influence - (system.factions[1].influence if len(system.factions) > 1 else 0), 2)
         gapfromtop: float = round(
@@ -67,7 +67,7 @@ def OverrideMessages() -> list[Message]:
         for faction in system.factions:
             if faction.name != CSNSettings.FACTION and faction.name in myMessage.text:
                 myMessage = ExpandMessage(myMessage,
-                                          expandto=expandto, inf=faction.inf, gap=abs(faction.influence-myPresence.influence), happy='<?>', gapfromtop=system.influence-faction.influence)
+                                          expandto=expandto, inf=faction.influence, gap=abs(faction.influence-myPresence.influence), happy='<?>', gapfromtop=system.influence-faction.influence)
         else:
             myMessage = ExpandMessage(
                 myMessage, expandto=expandto, inf=system.influence, gap=gap, happy='<?>', gapfromtop=gapfromtop)
@@ -122,30 +122,6 @@ def RetreatMessages(mySystems: list[System], myfaction: str = CSNSettings.FACTIO
         messages.append(myMessage)
 
     return messages
-
-
-def MarketMessages() -> list[Message]:
-    pass
-    # """ Interesting Market Messages """
-    # """ TODO Tritium needs to know if Tritium is sold """
-    # """ TODO Goldrush uses economy details of station 'extraction'ish """
-    # messages: list[Message] = []
-
-    # for system in mySystems:
-    #     state: State
-    #     sellsTritium: bool = False
-    #     goldRushEconomy: bool = 'Extraction' in system.alleconomys ## A Faction's Station is Extraction, and a Faction's State is ISF
-    #     for state in system.factions[0].states:
-    #         if sellsTritium and state.state.lower() in {'drought', 'blight', 'terrorism'} and state.phase is not Phase.RECOVERING:
-    #             myMessage = Message(
-    #                 system.name, 24, f"Tritium Opportunity{' Pending' if state.phase==Phase.PENDING else ''}")
-    #             messages.append(myMessage)
-    #         if goldRushEconomy and state.state.lower() in {'infrastructurefailure'} and state.phase is not Phase.RECOVERING:
-    #             myMessage = Message(
-    #                 system.name, 24, f"Gold Rush {' Pending' if state.phase==Phase.PENDING else ''}", dIcons['data'])
-    #             messages.append(myMessage)
-
-    # return messages
 
 
 def InvasionMessages(systems: list[System], mySystems: list[System], max_cycles: int = 5, paranoia_level: float = CSNSettings.PARANOIA_LEVEL, myfaction: str = CSNSettings.FACTION, all_factions=False) -> list[Message]:
@@ -204,7 +180,7 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
 def GetSystemsWithLive(faction: str = CSNSettings.FACTION, range=40) -> list[System]:
     answer: list[System] = []
     answer = GetSystemsFromEDSM(faction, range)
-    RefreshFaction(answer, faction)
+    answer = RefreshFaction(answer, faction)
     return answer
 
 

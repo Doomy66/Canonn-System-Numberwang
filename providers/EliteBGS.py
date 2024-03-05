@@ -1,3 +1,4 @@
+from cachetools import cached
 import requests
 import json
 from CSNSettings import CSNLog, RequestCount
@@ -148,31 +149,39 @@ def EBGSFactionSystems(faction: str, page: int = 1) -> list:
     return answer
 
 
-def RefreshFaction(mySystems: list[System], myFaction: str) -> None:
+def RefreshFaction(mySystems: list[System], myFaction: str) -> list[System]:
     """ Gets EBGS data for any systems with stale data or a conflict"""
     print(f"EBGS Refreshing systems for {myFaction}..")
     CSNLog.info(f"EBGS Refreshing systems for {myFaction}")
-    ebgs_system_summary = EBGSFactionSystems(faction=myFaction)
+    # ebgs_system_summary = EBGSFactionSystems(faction=myFaction)
+    ebgs_system_summary = {}
+    for name, updated, inconflict in EBGSFactionSystems(faction=myFaction):
+        ebgs_system_summary[name.lower()] = (updated, inconflict)
     cache: dict[System] = EBGSCache_Load()
-    for sys_name, updated, inconflict in ebgs_system_summary:
-        system: System = next(
-            (x for x in mySystems if x.name.lower() == sys_name.lower()), None)
-        if system.updated < updated or inconflict:
-            if cache.get(sys_name) and cache[sys_name].updated == updated:
-                # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c} {system.updated:%c}")
-                system = cache[sys_name]
-                print(
-                    f" EBGS Cached  {sys_name:30} : {updated:%c} {system.updated:%c}")
+    answer = []
+
+    for system in mySystems:
+        updated, inconflict = ebgs_system_summary.get(
+            system.name.lower(), (None, None))
+        if updated:
+            if system.updated < updated or inconflict:
+                if cache.get(system.name) and cache[system.name].updated == updated:
+                    # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c} {system.updated:%c}")
+                    system = cache[system.name]
+                    print(
+                        f" EBGS Cached  {system.name:30} : {updated:%c} {system.updated:%c}")
+                else:
+                    CSNLog.info(
+                        f"EBGS Request {system.name:30} : {updated:%c} {system.updated:%c}")
+                    print(f" EBGS Request {system.name:30} : {updated:%c}")
+                    system = EBGSLiveSystem(system, inconflict)
+                    cache[system.name] = system
             else:
-                CSNLog.info(
-                    f"EBGS Request {sys_name:30} : {updated:%c} {system.updated:%c}")
-                print(f" EBGS Request {sys_name:30} : {updated:%c}")
-                system = EBGSLiveSystem(system, inconflict)
-                cache[sys_name] = system
-        else:
-            system.updated = updated
+                system.updated = updated
+        answer.append(system)
 
     EBGSCache_Save(cache)
+    return answer
 
 
 def EBGSPreviousVisitors(system_name, days=30, earliest=datetime(2017, 10, 8)):

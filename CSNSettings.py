@@ -15,7 +15,7 @@ WEBHOOK_TOKEN = myEnv.get('wh_token')
 OVERRIDE_WORKBOOK = myEnv.get('override_workbook')
 
 # Faction Settings
-FACTION = myEnv.get('myfaction')
+FACTION: str = myEnv.get('myfaction')
 EXTENDEDPHASE: bool = myEnv.get(
     'extendedphase')[:1].upper() in ['Y', 'T']
 
