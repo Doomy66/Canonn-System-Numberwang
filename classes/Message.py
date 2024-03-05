@@ -19,6 +19,9 @@ class Message:
     override: Overide = Overide.NORMAL
     complete: bool = False
 
+    def __str__(self) -> str:
+        return (f"{self.systemname} - {self.text}")
+
     @property
     def isDiscord(self) -> bool:
         return self.priority <= 10 or self.priority > 20

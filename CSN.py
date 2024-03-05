@@ -148,13 +148,13 @@ def MarketMessages() -> list[Message]:
     # return messages
 
 
-def InvasionMessages(mySystems: list[System], max_cycles: int = 5, paranoia_level: float = CSNSettings.PARANOIA_LEVEL, myfaction: str = CSNSettings.FACTION, all_factions=False) -> list[Message]:
+def InvasionMessages(systems: list[System], mySystems: list[System], max_cycles: int = 5, paranoia_level: float = CSNSettings.PARANOIA_LEVEL, myfaction: str = CSNSettings.FACTION, all_factions=False) -> list[Message]:
     """ Turns Invasion Data calulated earlier into relevent Messages """
     """ Only bothered with Non-Ignored PF unless all_factions is TRUE"""
     messages: list[Message] = []
     system: System
     target: ExpansionTarget
-    for system in myBubble.systems:
+    for system in systems:
         if system not in mySystems and system.nextexpansion and system.influence > paranoia_level and \
                 (all_factions or (system.controllingdetails.isPlayer and not CSNSettings.isIgnored(system.controllingFaction))):
             for i, target in enumerate(system.expansion_targets[:max_cycles]):
@@ -219,10 +219,6 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
 
     mySystems = myBubble.faction_presence(CSNSettings.FACTION)
 
-    # if uselivedata:
-    #     RefreshFaction(mySystems, CSNSettings.FACTION)
-    #     myBubble._ExpandAll()
-
     messages: list[Message] = []
     # Manually Specified Messages
     messages.extend(OverrideMessages())
@@ -230,7 +226,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages.extend(StaleDataMessages(mySystems))
     messages.extend(DCOHThargoidMessages(mySystems))
     messages.extend(RetreatMessages(mySystems))
-    messages.extend(InvasionMessages(mySystems))
+    messages.extend(InvasionMessages(myBubble.systems, mySystems))
     messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
 

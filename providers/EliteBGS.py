@@ -74,7 +74,7 @@ def EBGSLiveSystem(system: System, forced: bool = False, cached=None) -> System:
             fp = fd['faction_presence']
             myPresence = Presence(name=f['name'], id=fd['eddb_id'],
                                   allegiance=fd['allegiance'].title(), government=fd['government'].title(),
-                                  influence=round(100*fp['influence'], 2))
+                                  influence=100*fp['influence'])
             myPresence.isPlayer = isPlayer(myPresence.name)
 
             for state in fp['pending_states']:
@@ -157,15 +157,18 @@ def RefreshFaction(mySystems: list[System], myFaction: str) -> None:
     for sys_name, updated, inconflict in ebgs_system_summary:
         system: System = next(
             (x for x in mySystems if x.name.lower() == sys_name.lower()), None)
-        if cache.get(sys_name) and cache[sys_name].updated == updated:
-            system = cache[sys_name]
-            # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c}")
-            print(f" EBGS Cached  {sys_name:30} : {updated:%c}")
-        elif system.updated < updated or inconflict:
-            CSNLog.info(f"EBGS Request {sys_name:30} : {updated:%c}")
-            print(f" EBGS Request {sys_name:30} : {updated:%c}")
-            system = EBGSLiveSystem(system, inconflict)
-            cache[sys_name] = system
+        if system.updated < updated or inconflict:
+            if cache.get(sys_name) and cache[sys_name].updated == updated:
+                # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c} {system.updated:%c}")
+                system = cache[sys_name]
+                print(
+                    f" EBGS Cached  {sys_name:30} : {updated:%c} {system.updated:%c}")
+            else:
+                CSNLog.info(
+                    f"EBGS Request {sys_name:30} : {updated:%c} {system.updated:%c}")
+                print(f" EBGS Request {sys_name:30} : {updated:%c}")
+                system = EBGSLiveSystem(system, inconflict)
+                cache[sys_name] = system
         else:
             system.updated = updated
 

@@ -74,7 +74,7 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
                 if rf['influence'] > 0:
                     # EDSM seems to be a bad source for isPlayer, using EDDB Arcive
                     f = Presence(rf['id'], rf['name'], allegiance=rf['allegiance'], government=rf['government'],
-                                 influence=round(100*rf['influence'], 2), happiness=rf['happiness'], isPlayer=isPlayer(rf['name']))
+                                 influence=100*rf['influence'], happiness=rf['happiness'], isPlayer=isPlayer(rf['name']))
                     # Add States of Faction. NB States have very little information in EDSM, for Conflict days won etc you need EBGS data
                     for rstate in rf.get('activeStates', []):
                         f.states.append(
