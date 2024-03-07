@@ -2,7 +2,6 @@ import CSNSettings
 from classes.BubbleExpansion import BubbleExpansion
 from classes.System import System
 from classes.ExpansionTarget import ExpansionTarget
-from providers.EliteBGS import EBGSLiveSystem, RefreshFaction
 import CSN
 
 
@@ -13,7 +12,7 @@ def printexpansions(system_name: str, targets: list[ExpansionTarget], length=5):
         x.name for x in myBubble.faction_presence(myFactionName))
     for t in targets[:length]:
         print(
-            f"  {'*' if t.systemname in oursysnames else ' '}{t.systemname} : {t} [{t.score:.3f}]")
+            f"  {'*' if t.systemname in oursysnames else ' '}{t.systemname} : {t} {myBubble.cube_distance(myBubble.getsystem(system_name),myBubble.getsystem(t.systemname)):.2f}cly {myBubble.distance(myBubble.getsystem(system_name),myBubble.getsystem(t.systemname)):.2f}ly [{t.score:.3f}]")
 
 
 if __name__ == '__main__':
@@ -47,12 +46,12 @@ if __name__ == '__main__':
     # TODO Invasion of Faction
 
     # System of Interest
-    mySystemName = 'Rauratunab'
+    mySystemName = 'Arine'
     mySystem: System = myBubble.getsystem(mySystemName)
 
     # Systems Expansion Targets
     if targets := mySystem.expansion_targets:
-        printexpansions(mySystem.name, targets, 5)
+        printexpansions(mySystem.name, targets, 10)
 
     # TODO Single System Invasion Threats Regardless of Player Faction Status (change all_factions to FALSE for Player Factions only)
     threats_to_system = CSN.InvasionMessages(myBubble.systems,

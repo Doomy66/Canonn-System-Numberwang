@@ -212,6 +212,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # messages.extend(MarketMessages())
 
     # System Status Message
+    CSNSettings.CSNLog.info('System Messages')
     system: System
     for system in mySystems:
         # Precalculations
@@ -233,7 +234,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             myMessage: Message = Message(
                 system.name, 2, f"{str(conflictstate)}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
 
-            if conflictstate.phase == Phase.RECOVERING:
+            if conflictstate.phase == Phase.RECOVERING:  # Conflict is over, so turn into information
                 myMessage.priority = 21
                 myMessage.emoji = CSNSettings.ICONS['info']
                 messages.append(myMessage)
@@ -258,7 +259,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             myMessage: Message = Message(
                 system.name, 4, f"Required: {CSNSettings.FACTION} Missons etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
             messages.append(myMessage)
-            continue
+            continue  # Does not need the continue but might add another condition in the future
 
     # End of system loop
     messages.sort(key=lambda x: x.priority)

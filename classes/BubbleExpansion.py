@@ -59,7 +59,7 @@ class BubbleExpansion(Bubble):
                 # Expansion into a spare slot
                 expansion = ExpansionTarget(
                     target_system.name, description='Expansion', score=target_retreated_bonus+target_distance/100, faction=target_system.factions[0])
-                if target_cube_distance <= self.SIMPLERANGE:
+                if target_cube_distance < self.SIMPLERANGE:
                     targets.append(expansion)
                 elif extended:
                     expansion.extended = True
@@ -73,7 +73,7 @@ class BubbleExpansion(Bubble):
                     if not (current_faction.isNative or current_faction.name == target_system.controllingFaction or current_faction.activeconflict):
                         expansion = ExpansionTarget(
                             target_system.name, description='Invasion', faction=current_faction, score=target_retreated_bonus+current_faction.influence)
-                        if target_cube_distance <= self.SIMPLERANGE:
+                        if target_cube_distance < self.SIMPLERANGE:
                             targets.append(expansion)
                         elif extended:
                             expansion.extended = True

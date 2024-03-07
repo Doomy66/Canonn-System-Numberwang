@@ -166,13 +166,13 @@ def RefreshFaction(mySystems: list[System], myFaction: str) -> list[System]:
         if updated:
             if system.updated < updated or inconflict:
                 if cache.get(system.name) and cache[system.name].updated == updated:
-                    # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c} {system.updated:%c}")
+                    # CSNLog.info(f"EBGS Cache {sys_name:30} : {updated:%c}")
                     system = cache[system.name]
                     print(
-                        f" EBGS Cached  {system.name:30} : {updated:%c} {system.updated:%c}")
+                        f" EBGS Cached  {system.name:30} : {updated:%c}")
                 else:
                     CSNLog.info(
-                        f"EBGS Request {system.name:30} : {updated:%c} {system.updated:%c}")
+                        f"EBGS Request {system.name:30} : {updated:%c}")
                     print(f" EBGS Request {system.name:30} : {updated:%c}")
                     system = EBGSLiveSystem(system, inconflict)
                     cache[system.name] = system
