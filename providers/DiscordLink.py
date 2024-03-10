@@ -36,7 +36,7 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
             CSNSettings.WEBHOOK_ID, CSNSettings.WEBHOOK_TOKEN)
         message: Message
         for message in messages:
-            thistext: str = f"{message.emoji}{message.systemname} : {'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
+            thistext: str = f"{message.emoji}{message.systemname+' : ' if message.systemname else ''}{'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
             # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
             if len(webhook_text) < 1850:
                 webhook_text += thistext

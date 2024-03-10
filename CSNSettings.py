@@ -22,6 +22,7 @@ EXTENDEDPHASE: bool = myEnv.get(
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 _IGNOREPF = myEnv.get('ignorepf').split(",")
 PARANOIA_LEVEL = float(myEnv.get('invasionparanoialevel'))
+LIGHTHOUSE = myEnv.get('lighthousesystem')
 
 # dIcons from json file
 try:

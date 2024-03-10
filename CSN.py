@@ -205,6 +205,16 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages.extend(InvasionMessages(myBubble.systems, mySystems))
     messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
+    state: State
+    if CSNSettings.LIGHTHOUSE and (system := myBubble.getsystem(CSNSettings.LIGHTHOUSE)):
+        for state in system.controllingdetails.states:
+            if state.state.lower() == 'expansion':
+                if state.phase == Phase.PENDING or state.phase == Phase.ACTIVE:
+                    messages.append(
+                        Message('', 25, 'Expansion In Progress', CSNSettings.ICONS['info']))
+                elif state.phase == Phase.RECOVERING:
+                    messages.append(
+                        Message('', 25, 'Expansion Complete', CSNSettings.ICONS['info']))
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
