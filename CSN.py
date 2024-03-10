@@ -16,6 +16,7 @@ from providers.DiscordLink import WriteDiscord
 from providers.Canonn import getfleetcarrier
 from providers.DCOH import dcohsummary
 from providers.GoogleSheets import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
+import providers.ShortTermMemory as STM
 
 
 myBubble: BubbleExpansion = None  # type: ignore
@@ -205,16 +206,23 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages.extend(InvasionMessages(myBubble.systems, mySystems))
     messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
-    state: State
+    state: State = None
     if CSNSettings.LIGHTHOUSE and (system := myBubble.getsystem(CSNSettings.LIGHTHOUSE)):
-        for state in system.controllingdetails.states:
-            if state.state.lower() == 'expansion':
-                if state.phase == Phase.PENDING or state.phase == Phase.ACTIVE:
-                    messages.append(
-                        Message('', 25, 'Expansion In Progress', CSNSettings.ICONS['info']))
-                elif state.phase == Phase.RECOVERING:
-                    messages.append(
-                        Message('', 25, 'Expansion Complete', CSNSettings.ICONS['info']))
+        state = next(
+            (x for x in system.controllingdetails.states if x.state.lower() == 'expansion'), State('None'))
+
+        if state.state.lower() != STM.STM.get('exp_state'):
+            STM.STM['exp_state'] = state.state.lower()
+            STM.STM['exp_timestamp'] = system.updated.timestamp()
+            STM.SaveSTM()
+
+        if state.state.lower() == 'expansion':
+            if state.phase == Phase.PENDING or state.phase == Phase.ACTIVE:
+                messages.append(
+                    Message('', 25, 'Expansion In Progress', CSNSettings.ICONS['info']))
+            elif state.phase == Phase.RECOVERING:
+                messages.append(
+                    Message('', 25, 'Expansion Complete', CSNSettings.ICONS['data']))
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
