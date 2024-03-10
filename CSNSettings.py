@@ -25,7 +25,7 @@ PARANOIA_LEVEL = float(myEnv.get('invasionparanoialevel'))
 
 # dIcons from json file
 try:
-    with open(f'resources\\DiscordIcons', 'r') as io:
+    with open(f'resources\\DiscordIcons.json', 'r') as io:
         ICONS = json.load(io)
 except:
     ICONS = {}
