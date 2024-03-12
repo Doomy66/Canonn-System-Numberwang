@@ -178,6 +178,36 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
     return messages
 
 
+def LightHouseExpansion() -> list[Message]:
+    """ Check Lighthouse System and create live Expansion Message """
+    global myBubble
+    messages: list[Message] = []
+    state: State = None
+    if CSNSettings.LIGHTHOUSE and (system := myBubble.getsystem(CSNSettings.LIGHTHOUSE)):
+        state = next(
+            (x for x in system.controllingdetails.states if x.state.lower() == 'expansion'), State('None'))
+
+        if state.state.lower() != STM.get('exp_state'):
+            STM['exp_state'] = state.state.lower()
+            STM['exp_timestamp'] = system.updated.timestamp()
+            SaveSTM()
+
+        if state.state.lower() == 'expansion':
+            if state.phase == Phase.PENDING or state.phase == Phase.ACTIVE:
+                recorded_date = datetime.fromtimestamp(STM['exp_timestamp'])
+                planned_date = recorded_date + timedelta(days=10)
+                # Detected early in the morning, so probably happened in yesterdays tick (until tick officially moves!)
+                if (planned_date.time() <= datetime.strptime('08:00', '%H:%M').time()):
+                    planned_date = planned_date + timedelta(days=-1)
+                messages.append(
+                    Message('', 25, f"Expansion Expected {planned_date.strftime('%a %d %b')}", CSNSettings.ICONS['info']))
+            elif state.phase == Phase.RECOVERING:
+                messages.append(
+                    Message('', 25, 'Expansion Complete', CSNSettings.ICONS['data']))
+
+    return messages
+
+
 def GetSystemsWithLive(faction: str = CSNSettings.FACTION, range=40) -> list[System]:
     answer: list[System] = []
     answer = GetSystemsFromEDSM(faction, range)
@@ -206,28 +236,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages.extend(InvasionMessages(myBubble.systems, mySystems))
     messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
-    state: State = None
-    if CSNSettings.LIGHTHOUSE and (system := myBubble.getsystem(CSNSettings.LIGHTHOUSE)):
-        state = next(
-            (x for x in system.controllingdetails.states if x.state.lower() == 'expansion'), State('None'))
-
-        if state.state.lower() != STM.get('exp_state'):
-            STM['exp_state'] = state.state.lower()
-            STM['exp_timestamp'] = system.updated.timestamp()
-            SaveSTM()
-
-        if state.state.lower() == 'expansion':
-            if state.phase == Phase.PENDING or state.phase == Phase.ACTIVE:
-                recorded_date = datetime.fromtimestamp(STM['exp_timestamp'])
-                planned_date = recorded_date + timedelta(days=10)
-                # Detected early in the morning, so probably happened in yesterdays tick (until tick officially moves!)
-                if (planned_date.time() <= datetime.strptime('08:00', '%H:%M').time()):
-                    planned_date = planned_date + timedelta(days=-1)
-                messages.append(
-                    Message('', 25, f"Expansion Expected {planned_date.strftime("%a %d %b")}", CSNSettings.ICONS['info']))
-            elif state.phase == Phase.RECOVERING:
-                messages.append(
-                    Message('', 25, 'Expansion Complete', CSNSettings.ICONS['data']))
+    messages.extend(LightHouseExpansion())
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
