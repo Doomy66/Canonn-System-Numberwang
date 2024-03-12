@@ -182,14 +182,15 @@ def LightHouseExpansion() -> list[Message]:
     """ Check Lighthouse System and create live Expansion Message """
     global myBubble
     messages: list[Message] = []
-    state: State = None
     if CSNSettings.LIGHTHOUSE and (system := myBubble.getsystem(CSNSettings.LIGHTHOUSE)):
-        state = next(
+        state: State = next(
             (x for x in system.controllingdetails.states if x.state.lower() == 'expansion'), State('None'))
 
         if state.state.lower() != STM.get('exp_state'):
             STM['exp_state'] = state.state.lower()
             STM['exp_timestamp'] = system.updated.timestamp()
+            CSNSettings.CSNLog.info(
+                f'! Lighthouse Detected Expansion Change to {state.state}')
             SaveSTM()
 
         if state.state.lower() == 'expansion':
