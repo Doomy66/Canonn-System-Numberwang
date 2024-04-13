@@ -34,8 +34,8 @@ except:
 
 
 def isIgnored(faction: str) -> bool:
-    """ Returns True if faction name is in the list of ignored PF"""
-    return faction in _IGNOREPF
+    """ Returns True if faction name is in the list of ignored PF or an Ally"""
+    return isAlly(faction) or (faction in _IGNOREPF)
 
 
 def isAlly(faction: str) -> bool:

@@ -265,7 +265,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         if (conflictstate := next(
                 (_ for _ in myPresence.states if _.isConflict), None)):
             myMessage: Message = Message(
-                system.name, 2, f"{str(conflictstate)}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
+                system.name, 2, f"{str(conflictstate)}{' (Ally - Please leave alone)' if CSNSettings.isAlly(conflictstate.opponent) and system.controllingFaction == conflictstate.opponent else ''}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
 
             if conflictstate.phase == Phase.RECOVERING:  # Conflict is over, so turn into information
                 myMessage.priority = 21
@@ -279,6 +279,10 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         if any(_.systemname == system.name and _.override == Overide.PEACETIME for _ in messages):
             # Peacetime Override so no further message
             continue  # No More Internal Messages
+
+        # System belongs to an Ally so ignore Control and Gap Warnings
+        if CSNSettings.isAlly(system.controllingFaction):
+            continue
 
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
