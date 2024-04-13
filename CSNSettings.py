@@ -21,6 +21,7 @@ EXTENDEDPHASE: bool = myEnv.get(
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 _IGNOREPF = myEnv.get('ignorepf').split(",")
+_ALLIES = myEnv.get('allies').split(",")
 PARANOIA_LEVEL = float(myEnv.get('invasionparanoialevel'))
 LIGHTHOUSE = myEnv.get('lighthousesystem')
 
@@ -35,6 +36,11 @@ except:
 def isIgnored(faction: str) -> bool:
     """ Returns True if faction name is in the list of ignored PF"""
     return faction in _IGNOREPF
+
+
+def isAlly(faction: str) -> bool:
+    """ Returns True if faction name is in the list of Allied PF"""
+    return faction in _ALLIES
 
 
 # No orders to boost inf for system control etc. Leave it to the system owner. Not Used Yet.
