@@ -13,6 +13,8 @@ def Schedule():
         print('Nothing Scheduled')
         return None
 
+    # full = True
+
     GenerateMissions(uselivedata=True, DiscordFullReport=full,
                      DiscordUpdateReport=not full)
 

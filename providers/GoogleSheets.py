@@ -52,11 +52,17 @@ def CSNOverRideReadSafe():  # Read without Google API
             system, priority, Description, Emoji, Type = row
             if system != '':
                 answer.append(
-                    [system, int(priority), Description, Emoji, Type])
+                    [system.rstrip(), int(priority), Description, Emoji, Type])
     return (answer)
 
 
 def CSNOverRideRead():
+    """
+    Reads data from a Google Sheet and returns a list of overrides.
+
+    Returns:
+        list: A list of lists containing the system, priority, description, emoji, and override type.
+    """
     answer = []
     answer.append(['System', 'Priority', 'Mission'])
     if not CSNSettings.OVERRIDE_WORKBOOK:
@@ -72,13 +78,11 @@ def CSNOverRideRead():
         print('No data found.')
     else:
         for row in values:
-            # print(len(row))
             system, priority, Description, Emoji, OType = row if len(
                 row) == 5 else row+[''] if len(row) == 4 else row+['']+[''] if len(row) == 3 else row+['']+['']+['']
             if system != '' and system[0] != '!':
-                # blank priority now has a default and not fail to cast
                 answer.append(
-                    [system, int(priority) if priority else 1, Description, Emoji, OType])
+                    [system.rstrip(), int(priority) if priority else 1, Description, Emoji, OType])
     return (answer)
 
 
