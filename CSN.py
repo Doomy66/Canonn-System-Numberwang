@@ -265,7 +265,9 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         if (conflictstate := next(
                 (_ for _ in myPresence.states if _.isConflict), None)):
             myMessage: Message = Message(
-                system.name, 2, f"{str(conflictstate)}{' (Ally - Please leave alone)' if CSNSettings.isAlly(conflictstate.opponent) and system.controllingFaction == conflictstate.opponent else ''}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
+                system.name, 6 if CSNSettings.isAlly(
+                    system.controllingFaction) else 2,
+                f"{str(conflictstate)}{' (Ally - Please leave alone)' if CSNSettings.isAlly(conflictstate.opponent) and system.controllingFaction == conflictstate.opponent else ''}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
 
             if conflictstate.phase == Phase.RECOVERING:  # Conflict is over, so turn into information
                 myMessage.priority = 21
