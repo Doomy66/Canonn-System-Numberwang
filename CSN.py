@@ -197,9 +197,10 @@ def LightHouseExpansion() -> list[Message]:
             if state.phase == Phase.PENDING or state.phase == Phase.ACTIVE:
                 recorded_date = datetime.fromtimestamp(STM['exp_timestamp'])
                 planned_date = recorded_date + timedelta(days=10)
+                # Tick moved to next day, so no need to adjust date
                 # Detected early in the morning, so probably happened in yesterdays tick (until tick officially moves!)
-                if (planned_date.time() <= datetime.strptime('08:00', '%H:%M').time()):
-                    planned_date = planned_date + timedelta(days=-1)
+                # if (planned_date.time() <= datetime.strptime('08:00', '%H:%M').time()):
+                #    planned_date = planned_date + timedelta(days=-1)
                 messages.append(
                     Message('', 25, f"Expansion Expected {planned_date.strftime('%a %d %b')}", CSNSettings.ICONS['info']))
             elif state.phase == Phase.RECOVERING:
