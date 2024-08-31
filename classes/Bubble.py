@@ -34,7 +34,7 @@ class Bubble:
             Sorted by Distance
         """
         ans = sorted(list(filter(lambda x: self.cube_distance(
-            system, x) < range and (exclude_presense == '' or not x.isfactionpresent(exclude_presense)), self.systems)), key=lambda x: self.distance(x, system))
+            system, x) < range and x.population > 0 and (exclude_presense == '' or not x.isfactionpresent(exclude_presense)), self.systems)), key=lambda x: self.distance(x, system))
         return ans
 
     def faction_presence(self, factionname: str) -> list[System]:

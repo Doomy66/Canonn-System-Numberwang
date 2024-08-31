@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # TODO Invasion of Faction
 
     # System of Interest
-    mySystemName = 'Arine'
+    mySystemName = 'Suhte'
     mySystem: System = myBubble.getsystem(mySystemName)
 
     # Systems Expansion Targets

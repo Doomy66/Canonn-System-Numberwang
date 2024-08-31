@@ -137,18 +137,19 @@ class BubbleExpansion(Bubble):
         for system in self.systems:
             # if system.name == 'Varati':
             #     bubble.systemhistory[system.name] = set()  # TEST
-            if system.population > 0 and not self.systemhistory.get(system.name, None):
-                self.systemhistory[system.name] = set(
-                    EBGSPreviousVisitors(system.name))
-                anychanges = True
-                sleep(5)  # Be nice to EBGS
-            else:
-                faction: Presence
-                for faction in system.factions:
-                    if faction.name not in self.systemhistory[system.name]:
-                        print(
-                            f" New Expansion Detected {system.name}, {faction.name}")
-                        self.systemhistory[system.name].add(faction.name)
-                        anychanges = True
+            if system.population > 0:
+                if not self.systemhistory.get(system.name, None):
+                    self.systemhistory[system.name] = set(
+                        EBGSPreviousVisitors(system.name))
+                    anychanges = True
+                    sleep(5)  # Be nice to EBGS
+                else:
+                    faction: Presence
+                    for faction in system.factions:
+                        if faction.name not in self.systemhistory[system.name]:
+                            print(
+                                f" New Expansion Detected {system.name}, {faction.name}")
+                            self.systemhistory[system.name].add(faction.name)
+                            anychanges = True
         if anychanges:
             HistorySave()
