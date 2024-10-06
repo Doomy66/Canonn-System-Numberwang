@@ -329,7 +329,7 @@ if __name__ == '__main__':
         Tests and Examples of use
     """
     # Default/Manual Usage
-    full = False
+    full = True
     GenerateMissions(uselivedata=True,
                      DiscordUpdateReport=not full, DiscordFullReport=full)
 
