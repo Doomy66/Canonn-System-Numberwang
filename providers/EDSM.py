@@ -12,6 +12,55 @@ import requests
 import gzip
 
 
+def RefreshUnpopulatedDump(file, url):
+    """ Checks Dates of Cache and API Data and downloads if required """
+    cachedate: datetime.datetime = datetime.datetime.strptime(
+        '2000-01-01', '%Y-%m-%d')
+    basecoords = (0, 0, 0)
+    range = 1000
+
+    # Get Modified Dates to check if it needs downloading again
+    if os.path.exists(file):
+        cachedate = datetime.datetime.fromtimestamp(
+            os.path.getmtime(file))
+        return cachedate  # !! No need to download again
+
+    try:
+        resp = requests.head(url)
+        lastmoddt = datetime.datetime.strptime(
+            resp.headers._store['last-modified'][1], '%a, %d %b %Y %H:%M:%S %Z')
+        # Needs to download fresh data
+        if lastmoddt > cachedate:
+            print('EDSM Unpopulated Downloading...')
+            CSNSettings.CSNLog.info('EDSM Unpopulated Downloading...')
+
+            resp = requests.get(url).content
+            resp = json.loads(gzip.decompress(resp))
+
+            # Strip it down to a sensible size
+            small = []
+            for s in resp:
+                if abs(s['coords']['x']-basecoords[0]) < range and abs(s['coords']['y']-basecoords[1]) < range and abs(s['coords']['z']-basecoords[2]) < range:
+                    small.append(s)
+
+            print('EDSM Saving...')
+            CSNSettings.CSNLog.info('EDSM Unpopulated Saving...')
+            with gzip.open(file, "w") as f:
+                f.write(json.dumps(small).encode('utf-8'))
+    except:
+        CSNSettings.CSNLog.info('EDSM Offline !')
+        print(f"EDSM Offline !")
+    return cachedate
+
+
+def LoadCache(file) -> list:
+    print('EDSM Loading...')
+    with gzip.open(file, "r") as f:
+        raw = json.loads(f.read().decode('utf-8'))
+        CSNSettings.CSNLog.info('EDSM Loaded')
+    return raw
+
+
 def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
     """ Reads latest daily download of populated systems from EDSM and creates a list of System Objects \n
         If a Faction is supplied, the list is cut down to that Faction and others withing range ly Cube
@@ -48,13 +97,6 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
             CSNSettings.CSNLog.info('EDSM Offline !')
             print(f"EDSM Offline !")
         return lastmoddt
-
-    def LoadCache(edsmcache) -> list:
-        print('EDSM Loading...')
-        with gzip.open(edsmcache, "r") as f:
-            raw = json.loads(f.read().decode('utf-8'))
-            CSNSettings.CSNLog.info('EDSM Loaded')
-        return raw
 
     lastmoddt = RefreshCache(edsmcache)
     raw = LoadCache(edsmcache)
@@ -112,7 +154,31 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
     return systemlist
 
 
+def GetUnpopulated() -> list[System]:
+    """ Reads latest daily download of unpopulated systems from EDSM and creates a list of System Objects """
+    edsmcache = os.environ.get('APPDATA')+"\CSN_EDSMUnpopulated.json"
+    EDSMUNPOPULATED = "https://www.edsm.net/dump/systemsWithCoordinates.json.gz"
+
+    lastmoddt = RefreshUnpopulatedDump(edsmcache, EDSMUNPOPULATED)
+
+    print('EDSM Converting to DataClass...')
+    CSNSettings.CSNLog.info('EDSM Converting to DataClass...')
+
+    raw = LoadCache(edsmcache)
+    systemlist: list[System] = []
+    for rs in raw:
+        system = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
+                        x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], updated=lastmoddt)
+
+        systemlist.append(system)
+    print(f'EDSM Converted to include {len(systemlist)} systems')
+    CSNSettings.CSNLog.info(
+        f'EDSM Converted to DataClass : {len(systemlist)} systems')
+    return systemlist
+
+
 if __name__ == '__main__':
+
     pass
     # Some Tests and Examples
     # myFactionName = os.environ.get('myfaction')

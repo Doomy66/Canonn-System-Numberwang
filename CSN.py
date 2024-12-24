@@ -236,7 +236,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages.extend(DCOHThargoidMessages(mySystems))
     messages.extend(RetreatMessages(mySystems))
     messages.extend(InvasionMessages(myBubble.systems, mySystems))
-    messages.extend(FleetCarrierMessages())
+    # messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
     messages.extend(LightHouseExpansion())
 
