@@ -174,8 +174,12 @@ def RefreshFaction(mySystems: list[System], myFaction: str) -> list[System]:
                     CSNLog.info(
                         f"EBGS Request {system.name:30} : {updated:%c}")
                     print(f" EBGS Request {system.name:30} : {updated:%c}")
-                    system = EBGSLiveSystem(system, inconflict)
-                    cache[system.name] = system
+                    try:
+                        system = EBGSLiveSystem(system, inconflict)
+                        cache[system.name] = system
+                    except:
+                        CSNLog.info(
+                            f"!Failed to get EBGS Live data for {system.name}\n")
             else:
                 system.updated = updated
         answer.append(system)
