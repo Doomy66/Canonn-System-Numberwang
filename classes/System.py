@@ -67,6 +67,8 @@ class System:
 
     def isfactionpresent(self, name: str) -> bool:
         """ Is a faction present in System """
+        if not self.population:
+            return False
         for f in self.factions:
             if f.name == name:
                 return True
