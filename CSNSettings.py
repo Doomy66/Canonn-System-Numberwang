@@ -18,6 +18,7 @@ OVERRIDE_WORKBOOK = myEnv.get('override_workbook')
 FACTION: str = myEnv.get('myfaction')
 EXTENDEDPHASE: bool = myEnv.get(
     'extendedphase')[:1].upper() in ['Y', 'T']
+HOME = myEnv.get('home')
 
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 _IGNOREPF = myEnv.get('ignorepf').split(",")

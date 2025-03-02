@@ -1,5 +1,6 @@
 # Generates Messages/Missions for the faction
 from datetime import datetime, timedelta
+from math import dist
 import platform
 import pickle
 
@@ -248,6 +249,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # System Status Message
     CSNSettings.CSNLog.info('System Messages')
     system: System
+    home: System = myBubble.getsystem(CSNSettings.HOME)
     for system in mySystems:
         # Precalculations
         gap: float = round(system.influence -
@@ -256,6 +258,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             (_ for _ in system.factions if _.name == CSNSettings.FACTION), None)
         gapfromtop: float = round(
             system.influence - myPresence.influence if myPresence else 0, 1)
+        distance: float = myBubble.distance(home, system)
 
         # Manual Override - No Internal Message for this System
         if any(_.override == Overide.OVERRIDE and _.systemname == system.name for _ in messages):
@@ -290,7 +293,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 3, f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
+                system.name, 3+(distance/100), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}% dist {distance:.1f}ly)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
             continue
 
