@@ -105,6 +105,10 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
     CSNSettings.CSNLog.info('EDSM Converting to DataClass...')
 
     systemlist: list[System] = []
+    # Polaris is a special case, it is not in the EDSM data
+    system: System = System('ESDM', id=388367419731, id64=388367419731, name='Polaris', x=-322.3875, y=194.59378, z=-212.4375,
+                            allegiance='Non', government='None', economy='None', security='None', population=0, controllingFaction='None', updated=lastmoddt)
+    systemlist.append(system)
     for rs in raw:
         system = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
                         x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], allegiance=rs['allegiance'], government=rs['government'], economy=rs[
