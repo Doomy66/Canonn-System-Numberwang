@@ -31,6 +31,7 @@ class System:
     # Only Pouplated in BubbleExpansion Sub-Class
     expansion_targets: list = field(default_factory=list[ExpansionTarget])
     updated: datetime = datetime.now()
+    zoneofinterest: bool = False
 
     def __str__(self) -> str:
         ans = f"{self.name} : {self.controllingFaction} ({self.influence}%)"

@@ -40,3 +40,11 @@ class Bubble:
     def faction_presence(self, factionname: str) -> list[System]:
         """ Returns a List of all System where the faction is present"""
         return list(filter(lambda x: x.isfactionpresent(factionname), self.systems))
+
+    def AddtoZoneofInterest(self, system: System) -> None:
+        """ Add a System to the Zone of Interest """
+        system.zoneofinterest = True
+
+        for target_system in self.cube_systems(system):
+            if target_system.population and not target_system.zoneofinterest and target_system.isfactionpresent(CSNSettings.FACTION):
+                self.AddtoZoneofInterest(target_system)

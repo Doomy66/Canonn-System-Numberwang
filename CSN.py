@@ -227,6 +227,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     else:
         myBubble = BubbleExpansion(GetSystemsFromEDSM())
 
+    myBubble.AddtoZoneofInterest(myBubble.getsystem(CSNSettings.HOME))
     mySystems = myBubble.faction_presence(CSNSettings.FACTION)
 
     messages: list[Message] = []
@@ -291,7 +292,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             continue
 
         # Not Yet In Control
-        if system.controllingFaction != CSNSettings.FACTION:
+        if system.controllingFaction != CSNSettings.FACTION and system.zoneofinterest:
             myMessage: Message = Message(
                 system.name, 3+(distance/100), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}% dist {distance:.1f}ly)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
