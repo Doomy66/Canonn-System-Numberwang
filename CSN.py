@@ -169,7 +169,7 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
     messages: list[Message] = []
     # Yeah, showing off pythonic, not exactly readable
     best = list((_ for _ in mySystems if (_.controllingFaction ==
-                CSNSettings.FACTION and (len(_.factions) > 1) and (
+                CSNSettings.FACTION and _.zoneofinterest and (len(_.factions) > 1) and (
                     SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:count]:
@@ -298,7 +298,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 3+(distance/100), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}% dist {distance:.1f}ly)", CSNSettings.ICONS['push'])
+                system.name, 3+(distance/1000), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}% dist {distance:.1f}ly)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
             continue
 
