@@ -136,7 +136,7 @@ def InvasionMessages(systems: list[System], mySystems: list[System], max_cycles:
         if system not in mySystems and system.nextexpansion and system.influence > paranoia_level and \
                 (all_factions or (system.controllingdetails.isPlayer and not CSNSettings.isIgnored(system.controllingFaction))):
             for i, target in enumerate(system.expansion_targets[:max_cycles]):
-                if target.faction.name == myfaction:
+                if target.faction.name == myfaction and myBubble.getsystem(target.systemname).zoneofinterest:
                     messages.append(Message(system.name,
                                     10, f"{system.controllingFaction} Possible {target.description} to {target.systemname} ({system.influence:.2f}%) Priority {i+1}", CSNSettings.ICONS['data']))
                     break
@@ -291,8 +291,12 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         if CSNSettings.isAlly(system.controllingFaction):
             continue
 
+        # System is Ignored
+        if not system.zoneofinterest:
+            continue
+
         # Not Yet In Control
-        if system.controllingFaction != CSNSettings.FACTION and system.zoneofinterest:
+        if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
                 system.name, 3+(distance/100), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}% dist {distance:.1f}ly)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
