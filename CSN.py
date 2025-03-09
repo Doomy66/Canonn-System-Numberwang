@@ -298,7 +298,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 3+(gapfromtop/1000), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%", CSNSettings.ICONS['push'])
+                system.name, 3+(gapfromtop/1000), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
             continue
 
