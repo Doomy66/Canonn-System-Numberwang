@@ -298,14 +298,14 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 3+(distance/1000), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}% dist {distance:.1f}ly)", CSNSettings.ICONS['push'])
+                system.name, 3+(gapfromtop/1000), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%", CSNSettings.ICONS['push'])
             messages.append(myMessage)
             continue
 
         # Gap Warning
         if gap <= SAFE_GAP:
             myMessage: Message = Message(
-                system.name, 4, f"Required: {CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
+                system.name, 4+(gapfromtop/1000), f"Required: {CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
             messages.append(myMessage)
             continue  # Does not need the continue but might add another condition in the future
 
