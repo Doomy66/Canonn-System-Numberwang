@@ -23,6 +23,7 @@ HOME = myEnv.get('home')
 # Player Factions to treat as NPCs, either because they are inactive or other reasons
 _IGNOREPF = myEnv.get('ignorepf').split(",")
 _ALLIES = myEnv.get('allies').split(",")
+_PARTNERS = myEnv.get('partners').split(",")
 PARANOIA_LEVEL = float(myEnv.get('invasionparanoialevel'))
 LIGHTHOUSE = myEnv.get('lighthousesystem')
 
@@ -42,6 +43,11 @@ def isIgnored(faction: str) -> bool:
 def isAlly(faction: str) -> bool:
     """ Returns True if faction name is in the list of Allied PF"""
     return faction in _ALLIES
+
+
+def isPartner(faction: str) -> bool:
+    """ Returns True if faction name is in the list of Partner PF"""
+    return faction in _PARTNERS
 
 
 # No orders to boost inf for system control etc. Leave it to the system owner. Not Used Yet.

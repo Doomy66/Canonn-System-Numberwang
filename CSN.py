@@ -168,9 +168,12 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
     """ 3 Systems with the lowest non urgent gaps """
     messages: list[Message] = []
     # Yeah, showing off pythonic, not exactly readable
-    best = list((_ for _ in mySystems if (_.controllingFaction ==
-                CSNSettings.FACTION and _.zoneofinterest and (len(_.factions) > 1) and (
-                    SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP))))
+    best = list((_ for _ in mySystems
+                 if (_.controllingFaction == CSNSettings.FACTION
+                     and _.zoneofinterest
+                     and (len(_.factions) > 1)
+                     and (SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP)
+                     and not CSNSettings.isPartner(_.factions[1].name))))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:count]:
         myMessage = Message(
@@ -287,8 +290,8 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             # Peacetime Override so no further message
             continue  # No More Internal Messages
 
-        # System belongs to an Ally so ignore Control and Gap Warnings
-        if CSNSettings.isAlly(system.controllingFaction):
+        # System belongs to an Ally/Partner so ignore Control and Gap Warnings
+        if CSNSettings.isAlly(system.controllingFaction) or CSNSettings.isPartner(system.controllingFaction):
             continue
 
         # System is Ignored
@@ -303,7 +306,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             continue
 
         # Gap Warning
-        if gap <= SAFE_GAP:
+        if gap <= SAFE_GAP and not CSNSettings.isPartner(system.factions[1].name):
             myMessage: Message = Message(
                 system.name, 4+(gapfromtop/1000), f"Required: {CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
             messages.append(myMessage)
