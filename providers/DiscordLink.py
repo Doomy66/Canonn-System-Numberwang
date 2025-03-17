@@ -31,7 +31,7 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
     print(f"Discord Webhook : {'Full' if Full else 'Update'}...")
     if CSNSettings.WEBHOOK_ID and messages:
         webhook_text: str = ''
-        webhook_extra: str = ''
+        webhook_sentmain: bool = False
         webhook = SyncWebhook.partial(
             CSNSettings.WEBHOOK_ID, CSNSettings.WEBHOOK_TOKEN)
         message: Message
@@ -41,20 +41,27 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
             if len(webhook_text) < 1850:
                 webhook_text += thistext
             else:
-                webhook_extra += thistext
+                SendMessage(webhook_text, webhook_sentmain)
+                webhook_sentmain = True
+                webhook_text = thistext
 
         if webhook_text != '':
-            print(webhook_text)
-            webhook.send(
-                f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.ICONS['csnicon']} \n{webhook_text}")
-            CSNSettings.CSNLog.info(f"Discord {len(webhook_text)} chars")
+            SendMessage(webhook_text, webhook_sentmain)
 
-        if webhook_extra != '':
-            print(webhook_extra)
-            webhook.send(
-                f"...continued {CSNSettings.ICONS['csnicon']} \n{webhook_extra}")
-            CSNSettings.CSNLog.info(
-                f"Discord extra {len(webhook_extra)} chars")
     else:
         CSNSettings.CSNLog.info(f"Discord : Nothing to Report")
         print("...Nothing to Report to Discord")
+
+    def SendMessage(message: str, isextra: bool) -> None:
+        """ Send a message to the Discord Channel """
+
+        print(message)
+        if isextra:
+            webhook.send(
+                f"...continued {CSNSettings.ICONS['csnicon']} \n{message}")
+            CSNSettings.CSNLog.info(
+                f"Discord extra {len(message)} chars")
+        else:
+            webhook.send(
+                f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.ICONS['csnicon']} \n{message}")
+            CSNSettings.CSNLog.info(f"Discord {len(message)} chars")
