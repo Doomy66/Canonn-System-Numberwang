@@ -5,12 +5,18 @@ import pickle
 from discord import SyncWebhook
 
 
+def SendMessage(webhook: SyncWebhook, message: str):
+    """ Send a message to the Discord Channel """
+    print(message)
+    webhook.send(message)
+    CSNSettings.CSNLog.info(f"Discord {len(message)} chars")
+
+
 def WriteDiscord(Full: bool, messages: list[Message]) -> None:
     """ Write the messages to Discord Channel either a full report, or just the changes since last time """
     messages = list(filter(lambda _: _.isDiscord, messages))
     # Load Old Messages
     oldmessages: list[Message] = []
-
     if not Full:
         try:
             CSNSettings.CSNLog.info('Load Saved Messages')
@@ -30,38 +36,22 @@ def WriteDiscord(Full: bool, messages: list[Message]) -> None:
 
     print(f"Discord Webhook : {'Full' if Full else 'Update'}...")
     if CSNSettings.WEBHOOK_ID and messages:
-        webhook_text: str = ''
-        webhook_sentmain: bool = False
+        webhook_text: str = f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.ICONS['csnicon']} \n"
         webhook = SyncWebhook.partial(
             CSNSettings.WEBHOOK_ID, CSNSettings.WEBHOOK_TOKEN)
         message: Message
         for message in messages:
             thistext: str = f"{message.emoji}{message.systemname+' : ' if message.systemname else ''}{'~~' if message.complete else ''}{message.text}{'~~ : Mission Complete' if message.complete else ''}\n"
             # Max len for a single hook is 2000 chars. A message can be approx 100 and there is the additional header text.
-            if len(webhook_text) < 1850:
+            if len(webhook_text) < 1875:
                 webhook_text += thistext
             else:
-                SendMessage(webhook_text, webhook_sentmain)
-                webhook_sentmain = True
-                webhook_text = thistext
+                SendMessage(webhook, webhook_text)
+                webhook_text = f"...continued {CSNSettings.ICONS['csnicon']} \n{thistext}"
 
         if webhook_text != '':
-            SendMessage(webhook_text, webhook_sentmain)
+            SendMessage(webhook, webhook_text)
 
     else:
         CSNSettings.CSNLog.info(f"Discord : Nothing to Report")
         print("...Nothing to Report to Discord")
-
-    def SendMessage(message: str, isextra: bool) -> None:
-        """ Send a message to the Discord Channel """
-
-        print(message)
-        if isextra:
-            webhook.send(
-                f"...continued {CSNSettings.ICONS['csnicon']} \n{message}")
-            CSNSettings.CSNLog.info(
-                f"Discord extra {len(message)} chars")
-        else:
-            webhook.send(
-                f"{'**Full Report**' if Full else 'Latest News'} {CSNSettings.ICONS['csnicon']} \n{message}")
-            CSNSettings.CSNLog.info(f"Discord {len(message)} chars")
