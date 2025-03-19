@@ -230,7 +230,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     else:
         myBubble = BubbleExpansion(GetSystemsFromEDSM())
 
-    myBubble.AddtoZoneofInterest(myBubble.getsystem(CSNSettings.HOME))
+    # myBubble.AddtoZoneofInterest(myBubble.getsystem(CSNSettings.HOME))
     mySystems = myBubble.faction_presence(CSNSettings.FACTION)
 
     messages: list[Message] = []
@@ -272,10 +272,16 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         conflictstate: State
         if (conflictstate := next(
                 (_ for _ in myPresence.states if _.isConflict), None)):
+            thistext = f"{str(conflictstate)}"
+            if CSNSettings.isAlly(conflictstate.opponent) and system.controllingFaction == conflictstate.opponent:
+                thistext += ' (Ally - Please leave alone)'
+            if not system.zoneofinterest:
+                thistext += ' (Colony)'
+
             myMessage: Message = Message(
                 system.name, 6 if CSNSettings.isAlly(
                     system.controllingFaction) or not system.zoneofinterest else 2,
-                f"{str(conflictstate)}{' (Ally - Please leave alone)' if CSNSettings.isAlly(conflictstate.opponent) and system.controllingFaction == conflictstate.opponent else ''}", CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
+                thistext, CSNSettings.ICONS[conflictstate.state.replace(' ', '').lower()])
 
             if conflictstate.phase == Phase.RECOVERING:  # Conflict is over, so turn into information
                 myMessage.priority = 21

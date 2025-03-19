@@ -27,6 +27,7 @@ class BubbleExpansion(Bubble):
         self.systems = sorted(self.systems, key=lambda x: x.name)
         if self.empire == CSNSettings.FACTION:  # Keep the History file for your own faction
             self.HistoryLoad()
+        self.AddtoZoneofInterest(self.getsystem(CSNSettings.HOME))
         self._ExpandAll()
 
     def _ExpandAll(self) -> None:
@@ -43,7 +44,14 @@ class BubbleExpansion(Bubble):
     def ExpandFromSystem(self, source_system: System, extended: bool = False) -> list:
         """ Calculate all expansion targets for a system"""
         targets: list[ExpansionTarget] = []
-        for target_system in self.cube_systems(source_system, exclude_presense=source_system.controllingFaction):
+        cube = self.cube_systems(
+            source_system, exclude_presense=source_system.controllingFaction)  # Only get it once
+
+        if not [x for x in cube if x.zoneofinterest]:
+            print(".", end="")
+            return targets
+        print("-", end="")
+        for target_system in cube:
             target_distance: float = source_system.distance(target_system)
             target_cube_distance: float = source_system.cube_distance(
                 target_system)

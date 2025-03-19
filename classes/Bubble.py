@@ -45,6 +45,6 @@ class Bubble:
         """ Add a System to the Zone of Interest """
         system.zoneofinterest = True
 
-        for target_system in self.cube_systems(system):
+        for target_system in self.cube_systems(system, 20):
             if target_system.population and not target_system.zoneofinterest and target_system.isfactionpresent(CSNSettings.FACTION):
                 self.AddtoZoneofInterest(target_system)
