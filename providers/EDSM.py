@@ -112,7 +112,7 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
     for rs in raw:
         system = System('EDSM', id=rs['id'], id64=rs['id64'], name=rs['name'],
                         x=rs['coords']['x'], y=rs['coords']['y'], z=rs['coords']['z'], allegiance=rs['allegiance'], government=rs['government'], economy=rs[
-            'economy'], security=rs['security'], population=rs['population'], controllingFaction=rs['controllingFaction']['name'], updated=lastmoddt
+            'economy'], security=rs['security'], population=rs['population'], controllingFaction=rs['controllingFaction']['name'], updated=lastmoddt, zoneofinterest=False
         )
         # Add Faction Presences
         if 'factions' in rs.keys():
@@ -147,6 +147,8 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
     if faction:
         empire = list(
             filter(lambda x: x.isfactionpresent(faction), systemlist))
+
+        # TODO Earlier Zone of Interest
         if empire:
             systemlist = list(filter(lambda x: min(
                 map(lambda e: e.cube_distance(x), empire)) <= range, systemlist))
