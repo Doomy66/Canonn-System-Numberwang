@@ -43,6 +43,7 @@ class Bubble:
 
     def AddtoZoneofInterest(self, system: System) -> None:
         """ Add a System to the Zone of Interest """
+        """ No Longer in Use. Its done earlier during the Load of EDSM"""
         system.zoneofinterest = True
 
         for target_system in self.cube_systems(system, 20):

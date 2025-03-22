@@ -145,19 +145,47 @@ def GetSystemsFromEDSM(faction: str, range=40) -> list[System]:
 
     # Reduce List to Empire and Systems within range (40 covers simple invasions, use 60 for extended invasions)
     if faction:
+        # Our Systems
         empire = list(
             filter(lambda x: x.isfactionpresent(faction), systemlist))
 
-        # TODO Earlier Zone of Interest
+        startsystem: System = next(
+            (x for x in empire if x.name == CSNSettings.HOME), None)
+        if startsystem:
+            AddtoZoneofInterest(empire, startsystem)
+            empire = list(filter(lambda x: x.zoneofinterest, systemlist))
+
+        print(
+            f'Faction {faction} has {len(empire)} systems in ZOI')
+        CSNSettings.CSNLog.info(
+            f'Faction {faction} has {len(empire)} systems in ZOI')
+
         if empire:
-            systemlist = list(filter(lambda x: min(
+            systemlist = list(filter(lambda x: x.isfactionpresent(faction) or min(
                 map(lambda e: e.cube_distance(x), empire)) <= range, systemlist))
         else:
             print('! Faction Not Found, you have the whole bubble !')
+        # print(f'Faction {faction} has {len(systemlist)} systems in range')
+
+        # print(f'Faction {faction} has {len(systemlist)} systems in Zone of Interest')
+
     print(f'EDSM Converted to include {len(systemlist)} systems')
     CSNSettings.CSNLog.info(
         f'EDSM Converted to DataClass : {len(systemlist)} systems')
     return systemlist
+
+
+def AddtoZoneofInterest(self: list[System], system: System) -> None:
+    """ Add a System to the Zone of Interest """
+    system.zoneofinterest = True
+    for other_system in self:
+        if cube_distance(system, other_system) < 20 and other_system.population and not other_system.zoneofinterest and other_system.isfactionpresent(CSNSettings.FACTION):
+            AddtoZoneofInterest(self, other_system)
+
+
+def cube_distance(a: System, b: System) -> float:
+    """ Maximum Axis Difference between 2 systems """
+    return (max(abs(a.x-b.x), abs(a.y-b.y), abs(a.z-b.z)))if (a and b) else 0
 
 
 def GetUnpopulated() -> list[System]:

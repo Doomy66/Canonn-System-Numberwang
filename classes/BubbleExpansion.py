@@ -27,7 +27,6 @@ class BubbleExpansion(Bubble):
         self.systems = sorted(self.systems, key=lambda x: x.name)
         if self.empire == CSNSettings.FACTION:  # Keep the History file for your own faction
             self.HistoryLoad()
-        self.AddtoZoneofInterest(self.getsystem(CSNSettings.HOME))
         self._ExpandAll()
 
     def _ExpandAll(self) -> None:
