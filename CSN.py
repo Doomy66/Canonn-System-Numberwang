@@ -18,6 +18,7 @@ from providers.Canonn import getfleetcarrier
 from providers.DCOH import dcohsummary
 from providers.GoogleSheets import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
 from providers.ShortTermMemory import STM, SaveSTM
+from providers.Infomancer import LastTickReadable as LastTick
 
 
 myBubble: BubbleExpansion = None  # type: ignore
@@ -214,6 +215,13 @@ def LightHouseExpansion() -> list[Message]:
     return messages
 
 
+def TickMessages() -> list[Message]:
+    messages: list[Message] = []
+    messages.append(
+        Message('Tick', 25, f"detected {LastTick()}", CSNSettings.ICONS['info']))
+    return messages
+
+
 def GetSystemsWithLive(faction: str = CSNSettings.FACTION, range=40) -> list[System]:
     answer: list[System] = []
     answer = GetSystemsFromEDSM(faction, range)
@@ -244,6 +252,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
     messages.extend(LightHouseExpansion())
+    messages.extend(TickMessages())
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
