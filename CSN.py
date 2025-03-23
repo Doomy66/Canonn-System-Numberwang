@@ -252,7 +252,8 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
     messages.extend(LightHouseExpansion())
-    messages.extend(TickMessages())
+    # Had to dsable as the call is blacklisted by my servers IT Security
+    # messages.extend(TickMessages())
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
