@@ -18,7 +18,7 @@ from providers.Canonn import getfleetcarrier
 from providers.DCOH import dcohsummary
 from providers.GoogleSheets import CSNOverRideRead, CSNFleetCarrierRead, CSNPatrolWrite
 from providers.ShortTermMemory import STM, SaveSTM
-from providers.Infomancer import LastTickReadable as LastTick
+from providers.EDCD import LastTickReadable as LastTick
 
 
 myBubble: BubbleExpansion = None  # type: ignore
@@ -252,8 +252,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
     messages.extend(LightHouseExpansion())
-    # Had to dsable as the call is blacklisted by my servers IT Security
-    # messages.extend(TickMessages())
+    messages.extend(TickMessages())
 
     # Probably wont implement. Low value.
     # TODO Tritium Refinary Low Price Active/Pending
