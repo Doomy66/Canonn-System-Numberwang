@@ -174,7 +174,9 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
                      and _.zoneofinterest
                      and (len(_.factions) > 1)
                      and (SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP)
-                     and not CSNSettings.isPartner(_.factions[1].name))))
+                     and not CSNSettings.isPartner(_.factions[1].name)
+                     and not any((m.override == Overide.OVERRIDE or m.override == Overide.PEACETIME) and m.systemname == _.name for m in messages)
+                     )))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:count]:
         myMessage = Message(
@@ -248,7 +250,8 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     messages.extend(StaleDataMessages(mySystems))
     messages.extend(DCOHThargoidMessages(mySystems))
     messages.extend(RetreatMessages(mySystems))
-    messages.extend(InvasionMessages(myBubble.systems, mySystems))
+    # Disabled while the Colonys are still overwhelming
+    # messages.extend(InvasionMessages(myBubble.systems, mySystems))
     # messages.extend(FleetCarrierMessages())
     messages.extend(FillInMessages(mySystems, count=3))
     messages.extend(LightHouseExpansion())
@@ -272,6 +275,10 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         gapfromtop: float = round(
             system.influence - myPresence.influence if myPresence else 0, 1)
         distance: float = myBubble.distance(home, system)
+
+        if system.name == "HIP 56124":
+            print(
+                f"{system.name} {system.influence} {system.factions[1].influence} {gap} {gapfromtop} {distance}")
 
         # Manual Override - No Internal Message for this System
         if any(_.override == Overide.OVERRIDE and _.systemname == system.name for _ in messages):
@@ -316,14 +323,14 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 3+(gapfromtop/1000), f"Urgent: {CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
+                system.name, 4+(gapfromtop/1000), f"{CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
             messages.append(myMessage)
             continue
 
         # Gap Warning
         if gap <= SAFE_GAP and not CSNSettings.isPartner(system.factions[1].name):
             myMessage: Message = Message(
-                system.name, 4+(gapfromtop/1000), f"Required: {CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
+                system.name, 3+(gapfromtop/1000), f"{CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
             messages.append(myMessage)
             continue  # Does not need the continue but might add another condition in the future
 
