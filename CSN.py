@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from math import dist
 import platform
 import pickle
+import string
 
 import CSNSettings
 from classes.BubbleExpansion import BubbleExpansion
@@ -165,7 +166,7 @@ def FleetCarrierMessages() -> list[Message]:
     return messages
 
 
-def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
+def FillInMessages(mySystems: list[System], count: int = 3, current_messages: list[Message] = []) -> list[Message]:
     """ 3 Systems with the lowest non urgent gaps """
     messages: list[Message] = []
     # Yeah, showing off pythonic, not exactly readable
@@ -175,7 +176,7 @@ def FillInMessages(mySystems: list[System], count: int = 3) -> list[Message]:
                      and (len(_.factions) > 1)
                      and (SAFE_GAP <= (_.influence - _.factions[1].influence) <= IGNORE_GAP)
                      and not CSNSettings.isPartner(_.factions[1].name)
-                     and not any((m.override == Overide.OVERRIDE or m.override == Overide.PEACETIME) and m.systemname == _.name for m in messages)
+                     and not any((m.override == Overide.OVERRIDE or m.override == Overide.PEACETIME) and m.systemname == _.name for m in current_messages)
                      )))
     best = sorted(best, key=lambda x: (x.influence - x.factions[1].influence))
     for best3 in best[:count]:
@@ -253,7 +254,8 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     # Disabled while the Colonys are still overwhelming
     # messages.extend(InvasionMessages(myBubble.systems, mySystems))
     # messages.extend(FleetCarrierMessages())
-    messages.extend(FillInMessages(mySystems, count=3))
+    messages.extend(FillInMessages(
+        mySystems, count=3, current_messages=messages))
     messages.extend(LightHouseExpansion())
     messages.extend(TickMessages())
 
