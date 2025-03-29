@@ -278,10 +278,6 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
             system.influence - myPresence.influence if myPresence else 0, 1)
         distance: float = myBubble.distance(home, system)
 
-        if system.name == "HIP 56124":
-            print(
-                f"{system.name} {system.influence} {system.factions[1].influence} {gap} {gapfromtop} {distance}")
-
         # Manual Override - No Internal Message for this System
         if any(_.override == Overide.OVERRIDE and _.systemname == system.name for _ in messages):
             continue
