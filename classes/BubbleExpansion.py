@@ -46,7 +46,7 @@ class BubbleExpansion(Bubble):
         cube = self.cube_systems(
             source_system, exclude_presense=source_system.controllingFaction)  # Only get it once
 
-        if not [x for x in cube if x.zoneofinterest]:
+        if not source_system.zoneofinterest and not [x for x in cube if x.zoneofinterest]:
             print(".", end="")
             return targets
         print("-", end="")
