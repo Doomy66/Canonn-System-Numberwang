@@ -331,7 +331,7 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Gap Warning
         if gap <= SAFE_GAP and not CSNSettings.isPartner(system.factions[1].name):
             myMessage: Message = Message(
-                system.name, 3+(gapfromtop/1000), f"{CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
+                system.name, 3+(gap/1000), f"{CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
             gapmessages.append(myMessage)
             continue  # Does not need the continue but might add another condition in the future
 
