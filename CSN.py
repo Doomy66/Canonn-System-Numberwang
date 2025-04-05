@@ -1,6 +1,7 @@
 # Generates Messages/Missions for the faction
 from datetime import datetime, timedelta
-from math import dist
+from email import message
+from math import dist, e
 import platform
 import pickle
 import string
@@ -245,6 +246,8 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
     mySystems = myBubble.faction_presence(CSNSettings.FACTION)
 
     messages: list[Message] = []
+    forcontrolmessages: list[Message] = []
+    gapmessages: list[Message] = []
     # Manually Specified Messages
     messages.extend(OverrideMessages())
     # General Additional Messages
@@ -321,18 +324,24 @@ def GenerateMissions(uselivedata=True, DiscordFullReport=True, DiscordUpdateRepo
         # Not Yet In Control
         if system.controllingFaction != CSNSettings.FACTION:
             myMessage: Message = Message(
-                system.name, 4+(gapfromtop/1000), f"{CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
-            messages.append(myMessage)
+                system.name, 4+((gapfromtop+(distance/1000))/200), f"{CSNSettings.FACTION} Missions etc to gain system control (gap {gapfromtop:.1f}%)", CSNSettings.ICONS['push'])
+            forcontrolmessages.append(myMessage)
             continue
 
         # Gap Warning
         if gap <= SAFE_GAP and not CSNSettings.isPartner(system.factions[1].name):
             myMessage: Message = Message(
                 system.name, 3+(gapfromtop/1000), f"{CSNSettings.FACTION} Missions etc : {system.factions[1].name} is threatening, gap is only {gap:.1f}%", CSNSettings.ICONS['infgap'])
-            messages.append(myMessage)
+            gapmessages.append(myMessage)
             continue  # Does not need the continue but might add another condition in the future
 
     # End of system loop
+    forcontrolmessages.sort(key=lambda x: x.priority)
+    gapmessages.sort(key=lambda x: x.priority)
+
+    messages.extend(gapmessages[:10])
+    messages.extend(forcontrolmessages[:10])
+
     messages.sort(key=lambda x: x.priority)
 
     # Output
